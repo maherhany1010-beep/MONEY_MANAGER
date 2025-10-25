@@ -1,0 +1,265 @@
+'use client'
+
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+
+export interface SearchFilterState {
+  searchQuery: string
+  status: 'all' | 'active' | 'inactive'
+  vaultType: string
+  location: string
+  sortBy: string
+}
+
+interface SearchFilterProps {
+  filters: SearchFilterState
+  onFiltersChange: (filters: SearchFilterState) => void
+  vaultTypes: string[]
+  locations: string[]
+}
+
+export function SearchFilter({ filters, onFiltersChange, vaultTypes, locations }: SearchFilterProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const activeFiltersCount = [
+    filters.status !== 'all',
+    filters.vaultType !== 'all',
+    filters.location !== 'all',
+    filters.sortBy !== 'name-asc',
+  ].filter(Boolean).length
+
+  const handleReset = () => {
+    onFiltersChange({
+      searchQuery: '',
+      status: 'all',
+      vaultType: 'all',
+      location: 'all',
+      sortBy: 'name-asc',
+    })
+  }
+
+  const removeFilter = (key: keyof SearchFilterState) => {
+    const defaultValues: SearchFilterState = {
+      searchQuery: '',
+      status: 'all',
+      vaultType: 'all',
+      location: 'all',
+      sortBy: 'name-asc',
+    }
+    onFiltersChange({
+      ...filters,
+      [key]: defaultValues[key],
+    })
+  }
+
+  const getVaultTypeLabel = (type: string) => {
+    switch (type) {
+      case 'main': return 'رئيسية'
+      case 'branch': return 'فرع'
+      case 'personal': return 'شخصية'
+      case 'emergency': return 'طوارئ'
+      default: return type
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* شريط البحث */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="ابحث عن خزينة..."
+            value={filters.searchQuery}
+            onChange={(e) => onFiltersChange({ ...filters, searchQuery: e.target.value })}
+            className="pr-10"
+          />
+        </div>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              فلاتر متقدمة
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="mr-2 px-1.5 py-0.5 text-xs">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          </CollapsibleTrigger>
+        </Collapsible>
+      </div>
+
+      {/* الفلاتر المتقدمة */}
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleContent className="space-y-4">
+          <div className="grid gap-4 p-4 border rounded-lg bg-muted/50">
+            <div className="grid gap-4 md:grid-cols-4">
+              {/* الحالة */}
+              <div className="space-y-2">
+                <Label>الحالة</Label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value: any) => onFiltersChange({ ...filters, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="active">نشطة</SelectItem>
+                    <SelectItem value="inactive">غير نشطة</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* نوع الخزينة */}
+              <div className="space-y-2">
+                <Label>نوع الخزينة</Label>
+                <Select
+                  value={filters.vaultType}
+                  onValueChange={(value) => onFiltersChange({ ...filters, vaultType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    {vaultTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {getVaultTypeLabel(type)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* الموقع */}
+              <div className="space-y-2">
+                <Label>الموقع</Label>
+                <Select
+                  value={filters.location}
+                  onValueChange={(value) => onFiltersChange({ ...filters, location: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    {locations.map(location => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* الترتيب */}
+              <div className="space-y-2">
+                <Label>الترتيب</Label>
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={(value) => onFiltersChange({ ...filters, sortBy: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">الاسم (أ-ي)</SelectItem>
+                    <SelectItem value="name-desc">الاسم (ي-أ)</SelectItem>
+                    <SelectItem value="balance-desc">الرصيد (الأعلى)</SelectItem>
+                    <SelectItem value="balance-asc">الرصيد (الأقل)</SelectItem>
+                    <SelectItem value="capacity-desc">السعة (الأعلى)</SelectItem>
+                    <SelectItem value="capacity-asc">السعة (الأقل)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* زر إعادة التعيين */}
+            {activeFiltersCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="w-full"
+              >
+                <X className="h-4 w-4 ml-2" />
+                إعادة تعيين الفلاتر
+              </Button>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* الفلاتر النشطة */}
+      {activeFiltersCount > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {filters.status !== 'all' && (
+            <Badge variant="secondary" className="gap-1">
+              الحالة: {filters.status === 'active' ? 'نشطة' : 'غير نشطة'}
+              <button
+                onClick={() => removeFilter('status')}
+                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.vaultType !== 'all' && (
+            <Badge variant="secondary" className="gap-1">
+              النوع: {getVaultTypeLabel(filters.vaultType)}
+              <button
+                onClick={() => removeFilter('vaultType')}
+                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.location !== 'all' && (
+            <Badge variant="secondary" className="gap-1">
+              الموقع: {filters.location}
+              <button
+                onClick={() => removeFilter('location')}
+                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {filters.sortBy !== 'name-asc' && (
+            <Badge variant="secondary" className="gap-1">
+              مرتب حسب: {
+                filters.sortBy === 'name-desc' ? 'الاسم (ي-أ)' :
+                filters.sortBy === 'balance-desc' ? 'الرصيد (الأعلى)' :
+                filters.sortBy === 'balance-asc' ? 'الرصيد (الأقل)' :
+                filters.sortBy === 'capacity-desc' ? 'السعة (الأعلى)' :
+                filters.sortBy === 'capacity-asc' ? 'السعة (الأقل)' :
+                'الاسم (أ-ي)'
+              }
+              <button
+                onClick={() => removeFilter('sortBy')}
+                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
