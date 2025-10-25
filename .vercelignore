@@ -1,34 +1,61 @@
-# Ignore documentation files
-*.md
+# Ignore documentation files (except README and important docs)
 CHANGELOG.md
-README.md
+CLEANUP_REPORT.md
+*.test.md
+docs/**/*.md
 
 # Ignore test files
 *.test.ts
 *.test.tsx
 *.spec.ts
 *.spec.tsx
+__tests__/**
+.test/**
 
 # Ignore development files
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.example
 
 # Ignore git files
 .git
 .gitignore
+.gitattributes
 
 # Ignore IDE files
 .vscode
 .idea
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # Ignore OS files
 .DS_Store
 Thumbs.db
+.AppleDouble
+.LSOverride
 
-# Keep node_modules and .next
-# These should NOT be ignored
+# Ignore build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Ignore dependency files (Vercel handles these)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore cache files
+.cache/
+.eslintcache
+.next/cache
+
+# Keep important files
+# !README.md
+# !package.json
+# !next.config.mjs
+# !vercel.json
 
