@@ -74,13 +74,13 @@ export function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-4">
             {error && (
               <Alert variant={error.includes('تم إرسال') ? 'default' : 'destructive'}>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
               <div className="relative">
@@ -115,14 +115,15 @@ export function LoginForm() {
 
             <div className="space-y-2">
               <Button
-                type="submit"
+                type="button"
                 className="w-full"
                 disabled={isLoading}
+                onClick={handleLogin}
               >
                 {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                 تسجيل الدخول
               </Button>
-              
+
               <Button
                 type="button"
                 variant="outline"
@@ -134,7 +135,7 @@ export function LoginForm() {
                 إنشاء حساب جديد
               </Button>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
