@@ -77,17 +77,10 @@ const nextConfig = {
 
   // Optimize for production
   productionBrowserSourceMaps: false,
-  swcMinify: true,
   compress: true,
 
   // React strict mode for development
   reactStrictMode: true,
-
-  // Internationalization (if needed)
-  i18n: {
-    locales: ['ar', 'en'],
-    defaultLocale: 'ar',
-  },
 }
 
 export default nextConfig
