@@ -39,13 +39,7 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/login",
-      "destination": "/",
-      "permanent": false
-    }
-  ],
+  "redirects": [],
   "rewrites": [
     {
       "source": "/sitemap.xml",
