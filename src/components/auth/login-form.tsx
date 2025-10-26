@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, CreditCard, TrendingUp, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { generateOTP, sendOTPEmail } from '@/lib/otp'
 
 type AuthMode = 'login' | 'signup' | 'reset'
 
@@ -120,26 +121,39 @@ export function LoginForm() {
     setSuccess('')
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // Step 1: Create user account without email confirmation
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Disable email confirmation redirect - we'll use OTP instead
+          emailRedirectTo: undefined,
         },
       })
 
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess('✅ تم إرسال رابط التفعيل إلى بريدك الإلكتروني. يرجى التحقق من بريدك!')
-        setEmail('')
-        setPassword('')
-        setConfirmPassword('')
-        setTimeout(() => setMode('login'), 3000)
+      if (signUpError) {
+        setError(signUpError.message)
+        setIsLoading(false)
+        return
       }
+
+      // Step 2: Generate and send OTP
+      const otp = generateOTP()
+      const { success: otpSuccess, error: otpError } = await sendOTPEmail(email, otp)
+
+      if (!otpSuccess) {
+        setError(otpError || 'فشل في إرسال رمز التفعيل')
+        setIsLoading(false)
+        return
+      }
+
+      // Step 3: Redirect to OTP verification page
+      setSuccess('✅ تم إرسال رمز التفعيل إلى بريدك الإلكتروني!')
+      setTimeout(() => {
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`)
+      }, 1500)
     } catch (err) {
       setError('حدث خطأ غير متوقع')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -374,7 +388,7 @@ export function LoginForm() {
                     {isLoading ? (
                       <>
                         <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                        جاري التحميل...
+                        جاري الإرسال...
                       </>
                     ) : (
                       'إنشاء حساب'
