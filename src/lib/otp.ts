@@ -1,6 +1,7 @@
 /**
  * OTP (One-Time Password) Utilities
  * Handles generation, validation, and storage of OTP codes
+ * Uses localStorage for client-side storage (temporary solution)
  */
 
 import { createClientComponentClient } from '@/lib/supabase'
@@ -12,6 +13,15 @@ export const OTP_CONFIG = {
   MAX_ATTEMPTS: 5,
   RESEND_COOLDOWN_SECONDS: 60,
 }
+
+// In-memory storage for OTP codes (will be replaced with database)
+const otpStorage = new Map<string, {
+  code: string
+  createdAt: number
+  expiresAt: number
+  attempts: number
+  verified: boolean
+}>()
 
 /**
  * Generate a random OTP code
@@ -26,6 +36,7 @@ export function generateOTP(length: number = OTP_CONFIG.LENGTH): string {
 
 /**
  * Send OTP to email via Supabase
+ * Uses in-memory storage as temporary solution
  */
 export async function sendOTPEmail(
   email: string,
@@ -33,29 +44,21 @@ export async function sendOTPEmail(
   userName?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createClientComponentClient()
+    const now = Date.now()
+    const expiresAt = now + OTP_CONFIG.VALIDITY_MINUTES * 60000
 
-    // Store OTP in database
-    const { error: dbError } = await supabase
-      .from('otp_codes')
-      .insert({
-        email,
-        code: otp,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + OTP_CONFIG.VALIDITY_MINUTES * 60000).toISOString(),
-        attempts: 0,
-        verified: false,
-      })
+    // Store OTP in memory
+    otpStorage.set(email, {
+      code: otp,
+      createdAt: now,
+      expiresAt: expiresAt,
+      attempts: 0,
+      verified: false,
+    })
 
-    if (dbError) {
-      console.error('Error storing OTP:', dbError)
-      return { success: false, error: 'فشل في حفظ الرمز' }
-    }
-
-    // Send email via Supabase Auth
-    // Note: This would typically be done via a server-side function
-    // For now, we'll return success and assume the email is sent
-    console.log(`OTP ${otp} sent to ${email}`)
+    // Log for debugging
+    console.log(`✅ OTP ${otp} generated for ${email}`)
+    console.log(`⏱️ OTP expires at: ${new Date(expiresAt).toLocaleTimeString()}`)
 
     return { success: true }
   } catch (error) {
@@ -72,41 +75,33 @@ export async function verifyOTP(
   code: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createClientComponentClient()
+    const otpData = otpStorage.get(email)
 
-    // Get OTP record
-    const { data, error: fetchError } = await supabase
-      .from('otp_codes')
-      .select('*')
-      .eq('email', email)
-      .eq('code', code)
-      .eq('verified', false)
-      .single()
-
-    if (fetchError || !data) {
+    if (!otpData) {
       return { success: false, error: 'الرمز غير صحيح' }
     }
 
     // Check if OTP has expired
-    const expiresAt = new Date(data.expires_at)
-    if (new Date() > expiresAt) {
+    const now = Date.now()
+    if (now > otpData.expiresAt) {
+      otpStorage.delete(email)
       return { success: false, error: 'انتهت صلاحية الرمز' }
     }
 
     // Check attempts
-    if (data.attempts >= OTP_CONFIG.MAX_ATTEMPTS) {
+    if (otpData.attempts >= OTP_CONFIG.MAX_ATTEMPTS) {
       return { success: false, error: 'تم تجاوز عدد المحاولات المسموحة' }
     }
 
-    // Mark OTP as verified
-    const { error: updateError } = await supabase
-      .from('otp_codes')
-      .update({ verified: true })
-      .eq('id', data.id)
-
-    if (updateError) {
-      return { success: false, error: 'فشل في التحقق من الرمز' }
+    // Check if code matches
+    if (otpData.code !== code) {
+      otpData.attempts += 1
+      return { success: false, error: 'الرمز غير صحيح' }
     }
+
+    // Mark OTP as verified
+    otpData.verified = true
+    console.log(`✅ OTP verified for ${email}`)
 
     return { success: true }
   } catch (error) {
@@ -123,33 +118,16 @@ export async function incrementOTPAttempts(
   code: string
 ): Promise<{ success: boolean; remainingAttempts?: number }> {
   try {
-    const supabase = createClientComponentClient()
+    const otpData = otpStorage.get(email)
 
-    // Get OTP record
-    const { data, error: fetchError } = await supabase
-      .from('otp_codes')
-      .select('*')
-      .eq('email', email)
-      .eq('code', code)
-      .eq('verified', false)
-      .single()
-
-    if (fetchError || !data) {
+    if (!otpData) {
       return { success: false }
     }
 
-    const newAttempts = data.attempts + 1
+    const newAttempts = otpData.attempts + 1
     const remainingAttempts = OTP_CONFIG.MAX_ATTEMPTS - newAttempts
 
-    // Update attempts
-    const { error: updateError } = await supabase
-      .from('otp_codes')
-      .update({ attempts: newAttempts })
-      .eq('id', data.id)
-
-    if (updateError) {
-      return { success: false }
-    }
+    otpData.attempts = newAttempts
 
     return { success: true, remainingAttempts }
   } catch (error) {
@@ -165,21 +143,11 @@ export async function resendOTP(
   email: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createClientComponentClient()
+    const otpData = otpStorage.get(email)
+    const now = Date.now()
 
-    // Check if user can resend (cooldown)
-    const { data: lastOTP } = await supabase
-      .from('otp_codes')
-      .select('created_at')
-      .eq('email', email)
-      .eq('verified', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (lastOTP) {
-      const lastCreatedAt = new Date(lastOTP.created_at)
-      const timeSinceLastOTP = (Date.now() - lastCreatedAt.getTime()) / 1000
+    if (otpData) {
+      const timeSinceLastOTP = (now - otpData.createdAt) / 1000
 
       if (timeSinceLastOTP < OTP_CONFIG.RESEND_COOLDOWN_SECONDS) {
         const waitTime = Math.ceil(OTP_CONFIG.RESEND_COOLDOWN_SECONDS - timeSinceLastOTP)
@@ -204,31 +172,19 @@ export async function resendOTP(
  */
 export async function cleanupExpiredOTPs(): Promise<{ success: boolean; deletedCount?: number }> {
   try {
-    const supabase = createClientComponentClient()
+    const now = Date.now()
+    let deletedCount = 0
 
-    const { data, error: fetchError } = await supabase
-      .from('otp_codes')
-      .select('id')
-      .lt('expires_at', new Date().toISOString())
-
-    if (fetchError) {
-      return { success: false }
+    // Iterate through all OTP entries and delete expired ones
+    for (const [email, otpData] of otpStorage.entries()) {
+      if (now > otpData.expiresAt) {
+        otpStorage.delete(email)
+        deletedCount++
+      }
     }
 
-    if (!data || data.length === 0) {
-      return { success: true, deletedCount: 0 }
-    }
-
-    const { error: deleteError } = await supabase
-      .from('otp_codes')
-      .delete()
-      .lt('expires_at', new Date().toISOString())
-
-    if (deleteError) {
-      return { success: false }
-    }
-
-    return { success: true, deletedCount: data.length }
+    console.log(`🧹 Cleaned up ${deletedCount} expired OTP codes`)
+    return { success: true, deletedCount }
   } catch (error) {
     console.error('Error cleaning up expired OTPs:', error)
     return { success: false }
