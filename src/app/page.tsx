@@ -1,81 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChartSkeleton, StatsCardSkeleton } from '@/components/ui/skeleton'
-import { useAutoNotifications } from '@/hooks/use-auto-notifications'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useBankAccounts } from '@/contexts/bank-accounts-context'
 import { useCashVaults } from '@/contexts/cash-vaults-context'
 import { useEWallets } from '@/contexts/e-wallets-context'
 import { usePrepaidCards } from '@/contexts/prepaid-cards-context'
-
-// Dynamic imports للمكونات الثقيلة مع Skeleton Loaders
-const DashboardOverview = dynamic(
-  () => import('@/components/dashboard/dashboard-overview').then(mod => ({ default: mod.DashboardOverview })),
-  {
-    loading: () => <StatsCardSkeleton />,
-    ssr: false
-  }
-)
-
-const DashboardCharts = dynamic(
-  () => import('@/components/dashboard/dashboard-charts').then(mod => ({ default: mod.DashboardCharts })),
-  {
-    loading: () => <ChartSkeleton />,
-    ssr: false
-  }
-)
-
-const DashboardAlerts = dynamic(
-  () => import('@/components/dashboard/dashboard-alerts').then(mod => ({ default: mod.DashboardAlerts })),
-  {
-    loading: () => <div className="h-32 animate-pulse bg-muted rounded-lg" />,
-    ssr: false
-  }
-)
-
-const AdvancedKPIs = dynamic(
-  () => import('@/components/dashboard/advanced-kpis').then(mod => ({ default: mod.AdvancedKPIs })),
-  {
-    loading: () => (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCardSkeleton />
-        <StatsCardSkeleton />
-        <StatsCardSkeleton />
-        <StatsCardSkeleton />
-      </div>
-    ),
-    ssr: false
-  }
-)
-
-const AdvancedCharts = dynamic(
-  () => import('@/components/dashboard/advanced-charts').then(mod => ({ default: mod.AdvancedCharts })),
-  {
-    loading: () => (
-      <div className="grid gap-4 md:grid-cols-2">
-        <ChartSkeleton />
-        <ChartSkeleton />
-      </div>
-    ),
-    ssr: false
-  }
-)
-
-const SmartRecommendations = dynamic(
-  () => import('@/components/dashboard/smart-recommendations').then(mod => ({ default: mod.SmartRecommendations })),
-  {
-    loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
-    ssr: false
-  }
-)
 import {
   CreditCard,
   TrendingUp,
@@ -97,9 +30,6 @@ import {
 } from 'lucide-react'
 
 export default function DashboardPage() {
-  // تفعيل الإشعارات التلقائية
-  useAutoNotifications()
-
   const { accounts: bankAccounts } = useBankAccounts()
   const { vaults: cashVaults } = useCashVaults()
   const { wallets: eWallets } = useEWallets()
@@ -277,25 +207,10 @@ export default function DashboardPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => window.location.href = '/reports'}>
-              <BarChart3 className="h-4 w-4 ml-2" />
               التقارير التفصيلية
             </Button>
           </div>
         </div>
-
-        {/* مؤشرات الأداء الرئيسية المتقدمة */}
-        <AdvancedKPIs data={kpisData} />
-
-        {/* الرسوم البيانية التفاعلية المتقدمة */}
-        <AdvancedCharts
-          spendingTrend={spendingTrendData}
-          categoryDistribution={categoryDistributionData}
-          cardComparison={cardComparisonData}
-          cashbackTrend={cashbackTrendData}
-        />
-
-        {/* التوصيات الذكية */}
-        <SmartRecommendations data={recommendationsData} />
 
         {/* Quick Stats - ملخص سريع */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -395,77 +310,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* التبويبات - محتوى مبسط */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">التفاصيل</CardTitle>
-            <CardDescription>عرض تفصيلي للحسابات والمعاملات</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground text-center py-8">
-              للحصول على تقارير تفصيلية وشاملة، يرجى زيارة صفحة{' '}
-              <Button variant="link" className="p-0 h-auto" onClick={() => window.location.href = '/reports'}>
-                التقارير التفصيلية
-              </Button>
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* حذف جميع التبويبات القديمة المكررة */}
-        {/* Tabs القديمة تم حذفها لتبسيط الصفحة الرئيسية */}
-
-        {/* نهاية المحتوى المبسط */}
-        <div className="hidden">
-          {/* المحتوى القديم محفوظ هنا للرجوع إليه إذا لزم الأمر */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الإنفاق الشهري (قديم)</CardTitle>
-              {spendingGrowth > 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(stats.monthlySpending)}
-              </div>
-              <p className={`text-xs ${spendingGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {spendingGrowth > 0 ? '+' : ''}{spendingGrowth.toFixed(1)}% من الشهر الماضي
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الكاش باك (قديم)</CardTitle>
-              <Gift className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
-                {formatCurrency(stats.cashbackEarned)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                هذا الشهر • إجمالي العام: {formatCurrency(stats.cashbackThisYear)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المدفوعات (قديم)</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {stats.pendingPayments}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                معلقة • {stats.overduePayments} متأخرة
-              </p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </AppLayout>
   )
