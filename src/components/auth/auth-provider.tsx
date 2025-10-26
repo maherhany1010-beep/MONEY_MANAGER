@@ -17,17 +17,44 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Mock user for development - always logged in
-  const [user] = useState({
-    id: 'demo-user-id',
-    email: 'demo@example.com',
-    created_at: new Date().toISOString()
-  } as User)
-  const [loading] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error('Error getting session:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null)
+      }
+    )
+
+    return () => {
+      subscription?.unsubscribe()
+    }
+  }, [supabase])
 
   const signOut = async () => {
-    // Mock sign out - do nothing for now
-    console.log('Mock sign out')
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   return (

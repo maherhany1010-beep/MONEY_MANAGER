@@ -4,113 +4,13 @@ import { createBrowserClient } from '@supabase/ssr'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Mock client for development
-const createMockClient = () => {
-  return {
-    auth: {
-      signUp: async (credentials: any) => {
-        console.log('Mock signUp:', credentials.email)
-        return {
-          data: {
-            user: {
-              id: 'mock-user-id',
-              email: credentials.email,
-              created_at: new Date().toISOString()
-            },
-            session: {
-              access_token: 'mock-access-token',
-              refresh_token: 'mock-refresh-token'
-            }
-          },
-          error: null
-        }
-      },
-      signInWithPassword: async (credentials: any) => {
-        console.log('Mock signIn:', credentials.email)
-        return {
-          data: {
-            user: {
-              id: 'mock-user-id',
-              email: credentials.email,
-              created_at: new Date().toISOString()
-            },
-            session: {
-              access_token: 'mock-access-token',
-              refresh_token: 'mock-refresh-token'
-            }
-          },
-          error: null
-        }
-      },
-      signOut: async () => {
-        console.log('Mock signOut')
-        return { error: null }
-      },
-      getSession: async () => {
-        return {
-          data: { session: null },
-          error: null
-        }
-      },
-      getUser: async () => {
-        return {
-          data: { user: null },
-          error: null
-        }
-      },
-      onAuthStateChange: (callback: any) => {
-        console.log('Mock onAuthStateChange')
-        return {
-          data: {
-            subscription: {
-              unsubscribe: () => console.log('Mock unsubscribe')
-            }
-          }
-        }
-      }
-    },
-    from: (table: string) => ({
-      select: (columns?: string) => ({
-        eq: (column: string, value: any) => ({
-          single: async () => ({ data: null, error: null }),
-          limit: (count: number) => ({
-            order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
-          }),
-          order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
-        }),
-        order: (column: string, options?: any) => Promise.resolve({ data: [], error: null }),
-        limit: (count: number) => Promise.resolve({ data: [], error: null })
-      }),
-      insert: (data: any) => Promise.resolve({ data: null, error: null }),
-      update: (data: any) => ({
-        eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-      }),
-      delete: () => ({
-        eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-      })
-    })
-  }
-}
-
-// Check if we should use mock client
-const shouldUseMockClient = () => {
-  return !supabaseUrl || !supabaseAnonKey ||
-         supabaseUrl.includes('demo') ||
-         supabaseAnonKey.includes('demo') ||
-         supabaseUrl.includes('xyzcompany')
-}
-
 // Client-side Supabase client
 export const createClientComponentClient = () => {
-  if (shouldUseMockClient()) {
-    console.log('Using mock Supabase client for development')
-    return createMockClient() as any
-  }
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 
 // Legacy client for backward compatibility
-export const supabase = shouldUseMockClient() ? createMockClient() as any : createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface Database {
