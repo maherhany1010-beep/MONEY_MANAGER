@@ -177,33 +177,43 @@ function generateEmailHTML(otp: string, userName?: string, expiryMinutes: number
           margin-bottom: 20px;
         }
         .otp-section {
-          background-color: #f9f9f9;
-          border: 2px solid #667eea;
-          border-radius: 8px;
-          padding: 20px;
-          margin: 20px 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          padding: 30px;
+          margin: 30px 0;
           text-align: center;
+        }
+        .otp-label {
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 15px;
+          font-weight: 500;
         }
         .otp-code {
-          font-size: 36px;
+          font-size: 48px;
           font-weight: bold;
-          color: #667eea;
-          letter-spacing: 4px;
+          color: #ffffff;
+          letter-spacing: 8px;
           font-family: 'Courier New', monospace;
-          margin: 10px 0;
+          margin: 15px 0;
+          background-color: rgba(0, 0, 0, 0.1);
+          padding: 20px;
+          border-radius: 8px;
         }
         .otp-info {
-          font-size: 14px;
-          color: #666;
-          margin-top: 10px;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.85);
+          margin-top: 15px;
         }
-        .footer {
-          background-color: #f5f5f5;
-          padding: 20px;
-          text-align: center;
-          font-size: 12px;
-          color: #999;
-          border-top: 1px solid #eee;
+        .instructions {
+          background-color: #f0f4ff;
+          border-right: 4px solid #667eea;
+          padding: 15px;
+          border-radius: 4px;
+          margin: 20px 0;
+          font-size: 14px;
+          color: #333;
+          line-height: 1.6;
         }
         .warning {
           background-color: #fff3cd;
@@ -214,6 +224,14 @@ function generateEmailHTML(otp: string, userName?: string, expiryMinutes: number
           margin: 15px 0;
           font-size: 14px;
         }
+        .footer {
+          background-color: #f5f5f5;
+          padding: 20px;
+          text-align: center;
+          font-size: 12px;
+          color: #999;
+          border-top: 1px solid #eee;
+        }
       </style>
     </head>
     <body>
@@ -222,33 +240,41 @@ function generateEmailHTML(otp: string, userName?: string, expiryMinutes: number
           <h1>الإدارة المالية الشاملة</h1>
           <p style="margin: 10px 0 0 0; font-size: 14px;">تطبيق إدارة الأموال والبطاقات الائتمانية</p>
         </div>
-        
+
         <div class="content">
           <div class="greeting">
             ${userName ? `مرحباً ${userName}،` : 'مرحباً،'}
           </div>
-          
-          <p style="color: #333; line-height: 1.6;">
-            تم طلب رمز تفعيل لحسابك. استخدم الرمز أدناه لإكمال عملية التحقق:
+
+          <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
+            تم طلب رمز تفعيل لحسابك الجديد. استخدم الرمز أدناه لإكمال عملية التحقق:
           </p>
-          
+
           <div class="otp-section">
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">رمز التفعيل</div>
+            <div class="otp-label">رمز التفعيل الخاص بك</div>
             <div class="otp-code">${otp}</div>
             <div class="otp-info">
-              صلاحية الرمز: ${expiryMinutes} دقائق
+              صلاحية الرمز: ${expiryMinutes} دقائق فقط
             </div>
           </div>
-          
-          <div class="warning">
-            ⚠️ لا تشارك هذا الرمز مع أحد. فريق الدعم لن يطلب منك هذا الرمز أبداً.
+
+          <div class="instructions">
+            <strong>كيفية الاستخدام:</strong><br>
+            1. انسخ الرمز أعلاه<br>
+            2. عد إلى تطبيق الإدارة المالية<br>
+            3. أدخل الرمز في حقل التفعيل<br>
+            4. اضغط على زر "تفعيل الحساب"
           </div>
-          
-          <p style="color: #666; font-size: 14px; line-height: 1.6;">
-            إذا لم تطلب هذا الرمز، يرجى تجاهل هذا البريد الإلكتروني.
+
+          <div class="warning">
+            ⚠️ <strong>تنبيه أمان:</strong> لا تشارك هذا الرمز مع أحد. فريق الدعم لن يطلب منك هذا الرمز أبداً.
+          </div>
+
+          <p style="color: #666; font-size: 13px; line-height: 1.6; margin-top: 20px;">
+            إذا لم تطلب هذا الرمز، يرجى تجاهل هذا البريد الإلكتروني أو حذفه.
           </p>
         </div>
-        
+
         <div class="footer">
           <p style="margin: 0;">© 2025 الإدارة المالية الشاملة. جميع الحقوق محفوظة.</p>
           <p style="margin: 5px 0 0 0;">هذا البريد الإلكتروني تم إرساله تلقائياً. يرجى عدم الرد عليه.</p>
