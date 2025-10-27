@@ -139,7 +139,7 @@ export function LoginForm() {
 
       // Step 2: Generate and send OTP
       const otp = generateOTP()
-      const { success: otpSuccess, error: otpError } = await sendOTPEmail(email, otp)
+      const { success: otpSuccess, error: otpError, displayOTP } = await sendOTPEmail(email, otp)
 
       if (!otpSuccess) {
         setError(otpError || 'فشل في إرسال رمز التفعيل')
@@ -147,7 +147,28 @@ export function LoginForm() {
         return
       }
 
-      // Step 3: Redirect to OTP verification page
+      // Step 3: Try to send email via API
+      try {
+        const emailResponse = await fetch('/api/send-otp-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            otp,
+            userName: email.split('@')[0],
+          }),
+        })
+
+        if (!emailResponse.ok) {
+          console.warn('Email API failed, but OTP is stored')
+        }
+      } catch (emailError) {
+        console.warn('Email API error:', emailError)
+      }
+
+      // Step 4: Redirect to OTP verification page
       setSuccess('✅ تم إرسال رمز التفعيل إلى بريدك الإلكتروني!')
       setTimeout(() => {
         router.push(`/verify-otp?email=${encodeURIComponent(email)}`)

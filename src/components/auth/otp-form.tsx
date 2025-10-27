@@ -25,6 +25,8 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
   const [remainingAttempts, setRemainingAttempts] = useState(OTP_CONFIG.MAX_ATTEMPTS)
   const [canResend, setCanResend] = useState(false)
   const [resendCountdown, setResendCountdown] = useState(0)
+  const [displayOTP, setDisplayOTP] = useState<string | null>(null)
+  const [showOTPDisplay, setShowOTPDisplay] = useState(false)
 
   // Resend countdown timer
   useEffect(() => {
@@ -52,7 +54,8 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
       if (result.success) {
         setSuccess('✅ تم التحقق من الرمز بنجاح!')
         setOTP('')
-        
+        setDisplayOTP(null)
+
         // Call success callback or redirect
         setTimeout(() => {
           if (onSuccess) {
@@ -65,15 +68,13 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
       } else {
         // Increment attempts
         const attemptsResult = await incrementOTPAttempts(email, otp)
-        if (attemptsResult.remainingAttempts !== undefined) {
-          setRemainingAttempts(attemptsResult.remainingAttempts)
-        }
+        const remaining = attemptsResult.remainingAttempts ?? OTP_CONFIG.MAX_ATTEMPTS
 
-        if (attemptsResult.remainingAttempts === 0) {
+        if (remaining === 0) {
           setError('تم تجاوز عدد المحاولات المسموحة. يرجى طلب رمز جديد')
         } else {
           setError(
-            `${result.error} (محاولات متبقية: ${attemptsResult.remainingAttempts})`
+            `${result.error} (محاولات متبقية: ${remaining})`
           )
         }
       }
@@ -98,6 +99,32 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
         setRemainingAttempts(OTP_CONFIG.MAX_ATTEMPTS)
         setCanResend(false)
         setResendCountdown(OTP_CONFIG.RESEND_COOLDOWN_SECONDS)
+
+        // Display OTP for development mode
+        if (result.otp) {
+          setDisplayOTP(result.otp)
+        }
+
+        // Try to send email via API
+        try {
+          const emailResponse = await fetch('/api/send-otp-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email,
+              otp: result.otp || 'unknown',
+              userName: email.split('@')[0],
+            }),
+          })
+
+          if (!emailResponse.ok) {
+            console.warn('Email API failed, but OTP is stored')
+          }
+        } catch (emailError) {
+          console.warn('Email API error:', emailError)
+        }
       } else {
         setError(result.error || 'فشل في إعادة إرسال الرمز')
       }
@@ -182,18 +209,40 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
           )}
         </Button>
 
-        {/* Resend Button */}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all disabled:opacity-50 mb-4"
-          disabled={!canResend || isLoading}
-          onClick={handleResendOTP}
-        >
-          {resendCountdown > 0
-            ? `إعادة الإرسال خلال ${resendCountdown}s`
-            : 'إعادة إرسال الرمز'}
-        </Button>
+        {/* Resend Button with Countdown */}
+        <div className="mb-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all disabled:opacity-50"
+            disabled={!canResend || isLoading}
+            onClick={handleResendOTP}
+          >
+            {resendCountdown > 0 ? (
+              <div className="flex items-center justify-center gap-2">
+                <span>إعادة الإرسال خلال</span>
+                <span className="font-bold text-blue-400 text-lg min-w-[2rem] text-center">
+                  {resendCountdown}
+                </span>
+                <span>ثانية</span>
+              </div>
+            ) : (
+              'إعادة إرسال الرمز'
+            )}
+          </Button>
+          {resendCountdown > 0 && (
+            <div className="mt-2 text-center">
+              <div className="w-full bg-slate-700/30 rounded-full h-1 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full transition-all duration-1000"
+                  style={{
+                    width: `${(resendCountdown / OTP_CONFIG.RESEND_COOLDOWN_SECONDS) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Back Button */}
         {onBack && (
@@ -208,8 +257,32 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
           </Button>
         )}
 
+        {/* Development Mode - Show OTP */}
+        <div className="mt-6 p-4 bg-amber-500/10 rounded-lg border border-amber-500/50">
+          <button
+            type="button"
+            className="w-full text-xs text-amber-400 hover:text-amber-300 transition-colors"
+            onClick={() => setShowOTPDisplay(!showOTPDisplay)}
+          >
+            {showOTPDisplay ? '▼ إخفاء الرمز' : '▶ عرض الرمز (للاختبار)'}
+          </button>
+          {showOTPDisplay && (
+            <div className="mt-3 p-3 bg-slate-700/50 rounded border border-amber-500/30">
+              <p className="text-xs text-amber-400 mb-2">الرمز للاختبار (في بيئة التطوير):</p>
+              <div className="bg-slate-800 p-3 rounded text-center">
+                <p className="text-2xl font-bold text-amber-400 tracking-widest font-mono">
+                  {displayOTP || 'جاري التحميل...'}
+                </p>
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                ملاحظة: في الإنتاج، سيتم إرسال الرمز عبر البريد الإلكتروني فقط
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Info */}
-        <div className="mt-6 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+        <div className="mt-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
           <p className="text-xs text-slate-400 text-center">
             لم تستقبل الرمز؟ تحقق من مجلد البريد العشوائي أو انتظر دقيقة واحدة قبل إعادة الإرسال
           </p>

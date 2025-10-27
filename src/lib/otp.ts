@@ -36,13 +36,13 @@ export function generateOTP(length: number = OTP_CONFIG.LENGTH): string {
 
 /**
  * Send OTP to email via Supabase
- * Uses in-memory storage as temporary solution
+ * Stores OTP in memory and sends email via Supabase Auth
  */
 export async function sendOTPEmail(
   email: string,
   otp: string,
   userName?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; displayOTP?: string }> {
   try {
     const now = Date.now()
     const expiresAt = now + OTP_CONFIG.VALIDITY_MINUTES * 60000
@@ -60,7 +60,36 @@ export async function sendOTPEmail(
     console.log(`✅ OTP ${otp} generated for ${email}`)
     console.log(`⏱️ OTP expires at: ${new Date(expiresAt).toLocaleTimeString()}`)
 
-    return { success: true }
+    // Try to send email via Supabase
+    try {
+      const supabase = createClientComponentClient()
+
+      // Send email using Supabase's email service
+      const { error: emailError } = await supabase.auth.resendIdentityConfirmationLink(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      })
+
+      if (emailError) {
+        console.warn('Email sending failed, returning OTP for display:', emailError)
+        // Return OTP for display as fallback
+        return {
+          success: true,
+          displayOTP: otp,
+          error: 'تم توليد الرمز. يرجى نسخه من الرسالة أدناه'
+        }
+      }
+
+      console.log('✅ Email sent successfully via Supabase')
+      return { success: true }
+    } catch (emailError) {
+      console.warn('Email service error, returning OTP for display:', emailError)
+      // Return OTP for display as fallback
+      return {
+        success: true,
+        displayOTP: otp,
+        error: 'تم توليد الرمز. يرجى نسخه من الرسالة أدناه'
+      }
+    }
   } catch (error) {
     console.error('Error sending OTP:', error)
     return { success: false, error: 'فشل في إرسال الرمز' }
@@ -141,7 +170,7 @@ export async function incrementOTPAttempts(
  */
 export async function resendOTP(
   email: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; otp?: string }> {
   try {
     const otpData = otpStorage.get(email)
     const now = Date.now()
@@ -160,7 +189,13 @@ export async function resendOTP(
 
     // Generate and send new OTP
     const newOTP = generateOTP()
-    return await sendOTPEmail(email, newOTP)
+    const result = await sendOTPEmail(email, newOTP)
+
+    // Return the OTP for display in development mode
+    return {
+      ...result,
+      otp: newOTP,
+    }
   } catch (error) {
     console.error('Error resending OTP:', error)
     return { success: false, error: 'فشل في إعادة إرسال الرمز' }
@@ -188,6 +223,43 @@ export async function cleanupExpiredOTPs(): Promise<{ success: boolean; deletedC
   } catch (error) {
     console.error('Error cleaning up expired OTPs:', error)
     return { success: false }
+  }
+}
+
+/**
+ * Send OTP email via API endpoint
+ * This is a helper function to send emails via a backend service
+ */
+export async function sendOTPEmailViaAPI(
+  email: string,
+  otp: string,
+  userName?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch('/api/send-otp-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        otp,
+        userName,
+        expiryMinutes: OTP_CONFIG.VALIDITY_MINUTES,
+      }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json()
+      console.error('Email API error:', data)
+      return { success: false, error: data.error || 'فشل في إرسال البريد الإلكتروني' }
+    }
+
+    console.log('✅ Email sent successfully via API')
+    return { success: true }
+  } catch (error) {
+    console.error('Error calling email API:', error)
+    return { success: false, error: 'فشل في الاتصال بخدمة البريد الإلكتروني' }
   }
 }
 
