@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 /**
  * API endpoint to send OTP email
  * POST /api/send-otp-email
- * 
+ *
  * Body:
  * {
  *   email: string
@@ -13,10 +13,46 @@ import { NextRequest, NextResponse } from 'next/server'
  * }
  */
 
+// Rate limiting map to prevent abuse
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+
+/**
+ * Check rate limit for an email address
+ * @param email - Email address to check
+ * @param maxAttempts - Maximum attempts allowed (default: 5)
+ * @param windowMs - Time window in milliseconds (default: 60000 = 1 minute)
+ * @returns true if request is allowed, false if rate limited
+ */
+function checkRateLimit(email: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(email)
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(email, { count: 1, resetTime: now + windowMs })
+    return true
+  }
+
+  if (record.count >= maxAttempts) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { email, otp, userName, expiryMinutes = 10 } = body
+
+    // Check rate limit
+    if (!checkRateLimit(email)) {
+      console.warn(`⚠️ Rate limit exceeded for email: ${email}`)
+      return NextResponse.json(
+        { error: 'تم تجاوز حد الطلبات. يرجى المحاولة لاحقاً' },
+        { status: 429 }
+      )
+    }
 
     // Validate input
     if (!email || !otp) {
