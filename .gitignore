@@ -92,3 +92,33 @@ next-env.d.ts
 *.pem
 .cache/
 .eslintcache
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.old
+*~
+
+# ============================================
+# CSV Reports & Exports
+# ============================================
+*.csv
+!package-lock.json
+
+# ============================================
+# Supabase Local Development
+# ============================================
+supabase/.branches
+supabase/.temp
+.supabase/
+
+# ============================================
+# Documentation Backups
+# ============================================
+*.md.bak
+*.md.old
+BACKUP_*.md
+OLD_*.md
