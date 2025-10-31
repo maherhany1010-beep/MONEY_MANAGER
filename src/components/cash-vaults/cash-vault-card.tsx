@@ -86,7 +86,7 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType)} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-6 text-white relative`}>
         {/* حالة الخزينة */}
         {!vault.isActive && (
           <div className="absolute top-2 left-2">
@@ -146,10 +146,10 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
         {/* نوع الخزينة ومستوى الوصول */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{getVaultTypeLabel(vault.vaultType)}</Badge>
+            <Badge variant="outline">{getVaultTypeLabel(vault.vaultType ?? 'main')}</Badge>
             <Badge variant="secondary" className="flex items-center gap-1">
-              {getAccessLevelIcon(vault.accessLevel)}
-              <span>{getAccessLevelLabel(vault.accessLevel)}</span>
+              {getAccessLevelIcon(vault.accessLevel ?? 'private')}
+              <span>{getAccessLevelLabel(vault.accessLevel ?? 'private')}</span>
             </Badge>
           </div>
           {vault.requiresApproval && (

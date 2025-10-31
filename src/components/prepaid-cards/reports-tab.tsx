@@ -99,7 +99,7 @@ export function ReportsTab({ cards, transactions }: ReportsTabProps) {
       } else if (t.type === 'purchase') {
         stats.totalPurchases += t.amount
       }
-      stats.totalFees += t.fee
+      stats.totalFees += (t.fee ?? 0)
     })
 
     stats.avgTransactionAmount = stats.transactionCount > 0
@@ -191,13 +191,13 @@ export function ReportsTab({ cards, transactions }: ReportsTabProps) {
         name: 'الحد اليومي',
         used: card.dailyUsed,
         limit: card.dailyLimit,
-        percentage: (card.dailyUsed / card.dailyLimit) * 100,
+        percentage: ((card.dailyUsed ?? 0) / (card.dailyLimit ?? 1)) * 100,
       },
       {
         name: 'الحد الشهري',
         used: card.monthlyUsed,
         limit: card.monthlyLimit,
-        percentage: (card.monthlyUsed / card.monthlyLimit) * 100,
+        percentage: ((card.monthlyUsed ?? 0) / (card.monthlyLimit ?? 1)) * 100,
       },
     ]
   }, [cards, selectedCardId])
@@ -212,10 +212,10 @@ export function ReportsTab({ cards, transactions }: ReportsTabProps) {
     }
 
     filteredTransactions.forEach(t => {
-      if (t.type === 'deposit') fees.deposit += t.fee
-      else if (t.type === 'withdrawal') fees.withdrawal += t.fee
-      else if (t.type === 'purchase') fees.purchase += t.fee
-      else if (t.type === 'transfer_out') fees.transfer += t.fee
+      if (t.type === 'deposit') fees.deposit += (t.fee ?? 0)
+      else if (t.type === 'withdrawal') fees.withdrawal += (t.fee ?? 0)
+      else if (t.type === 'purchase') fees.purchase += (t.fee ?? 0)
+      else if (t.type === 'transfer_out') fees.transfer += (t.fee ?? 0)
     })
 
     return [
@@ -544,8 +544,8 @@ export function ReportsTab({ cards, transactions }: ReportsTabProps) {
                         </div>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>المستخدم: {formatCurrency(limit.used)}</span>
-                            <span>الحد: {formatCurrency(limit.limit)}</span>
+                            <span>المستخدم: {formatCurrency(limit.used ?? 0)}</span>
+                            <span>الحد: {formatCurrency(limit.limit ?? 0)}</span>
                           </div>
                           <div className="h-3 bg-muted rounded-full overflow-hidden">
                             <div
@@ -557,7 +557,7 @@ export function ReportsTab({ cards, transactions }: ReportsTabProps) {
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          المتبقي: {formatCurrency(limit.limit - limit.used)}
+                          المتبقي: {formatCurrency((limit.limit ?? 0) - (limit.used ?? 0))}
                         </p>
                       </div>
                     </CardContent>

@@ -2,22 +2,23 @@ import type { Metadata } from "next";
 import { Noto_Sans_Arabic } from "next/font/google";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { ThemeProvider } from "@/contexts/theme-context";
-import { MerchantsProvider } from "@/contexts/merchants-context";
-import { CardsProvider } from "@/contexts/cards-context";
-import { BankAccountsProvider } from "@/contexts/bank-accounts-context";
-import { CashVaultsProvider } from "@/contexts/cash-vaults-context";
-import { EWalletsProvider } from "@/contexts/e-wallets-context";
-import { PrepaidCardsProvider } from "@/contexts/prepaid-cards-context";
-import { POSMachinesProvider } from "@/contexts/pos-machines-context";
-import { CentralTransfersProvider } from "@/contexts/central-transfers-context";
-import { CustomersProvider } from "@/contexts/customers-context";
-import { SavingsCirclesProvider } from "@/contexts/savings-circles-context";
-import { ProductsProvider } from "@/contexts/products-context";
-import { SalesProvider } from "@/contexts/sales-context";
-import { InvestmentsProvider } from "@/contexts/investments-context";
-import { ReconciliationProvider } from "@/contexts/reconciliation-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { NotificationsProvider } from "@/contexts/notifications-context";
+import { BankAccountsProvider } from "@/contexts/bank-accounts-context";
+import { EWalletsProvider } from "@/contexts/e-wallets-context";
+import { CashVaultsProvider } from "@/contexts/cash-vaults-context";
+import { CardsProvider } from "@/contexts/cards-context";
+import { CustomersProvider } from "@/contexts/customers-context";
+import { ProductsProvider } from "@/contexts/products-context";
+import { SalesProvider } from "@/contexts/sales-context";
+import { PrepaidCardsProvider } from "@/contexts/prepaid-cards-context";
+import { POSMachinesProvider } from "@/contexts/pos-machines-context";
+import { SavingsCirclesProvider } from "@/contexts/savings-circles-context";
+import { InvestmentsProvider } from "@/contexts/investments-context";
+import { MerchantsProvider } from "@/contexts/merchants-context";
+import { CentralTransfersProvider } from "@/contexts/central-transfers-context";
+import { CashbackProvider } from "@/contexts/cashback-context";
+import { ReconciliationProvider } from "@/contexts/reconciliation-context";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -29,7 +30,7 @@ const notoSansArabic = Noto_Sans_Arabic({
 
 export const metadata: Metadata = {
   title: "الإدارة المالية الشاملة",
-  description: "نظام شامل لإدارة البطاقات الائتمانية والحسابات البنكية والمحافظ الإلكترونية والخزائن النقدية",
+  description: "لإدارة أموالك بشكل أكثر احترافية ودقة - نظام متكامل لإدارة جميع جوانب حياتك المالية",
 };
 
 export default function RootLayout({
@@ -53,22 +54,24 @@ export default function RootLayout({
                         <EWalletsProvider>
                           <PrepaidCardsProvider>
                             <POSMachinesProvider>
-                              <CentralTransfersProvider>
-                                <CustomersProvider>
-                                  <SavingsCirclesProvider>
-                                    <ProductsProvider>
-                                      <SalesProvider>
-                                        <InvestmentsProvider>
-                                          <ReconciliationProvider>
-                                            {children}
-                                            <Toaster />
-                                          </ReconciliationProvider>
-                                        </InvestmentsProvider>
-                                      </SalesProvider>
-                                    </ProductsProvider>
-                                  </SavingsCirclesProvider>
-                                </CustomersProvider>
-                              </CentralTransfersProvider>
+                              <CustomersProvider>
+                                <ProductsProvider>
+                                  <SalesProvider>
+                                    <SavingsCirclesProvider>
+                                      <InvestmentsProvider>
+                                        <CentralTransfersProvider>
+                                          <CashbackProvider>
+                                            <ReconciliationProvider>
+                                              {children}
+                                              <Toaster />
+                                            </ReconciliationProvider>
+                                          </CashbackProvider>
+                                        </CentralTransfersProvider>
+                                      </InvestmentsProvider>
+                                    </SavingsCirclesProvider>
+                                  </SalesProvider>
+                                </ProductsProvider>
+                              </CustomersProvider>
                             </POSMachinesProvider>
                           </PrepaidCardsProvider>
                         </EWalletsProvider>

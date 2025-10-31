@@ -115,12 +115,10 @@ export default function CashbackPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth')
 
   const handleRedeemCashback = (amount: number) => {
-    console.log('Redeem cashback:', amount)
     // Implement cashback redemption logic
   }
 
   const handleExportHistory = () => {
-    console.log('Export cashback history')
     // Implement export functionality
   }
 

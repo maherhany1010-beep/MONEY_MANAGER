@@ -20,14 +20,14 @@ const nextConfig = {
     } : false,
   },
 
-  // Ignore ESLint errors during build
+  // Enable ESLint during build
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
-  // Ignore TypeScript errors during build
+  // Enable TypeScript checking during build
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Headers for caching and security

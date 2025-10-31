@@ -139,7 +139,7 @@ export default function AccountsCenterPage() {
   // حساب الرصيد الإجمالي لماكينات الدفع مع Memoization
   const posMachinesTotalBalance = useMemo(() => {
     return posMachines.reduce((sum, machine) => {
-      const machineBalance = machine.accounts.reduce((accSum, account) => accSum + account.balance, 0)
+      const machineBalance = (machine.accounts ?? []).reduce((accSum, account) => accSum + account.balance, 0)
       return sum + machineBalance
     }, 0)
   }, [posMachines])

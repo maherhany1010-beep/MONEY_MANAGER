@@ -37,11 +37,11 @@ export function usePrepaidLimitsReset() {
         const updatedCards = cards.map(card => {
           const updates: any = {}
 
-          if (needsDailyReset && card.dailyUsed > 0) {
+          if (needsDailyReset && (card.dailyUsed ?? 0) > 0) {
             updates.dailyUsed = 0
           }
 
-          if (needsMonthlyReset && card.monthlyUsed > 0) {
+          if (needsMonthlyReset && (card.monthlyUsed ?? 0) > 0) {
             updates.monthlyUsed = 0
           }
 
@@ -59,7 +59,7 @@ export function usePrepaidLimitsReset() {
 
           // Send notifications
           if (needsDailyReset) {
-            const activeCards = cards.filter(c => c.status === 'active' && c.dailyUsed > 0)
+            const activeCards = cards.filter(c => c.status === 'active' && (c.dailyUsed ?? 0) > 0)
             if (activeCards.length > 0) {
               addNotification(
                 'general',
@@ -72,7 +72,7 @@ export function usePrepaidLimitsReset() {
           }
 
           if (needsMonthlyReset) {
-            const activeCards = cards.filter(c => c.status === 'active' && c.monthlyUsed > 0)
+            const activeCards = cards.filter(c => c.status === 'active' && (c.monthlyUsed ?? 0) > 0)
             if (activeCards.length > 0) {
               addNotification(
                 'general',

@@ -84,12 +84,12 @@ export default function CashVaultsPage() {
   // Get unique vault types and locations for filter
   const vaultTypes = useMemo(() => {
     const uniqueTypes = new Set(vaults.map(v => v.vaultType).filter(Boolean))
-    return Array.from(uniqueTypes)
+    return Array.from(uniqueTypes) as string[]
   }, [vaults])
 
   const locations = useMemo(() => {
     const uniqueLocations = new Set(vaults.map(v => v.location).filter(Boolean))
-    return Array.from(uniqueLocations)
+    return Array.from(uniqueLocations) as string[]
   }, [vaults])
 
   // Filter and sort vaults
@@ -100,9 +100,9 @@ export default function CashVaultsPage() {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(v =>
-        v.vaultName.toLowerCase().includes(query) ||
-        v.location?.toLowerCase().includes(query) ||
-        v.vaultType?.toLowerCase().includes(query)
+        (v.vaultName ?? v.vault_name ?? '').toLowerCase().includes(query) ||
+        (v.location ?? '').toLowerCase().includes(query) ||
+        (v.vaultType ?? '').toLowerCase().includes(query)
       )
     }
 
@@ -127,9 +127,9 @@ export default function CashVaultsPage() {
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'name-asc':
-          return a.vaultName.localeCompare(b.vaultName, 'ar')
+          return (a.vaultName ?? a.vault_name ?? '').localeCompare((b.vaultName ?? b.vault_name ?? ''), 'ar')
         case 'name-desc':
-          return b.vaultName.localeCompare(a.vaultName, 'ar')
+          return (b.vaultName ?? b.vault_name ?? '').localeCompare((a.vaultName ?? a.vault_name ?? ''), 'ar')
         case 'balance-desc':
           return b.balance - a.balance
         case 'balance-asc':
@@ -251,7 +251,7 @@ export default function CashVaultsPage() {
             open={isReconciliationDialogOpen}
             onOpenChange={setIsReconciliationDialogOpen}
             accountId={selectedVault.id}
-            accountName={selectedVault.vaultName}
+            accountName={selectedVault.vaultName ?? selectedVault.vault_name ?? 'خزينة'}
             accountType="cash_vault"
             currentBalance={selectedVault.balance}
             onReconcile={handleReconcileConfirm}

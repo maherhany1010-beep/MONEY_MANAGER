@@ -29,9 +29,9 @@ export default function InventoryPage() {
 
   // Statistics
   const totalProducts = products.length
-  const totalValue = products.reduce((sum, p) => sum + (p.totalStock * p.sellingPrice), 0)
+  const totalValue = products.reduce((sum, p) => sum + ((p.totalStock ?? 0) * (p.sellingPrice ?? 0)), 0)
   const lowStockCount = getLowStockProducts().length
-  const totalStock = products.reduce((sum, p) => sum + p.totalStock, 0)
+  const totalStock = products.reduce((sum, p) => sum + (p.totalStock ?? 0), 0)
 
   // Filter products
   const filteredProducts = products.filter(product => {
@@ -153,7 +153,7 @@ export default function InventoryPage() {
               >
                 <option value="all">جميع الفئات</option>
                 {categories.filter(c => c !== 'all').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat ?? 'unknown'} value={cat ?? ''}>{cat}</option>
                 ))}
               </select>
             </div>
@@ -163,8 +163,8 @@ export default function InventoryPage() {
         {/* Products Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product) => {
-            const isLowStock = product.totalStock <= product.minStockAlert
-            const profitMargin = ((product.sellingPrice - product.purchasePrice) / product.purchasePrice * 100).toFixed(1)
+            const isLowStock = (product.totalStock ?? 0) <= (product.minStockAlert ?? 0)
+            const profitMargin = (((product.sellingPrice ?? 0) - (product.purchasePrice ?? 0)) / (product.purchasePrice ?? 1) * 100).toFixed(1)
 
             return (
               <Card key={product.id} className={`hover:shadow-lg transition-shadow ${isLowStock ? 'border-red-300 dark:border-red-800' : ''}`}>
@@ -186,11 +186,11 @@ export default function InventoryPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">الكمية المتاحة</span>
-                      <span className="font-bold">{product.totalStock} {product.unitType}</span>
+                      <span className="font-bold">{product.totalStock ?? 0} {product.unitType ?? 'قطعة'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">سعر البيع</span>
-                      <span className="font-bold text-green-600">{formatCurrency(product.sellingPrice)}</span>
+                      <span className="font-bold text-green-600">{formatCurrency(product.sellingPrice ?? 0)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">هامش الربح</span>

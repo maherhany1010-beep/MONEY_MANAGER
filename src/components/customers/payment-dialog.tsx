@@ -40,7 +40,7 @@ export function PaymentDialog({ open, onOpenChange, customerId, invoiceId, maxAm
 
   // الفواتير غير المدفوعة بالكامل
   const unpaidInvoices = useMemo(() => {
-    return invoices.filter(inv => inv.status !== 'paid')
+    return invoices.filter((inv: any) => inv.status !== 'paid')
   }, [invoices])
 
   const invoice = useMemo(() => {
@@ -115,8 +115,7 @@ export function PaymentDialog({ open, onOpenChange, customerId, invoiceId, maxAm
     try {
       await new Promise(resolve => setTimeout(resolve, 500)) // محاكاة التحميل
 
-      addPayment({
-        customerId,
+      addPayment(customerId, {
         invoiceId: formData.selectedInvoiceId || undefined,
         paymentDate: new Date().toISOString().split('T')[0],
         amount,
@@ -191,7 +190,7 @@ export function PaymentDialog({ open, onOpenChange, customerId, invoiceId, maxAm
               {customer && !invoice && (
                 <div className="p-3 bg-white/60 rounded-lg border border-orange-200">
                   <p className="text-sm text-orange-700 font-medium">إجمالي المديونية</p>
-                  <p className="text-2xl font-bold text-red-900">{formatCurrency(customer.currentDebt)}</p>
+                  <p className="text-2xl font-bold text-red-900">{formatCurrency(customer.currentDebt ?? 0)}</p>
                 </div>
               )}
             </div>

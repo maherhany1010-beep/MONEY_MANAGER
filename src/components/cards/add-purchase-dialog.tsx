@@ -74,7 +74,7 @@ export function AddPurchaseDialog({ open, onOpenChange, card, onAdd }: AddPurcha
 
     // إضافة ماكينات الدفع النشطة (الحساب الأساسي فقط)
     machines.forEach(machine => {
-      if (machine.status !== 'inactive' && machine.machineName) {
+      if (machine.status !== 'inactive' && machine.machineName && machine.accounts) {
         const primaryAccount = machine.accounts.find(a => a.isPrimary)
         if (primaryAccount && primaryAccount.accountName) {
           accounts.push({
@@ -154,12 +154,12 @@ export function AddPurchaseDialog({ open, onOpenChange, card, onAdd }: AddPurcha
       } else if (accountType === 'prepaid') {
         const prepaidCard = prepaidCards.find(c => c.id === accountId)
         if (prepaidCard) {
-          updatePrepaidCardBalance(accountId, prepaidCard.balance + beneficiaryAmount, beneficiaryAmount)
+          updatePrepaidCardBalance(accountId, prepaidCard.balance + beneficiaryAmount)
         }
       } else if (accountType === 'pos') {
         const [machineId, posAccountId] = accountIdParts
         const machine = machines.find(m => m.id === machineId)
-        if (machine) {
+        if (machine && machine.accounts) {
           const currentBalance = machine.accounts.find(a => a.id === posAccountId)?.balance || 0
           updateAccountBalance(machineId, posAccountId, currentBalance + beneficiaryAmount)
         }
@@ -184,12 +184,12 @@ export function AddPurchaseDialog({ open, onOpenChange, card, onAdd }: AddPurcha
           const prepaidCard = prepaidCards.find(c => c.id === accountId)
           if (prepaidCard) {
             // الحساب استقبل المبلغ بالفعل، الآن نخصم الرسوم
-            updatePrepaidCardBalance(accountId, prepaidCard.balance + beneficiaryAmount - purchaseFee, -purchaseFee)
+            updatePrepaidCardBalance(accountId, prepaidCard.balance + beneficiaryAmount - purchaseFee)
           }
         } else if (accountType === 'pos') {
           const [machineId, posAccountId] = accountIdParts
           const machine = machines.find(m => m.id === machineId)
-          if (machine) {
+          if (machine && machine.accounts) {
             const currentBalance = machine.accounts.find(a => a.id === posAccountId)?.balance || 0
             // الحساب استقبل المبلغ بالفعل، الآن نخصم الرسوم
             updateAccountBalance(machineId, posAccountId, currentBalance + beneficiaryAmount - purchaseFee)

@@ -132,7 +132,7 @@ export function TransferDialog({ open, onOpenChange, wallet }: TransferDialogPro
         break
       case 'prepaid':
         const prepaidCard = { balance: destinationDetails.balance }
-        updatePrepaidBalance(destId, prepaidCard.balance + destinationAddition, destinationAddition)
+        updatePrepaidBalance(destId, prepaidCard.balance + destinationAddition)
         break
     }
 

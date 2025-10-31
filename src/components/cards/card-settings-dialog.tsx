@@ -228,12 +228,12 @@ export function CardSettingsDialog({ open, onOpenChange, card }: CardSettingsDia
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">الرصيد الحالي:</span>
-                    <span className="font-medium">{formatCurrency(card.currentBalance)}</span>
+                    <span className="font-medium">{formatCurrency(card.currentBalance ?? 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">الرصيد المتاح:</span>
                     <span className="font-medium text-green-600">
-                      {formatCurrency(cardInfo.creditLimit - card.currentBalance)}
+                      {formatCurrency((cardInfo.creditLimit ?? 0) - (card.currentBalance ?? 0))}
                     </span>
                   </div>
                 </div>

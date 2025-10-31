@@ -47,7 +47,7 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
     }
 
     // Calculate total amount with fee
-    const fee = amount * (card.withdrawalFee / 100)
+    const fee = amount * ((card.withdrawalFee ?? 0) / 100)
     const totalAmount = amount + fee
 
     // Check card balance
@@ -57,22 +57,22 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
     }
 
     // Check daily limit
-    if (card.dailyUsed + totalAmount > card.dailyLimit) {
-      const remaining = card.dailyLimit - card.dailyUsed
+    if ((card.dailyUsed ?? 0) + totalAmount > (card.dailyLimit ?? Infinity)) {
+      const remaining = (card.dailyLimit ?? 0) - (card.dailyUsed ?? 0)
       toast.error(`تجاوز الحد اليومي. المتبقي: ${formatCurrency(remaining)}`)
       return
     }
 
     // Check monthly limit
-    if (card.monthlyUsed + totalAmount > card.monthlyLimit) {
-      const remaining = card.monthlyLimit - card.monthlyUsed
+    if ((card.monthlyUsed ?? 0) + totalAmount > (card.monthlyLimit ?? Infinity)) {
+      const remaining = (card.monthlyLimit ?? 0) - (card.monthlyUsed ?? 0)
       toast.error(`تجاوز الحد الشهري. المتبقي: ${formatCurrency(remaining)}`)
       return
     }
 
     // Check transaction limit
-    if (totalAmount > card.transactionLimit) {
-      toast.error(`تجاوز حد المعاملة الواحدة: ${formatCurrency(card.transactionLimit)}`)
+    if (totalAmount > (card.transactionLimit ?? Infinity)) {
+      toast.error(`تجاوز حد المعاملة الواحدة: ${formatCurrency(card.transactionLimit ?? 0)}`)
       return
     }
 
@@ -85,7 +85,7 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
         toast.error('الحساب البنكي غير موجود')
         return
       }
-      sourceName = account.accountName
+      sourceName = account.accountName ?? account.account_name ?? 'حساب بنكي'
       // Add to bank account
       updateAccountBalance(formData.sourceId, account.balance + amount)
     } else {
@@ -94,13 +94,13 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
         toast.error('الخزينة النقدية غير موجودة')
         return
       }
-      sourceName = vault.vaultName
+      sourceName = vault.vaultName ?? vault.vault_name ?? 'خزينة'
       // Add to vault
       updateVaultBalance(formData.sourceId, vault.balance + amount)
     }
 
     // Add withdrawal from card
-    addWithdrawal(card.id, amount, formData.sourceType, formData.sourceId, sourceName, formData.description)
+    addWithdrawal(card.id, amount, formData.description ?? '')
 
     toast.success(
       `تم السحب بنجاح`,
@@ -119,7 +119,7 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
   }
 
   const amount = parseFloat(formData.amount) || 0
-  const fee = amount * (card.withdrawalFee / 100)
+  const fee = amount * ((card.withdrawalFee ?? 0) / 100)
   const totalAmount = amount + fee
 
   return (
@@ -144,11 +144,11 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">الحد اليومي المتبقي:</span>
-              <span className="font-medium">{formatCurrency(card.dailyLimit - card.dailyUsed)}</span>
+              <span className="font-medium">{formatCurrency((card.dailyLimit ?? 0) - (card.dailyUsed ?? 0))}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">الحد الشهري المتبقي:</span>
-              <span className="font-medium">{formatCurrency(card.monthlyLimit - card.monthlyUsed)}</span>
+              <span className="font-medium">{formatCurrency((card.monthlyLimit ?? 0) - (card.monthlyUsed ?? 0))}</span>
             </div>
           </div>
 
@@ -160,7 +160,7 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
               type="number"
               step="0.01"
               min="0"
-              max={Math.min(card.balance, card.transactionLimit)}
+              max={Math.min(card.balance, card.transactionLimit ?? Infinity)}
               placeholder="0.00"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -173,8 +173,8 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
                   <span>{formatCurrency(amount)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>رسوم السحب ({card.withdrawalFee}%):</span>
-                  <span className="text-red-600">+ {formatCurrency(fee)}</span>
+                  <span>رسوم السحب ({card.withdrawalFee ?? 0}%):</span>
+                  <span className="text-red-600">+ {formatCurrency(fee ?? 0)}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t pt-1">
                   <span>إجمالي المخصوم:</span>
@@ -263,10 +263,10 @@ export function AddWithdrawalDialog({ open, onOpenChange, card }: AddWithdrawalD
                   <span>الرصيد غير كافٍ في البطاقة</span>
                 </div>
               )}
-              {totalAmount > card.transactionLimit && (
+              {totalAmount > (card.transactionLimit ?? Infinity) && (
                 <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded text-sm text-orange-700 dark:text-orange-300">
                   <AlertCircle className="h-4 w-4" />
-                  <span>تجاوز حد المعاملة الواحدة ({formatCurrency(card.transactionLimit)})</span>
+                  <span>تجاوز حد المعاملة الواحدة ({formatCurrency(card.transactionLimit ?? 0)})</span>
                 </div>
               )}
             </>

@@ -47,7 +47,7 @@ export function usePaymentReminders() {
 
       // Only show reminders for upcoming payments (within 14 days)
       if (daysUntilDue >= 0 && daysUntilDue <= 14) {
-        const minimumPayment = card.currentBalance * 0.05 // 5% minimum payment
+        const minimumPayment = (card.currentBalance ?? 0) * 0.05 // 5% minimum payment
 
         let urgency: 'critical' | 'warning' | 'info' = 'info'
         if (daysUntilDue <= 3) urgency = 'critical'
@@ -55,11 +55,11 @@ export function usePaymentReminders() {
 
         activeReminders.push({
           cardId: card.id,
-          cardName: card.name,
+          cardName: card.name ?? card.card_name ?? '',
           dueDate,
           daysUntilDue,
           minimumPayment,
-          currentBalance: card.currentBalance,
+          currentBalance: card.currentBalance ?? 0,
           urgency,
         })
       }

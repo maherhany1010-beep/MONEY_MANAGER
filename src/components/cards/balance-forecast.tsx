@@ -29,8 +29,8 @@ export function BalanceForecast({ cards, payments }: BalanceForecastProps) {
     return cards
       .filter(card => card.isActive)
       .map(card => {
-        const availableBalance = card.creditLimit - card.currentBalance
-        const utilizationRate = (card.currentBalance / card.creditLimit) * 100
+        const availableBalance = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
+        const utilizationRate = ((card.currentBalance ?? 0) / (card.creditLimit ?? 1)) * 100
 
         // Calculate days until credit limit is reached
         const daysUntilLimit = avgDailySpending > 0 
@@ -151,7 +151,7 @@ export function BalanceForecast({ cards, payments }: BalanceForecastProps) {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-muted-foreground">الحد الائتماني:</p>
-                    <p className="font-medium">{formatCurrency(item.card.creditLimit)}</p>
+                    <p className="font-medium">{formatCurrency(item.card.creditLimit ?? 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">المتاح:</p>

@@ -40,7 +40,7 @@ export default function DashboardPage() {
   const totalVaultBalance = cashVaults.reduce((sum, vault) => sum + vault.balance, 0)
   const totalWalletBalance = eWallets.reduce((sum, wallet) => sum + wallet.balance, 0)
   const totalPrepaidBalance = prepaidCards.reduce((sum, card) => sum + card.balance, 0)
-  const totalCreditBalance = creditCards.reduce((sum, card) => sum + (card.balance || 0), 0)
+  const totalCreditBalance = creditCards.reduce((sum, card) => sum + ((card.creditLimit ?? card.credit_limit ?? 0) - (card.currentBalance ?? card.current_balance ?? 0)), 0)
   const totalAvailableBalance = totalBankBalance + totalVaultBalance + totalWalletBalance + totalPrepaidBalance + totalCreditBalance
 
   // إحصائيات شاملة من جميع الأنظمة الفرعية

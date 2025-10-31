@@ -69,13 +69,13 @@ export default function BankAccountsPage() {
 
   // Get unique banks and account types for filter
   const banks = useMemo(() => {
-    const uniqueBanks = new Set(accounts.map(a => a.bankName).filter(Boolean))
-    return Array.from(uniqueBanks)
+    const uniqueBanks = new Set(accounts.map(a => a.bankName ?? a.bank_name).filter(Boolean))
+    return Array.from(uniqueBanks) as string[]
   }, [accounts])
 
   const accountTypes = useMemo(() => {
-    const uniqueTypes = new Set(accounts.map(a => a.accountType).filter(Boolean))
-    return Array.from(uniqueTypes)
+    const uniqueTypes = new Set(accounts.map(a => a.accountType ?? a.account_type).filter(Boolean))
+    return Array.from(uniqueTypes) as string[]
   }, [accounts])
 
   // Filter and sort accounts
@@ -86,9 +86,9 @@ export default function BankAccountsPage() {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(a =>
-        a.accountName.toLowerCase().includes(query) ||
-        a.bankName.toLowerCase().includes(query) ||
-        a.accountNumber?.toLowerCase().includes(query)
+        (a.accountName ?? a.account_name ?? '').toLowerCase().includes(query) ||
+        (a.bankName ?? a.bank_name ?? '').toLowerCase().includes(query) ||
+        (a.accountNumber ?? a.account_number ?? '').toLowerCase().includes(query)
       )
     }
 
@@ -113,9 +113,9 @@ export default function BankAccountsPage() {
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'name-asc':
-          return a.accountName.localeCompare(b.accountName, 'ar')
+          return (a.accountName ?? a.account_name ?? '').localeCompare((b.accountName ?? b.account_name ?? ''), 'ar')
         case 'name-desc':
-          return b.accountName.localeCompare(a.accountName, 'ar')
+          return (b.accountName ?? b.account_name ?? '').localeCompare((a.accountName ?? a.account_name ?? ''), 'ar')
         case 'balance-desc':
           return b.balance - a.balance
         case 'balance-asc':
@@ -224,7 +224,7 @@ export default function BankAccountsPage() {
           open={isReconciliationDialogOpen}
           onOpenChange={setIsReconciliationDialogOpen}
           accountId={selectedAccount.id}
-          accountName={selectedAccount.accountName}
+          accountName={selectedAccount.accountName ?? selectedAccount.account_name ?? 'حساب بنكي'}
           accountType="bank_account"
           currentBalance={selectedAccount.balance}
           onReconcile={handleReconcileConfirm}

@@ -73,6 +73,18 @@ export function AddCardDialog({ open, onOpenChange, onSuccess }: AddCardDialogPr
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       addCard({
+        card_name: data.name,
+        bank_name: data.bankName,
+        card_number_last_four: getLastFourDigits(data.cardNumber),
+        card_type: data.cardType,
+        credit_limit: data.creditLimit,
+        current_balance: 0,
+        available_credit: data.creditLimit,
+        due_date: data.dueDate,
+        minimum_payment: 0,
+        interest_rate: 0,
+        status: 'active',
+        // Legacy fields for backward compatibility
         name: data.name,
         bankName: data.bankName,
         cardNumberLastFour: getLastFourDigits(data.cardNumber),

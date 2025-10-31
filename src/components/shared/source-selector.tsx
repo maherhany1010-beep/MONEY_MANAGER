@@ -15,10 +15,10 @@ export type SourceType = 'bank' | 'vault' | 'ewallet' | 'card' | 'prepaid'
 
 export interface SourceItem {
   id: string
-  name: string
+  name?: string
   balance: number
   type: SourceType
-  isActive: boolean
+  isActive?: boolean | true
 }
 
 interface SourceSelectorProps {
@@ -57,7 +57,7 @@ export function SourceSelector({
         .forEach(acc => {
           sources.push({
             id: `bank-${acc.id}`,
-            name: acc.accountName,
+            name: acc.accountName ?? acc.account_name ?? 'حساب بنكي',
             balance: acc.balance,
             type: 'bank',
             isActive: acc.isActive ?? true,
@@ -72,7 +72,7 @@ export function SourceSelector({
         .forEach(vault => {
           sources.push({
             id: `vault-${vault.id}`,
-            name: vault.vaultName,
+            name: vault.vaultName ?? vault.vault_name ?? 'خزينة',
             balance: vault.balance,
             type: 'vault',
             isActive: vault.isActive ?? true,
@@ -87,7 +87,7 @@ export function SourceSelector({
         .forEach(wallet => {
           sources.push({
             id: `ewallet-${wallet.id}`,
-            name: wallet.walletName,
+            name: wallet.walletName ?? wallet.wallet_name ?? 'محفظة إلكترونية',
             balance: wallet.balance,
             type: 'ewallet',
             isActive: wallet.status === 'active',
@@ -101,13 +101,13 @@ export function SourceSelector({
         .filter(card => card.isActive && card.id !== excludeId)
         .forEach(card => {
           // For credit cards, available balance = credit limit - current balance
-          const availableBalance = card.creditLimit - card.currentBalance
+          const availableBalance = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
           sources.push({
             id: `card-${card.id}`,
-            name: card.name || 'بطاقة ائتمان',
+            name: card.name ?? card.card_name ?? 'بطاقة ائتمان',
             balance: availableBalance,
             type: 'card',
-            isActive: card.isActive,
+            isActive: card.isActive ?? true,
           })
         })
     }
@@ -119,7 +119,7 @@ export function SourceSelector({
         .forEach(card => {
           sources.push({
             id: `prepaid-${card.id}`,
-            name: card.cardName,
+            name: card.cardName ?? card.card_name ?? 'بطاقة مدفوعة مسبقاً',
             balance: card.balance,
             type: 'prepaid',
             isActive: card.status === 'active',
@@ -313,9 +313,9 @@ export function useSourceDetails(sourceId: string): SourceItem | null {
         if (!account) return null
         return {
           id: sourceId,
-          name: account.accountName,
+          name: account.accountName ?? account.account_name ?? 'حساب بنكي',
           balance: account.balance,
-          type: 'bank',
+          type: 'bank' as SourceType,
           isActive: account.isActive ?? true,
         }
       }
@@ -324,9 +324,9 @@ export function useSourceDetails(sourceId: string): SourceItem | null {
         if (!vault) return null
         return {
           id: sourceId,
-          name: vault.vaultName,
+          name: vault.vaultName ?? vault.vault_name ?? 'خزينة',
           balance: vault.balance,
-          type: 'vault',
+          type: 'vault' as SourceType,
           isActive: vault.isActive ?? true,
         }
       }
@@ -335,21 +335,21 @@ export function useSourceDetails(sourceId: string): SourceItem | null {
         if (!wallet) return null
         return {
           id: sourceId,
-          name: wallet.walletName,
+          name: wallet.walletName ?? wallet.wallet_name ?? 'محفظة إلكترونية',
           balance: wallet.balance,
-          type: 'ewallet',
+          type: 'ewallet' as SourceType,
           isActive: wallet.status === 'active',
         }
       }
       case 'card': {
         const card = creditCards.find(c => c.id === id)
         if (!card) return null
-        const availableBalance = card.creditLimit - card.currentBalance
+        const availableBalance = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
         return {
           id: sourceId,
           name: card.name || 'بطاقة ائتمان',
           balance: availableBalance,
-          type: 'card',
+          type: 'card' as SourceType,
           isActive: card.isActive,
         }
       }
@@ -360,7 +360,7 @@ export function useSourceDetails(sourceId: string): SourceItem | null {
           id: sourceId,
           name: card.cardName,
           balance: card.balance,
-          type: 'prepaid',
+          type: 'prepaid' as SourceType,
           isActive: card.status === 'active',
         }
       }

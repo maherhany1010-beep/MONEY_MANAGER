@@ -70,22 +70,7 @@ export function RedeemCashbackDialog({ open, onOpenChange, cashbackId, cardId }:
       }
 
       // إنشاء عملية الاسترداد
-      redeemCashback({
-        cashbackId,
-        cardId,
-        redemptionDate: new Date().toISOString().split('T')[0],
-        amount: redemptionAmount,
-        redemptionType,
-        redemptionMode,
-        voucherDetails: redemptionType === 'voucher' ? {
-          storeName: formData.storeName,
-          voucherCode: formData.voucherCode || undefined,
-          expiryDate: formData.expiryDate || undefined,
-          notes: formData.notes || undefined,
-        } : undefined,
-        isAutomatic: false,
-        notes: redemptionType === 'balance' ? formData.notes || undefined : undefined,
-      })
+      redeemCashback(cashbackId, redemptionAmount)
 
       setSuccess(true)
       setTimeout(() => {

@@ -38,15 +38,14 @@ export function AddPOSMachineDialog({ open, onOpenChange, onAdd }: AddPOSMachine
     // إنشاء حساب رئيسي افتراضي
     const primaryAccount: POSAccount = {
       id: `acc-${Date.now()}-1`,
+      name: 'الحساب الرئيسي',
       accountName: 'الحساب الرئيسي',
       accountNumber: `${formData.provider.substring(0, 3).toUpperCase()}-${formData.machineId}-001`,
       balance: 0,
       isPrimary: true,
       currency: 'EGP',
-      createdDate: new Date().toISOString().split('T')[0],
       totalDeposits: 0,
       totalWithdrawals: 0,
-      transactionCount: 0,
     }
 
     // حساب الأهداف والغرامات
@@ -56,11 +55,15 @@ export function AddPOSMachineDialog({ open, onOpenChange, onAdd }: AddPOSMachine
 
     const newMachine: POSMachine = {
       id: Date.now().toString(),
+      machine_name: formData.machineName,
+      machine_number: formData.machineId,
+      provider: formData.provider,
+      commission_rate: 0,
+      status: 'active',
+      // Legacy fields
       machineName: formData.machineName,
       machineId: formData.machineId,
-      provider: formData.provider,
       location: formData.location,
-      status: 'active',
       serialNumber: formData.serialNumber,
       model: formData.model,
       installationDate: new Date().toISOString().split('T')[0],

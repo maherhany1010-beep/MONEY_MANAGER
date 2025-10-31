@@ -66,7 +66,7 @@ export function useAutoFees() {
             
             if (!feeRecord || feeRecord.lastChargedYear < currentYear) {
               // خصم الرسوم السنوية
-              const newBalance = card.currentBalance + card.annualFee
+              const newBalance = (card.currentBalance ?? 0) + card.annualFee
               
               updateCard(card.id, {
                 currentBalance: newBalance,
@@ -93,16 +93,16 @@ export function useAutoFees() {
       }
 
       // 2. التحقق من رسوم التأخير
-      if (card.latePaymentFee && card.latePaymentFee > 0 && card.currentBalance > 0) {
+      if (card.latePaymentFee && card.latePaymentFee > 0 && (card.currentBalance ?? 0) > 0) {
         // التحقق من أن اليوم الحالي بعد موعد الاستحقاق
-        if (currentDay > card.dueDate) {
+        if (currentDay > (card.dueDate ?? 0)) {
           // التحقق من أن الرسوم لم تُخصم هذا الشهر
           const lateFeesKey = `late-fees-${card.id}-${currentYear}-${currentMonth}`
           const alreadyCharged = localStorage.getItem(lateFeesKey)
 
           if (!alreadyCharged) {
             // خصم رسوم التأخير
-            const newBalance = card.currentBalance + card.latePaymentFee
+            const newBalance = (card.currentBalance ?? 0) + card.latePaymentFee
             
             updateCard(card.id, {
               currentBalance: newBalance,
@@ -125,14 +125,14 @@ export function useAutoFees() {
       // 3. التحقق من رسوم تجاوز الحد
       if (card.overLimitFee && card.overLimitFee > 0) {
         // التحقق من أن الرصيد تجاوز الحد الائتماني
-        if (card.currentBalance > card.creditLimit) {
+        if ((card.currentBalance ?? 0) > (card.creditLimit ?? 0)) {
           // التحقق من أن الرسوم لم تُخصم هذا الشهر
           const overLimitFeesKey = `over-limit-fees-${card.id}-${currentYear}-${currentMonth}`
           const alreadyCharged = localStorage.getItem(overLimitFeesKey)
 
           if (!alreadyCharged) {
             // خصم رسوم تجاوز الحد
-            const newBalance = card.currentBalance + card.overLimitFee
+            const newBalance = (card.currentBalance ?? 0) + card.overLimitFee
             
             updateCard(card.id, {
               currentBalance: newBalance,

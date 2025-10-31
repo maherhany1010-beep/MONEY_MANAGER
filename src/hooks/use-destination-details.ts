@@ -9,10 +9,10 @@ export type DestinationType = 'bank' | 'vault' | 'ewallet' | 'card' | 'prepaid'
 
 export interface DestinationItem {
   id: string
-  name: string
+  name?: string
   balance: number
   type: DestinationType
-  isActive: boolean
+  isActive: boolean | true
 }
 
 /**
@@ -37,9 +37,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!account) return null
         return {
           id: destinationId,
-          name: account.accountName,
+          name: account.accountName ?? account.account_name ?? 'حساب بنكي',
           balance: account.balance,
-          type: 'bank',
+          type: 'bank' as DestinationType,
           isActive: account.isActive ?? true,
         }
       }
@@ -48,9 +48,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!vault) return null
         return {
           id: destinationId,
-          name: vault.vaultName,
+          name: vault.vaultName ?? vault.vault_name ?? 'خزينة',
           balance: vault.balance,
-          type: 'vault',
+          type: 'vault' as DestinationType,
           isActive: true,
         }
       }
@@ -59,9 +59,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!wallet) return null
         return {
           id: destinationId,
-          name: wallet.walletName,
+          name: wallet.walletName ?? wallet.wallet_name ?? 'محفظة إلكترونية',
           balance: wallet.balance,
-          type: 'ewallet',
+          type: 'ewallet' as DestinationType,
           isActive: wallet.status === 'active',
         }
       }
@@ -70,9 +70,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!card) return null
         return {
           id: destinationId,
-          name: card.name,
-          balance: card.creditLimit - card.currentBalance,
-          type: 'card',
+          name: card.name ?? card.card_name ?? 'بطاقة ائتمان',
+          balance: (card.creditLimit ?? 0) - (card.currentBalance ?? 0),
+          type: 'card' as DestinationType,
           isActive: card.isActive ?? true,
         }
       }
@@ -81,9 +81,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!card) return null
         return {
           id: destinationId,
-          name: card.cardName,
+          name: card.cardName ?? card.card_name ?? 'بطاقة مدفوعة مسبقاً',
           balance: card.balance,
-          type: 'prepaid',
+          type: 'prepaid' as DestinationType,
           isActive: card.status === 'active',
         }
       }

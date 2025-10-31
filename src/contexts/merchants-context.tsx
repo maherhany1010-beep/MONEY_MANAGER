@@ -1,100 +1,286 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { Merchant } from '@/components/cards/merchants-manager'
+import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/auth-provider'
+import type { RealtimeChannel } from '@supabase/supabase-js'
+
+// ===================================
+// 📦 Database Schema Interface
+// ===================================
+export interface Merchant {
+  // Database fields (snake_case)
+  id: string
+  user_id?: string
+  merchant_name: string
+  category: string | null
+  total_spent: number
+  created_at?: string
+  updated_at?: string
+  
+  // Legacy fields for backward compatibility (camelCase)
+  name?: string
+  merchantName?: string
+  merchantCategory?: string
+  totalSpent?: number
+  lastTransactionDate?: string
+  transactionCount?: number
+  averageTransactionAmount?: number
+  phone?: string
+  email?: string
+  address?: string
+  website?: string
+  notes?: string
+  isFavorite?: boolean
+  rating?: number
+  tags?: string[]
+}
 
 interface MerchantsContextType {
   merchants: Merchant[]
-  updateMerchants: (merchants: Merchant[]) => void
-  addMerchant: (merchant: Merchant) => void
-  removeMerchant: (id: string) => void
+  loading: boolean
+  error: string | null
+  addMerchant: (merchant: Omit<Merchant, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Merchant | null>
+  updateMerchant: (id: string, updates: Partial<Merchant>) => Promise<void>
+  deleteMerchant: (id: string) => Promise<void>
+  getMerchantById: (id: string) => Merchant | undefined
+  searchMerchants: (query: string) => Merchant[]
+  getMerchantsByCategory: (category: string) => Merchant[]
+  getTotalSpent: () => number
 }
 
 const MerchantsContext = createContext<MerchantsContextType | undefined>(undefined)
 
-// البيانات الافتراضية
-const defaultMerchants: Merchant[] = [
-  {
-    id: '1',
-    name: 'كارفور مصر',
-    category: 'طعام ومشروبات',
-    purchaseFee: 0,
-    purchaseFeeFixed: 0
-  },
-  {
-    id: '2',
-    name: 'محطة توتال مصر',
-    category: 'وقود',
-    purchaseFee: 2.5,
-    purchaseFeeFixed: 5
-  },
-  {
-    id: '3',
-    name: 'سيتي ستارز مول',
-    category: 'تسوق',
-    purchaseFee: 0,
-    purchaseFeeFixed: 0
-  },
-  {
-    id: '4',
-    name: 'مطعم أندريا',
-    category: 'طعام ومشروبات',
-    purchaseFee: 0,
-    purchaseFeeFixed: 0
-  },
-  {
-    id: '5',
-    name: 'فودافون',
-    category: 'فواتير',
-    purchaseFee: 1.5,
-    purchaseFeeFixed: 0
-  },
-  {
-    id: '6',
-    name: 'أمازون',
-    category: 'تسوق',
-    purchaseFee: 2.0,
-    purchaseFeeFixed: 0
-  },
-]
-
+// ===================================
+// 🎯 Provider Component
+// ===================================
 export function MerchantsProvider({ children }: { children: ReactNode }) {
-  const [merchants, setMerchants] = useState<Merchant[]>(defaultMerchants)
+  const [merchants, setMerchants] = useState<Merchant[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const supabase = createClientComponentClient()
 
-  // تحميل البيانات من localStorage عند بدء التطبيق
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedMerchants = localStorage.getItem('merchants')
-      if (savedMerchants) {
-        try {
-          setMerchants(JSON.parse(savedMerchants))
-        } catch (error) {
-          console.error('Error loading merchants:', error)
-        }
+  // ===================================
+  // 📥 Load merchants from Supabase
+  // ===================================
+  const loadMerchants = async () => {
+    if (!user) {
+      setMerchants([])
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('merchants')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error loading merchants:', fetchError)
+        setError(fetchError.message)
+      } else {
+        setMerchants(data || [])
       }
-    }
-  }, [])
-
-  // حفظ البيانات في localStorage عند التحديث
-  const updateMerchants = (newMerchants: Merchant[]) => {
-    setMerchants(newMerchants)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('merchants', JSON.stringify(newMerchants))
+    } catch (err) {
+      console.error('Unexpected error loading merchants:', err)
+      setError('حدث خطأ غير متوقع')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const addMerchant = (merchant: Merchant) => {
-    const newMerchants = [...merchants, merchant]
-    updateMerchants(newMerchants)
+  // ===================================
+  // 🔄 Real-time subscription
+  // ===================================
+  useEffect(() => {
+    if (!user) {
+      setMerchants([])
+      setLoading(false)
+      return
+    }
+
+    loadMerchants()
+
+    const channel: RealtimeChannel = supabase
+      .channel('merchants_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'merchants',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setMerchants((prev) => [payload.new as Merchant, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setMerchants((prev) =>
+              prev.map((merchant) =>
+                merchant.id === (payload.new as Merchant).id
+                  ? (payload.new as Merchant)
+                  : merchant
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setMerchants((prev) =>
+              prev.filter((merchant) => merchant.id !== (payload.old as Merchant).id)
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user, supabase])
+
+  // ===================================
+  // ➕ Add merchant
+  // ===================================
+  const addMerchant = async (
+    merchant: Omit<Merchant, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<Merchant | null> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return null
+    }
+
+    try {
+      const { data, error: insertError } = await supabase
+        .from('merchants')
+        .insert([
+          {
+            user_id: user.id,
+            merchant_name: merchant.merchant_name,
+            category: merchant.category,
+            total_spent: merchant.total_spent || 0,
+          },
+        ])
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Error adding merchant:', insertError)
+        setError(insertError.message)
+        return null
+      }
+
+      return data
+    } catch (err) {
+      console.error('Unexpected error adding merchant:', err)
+      setError('حدث خطأ غير متوقع')
+      return null
+    }
   }
 
-  const removeMerchant = (id: string) => {
-    const newMerchants = merchants.filter(m => m.id !== id)
-    updateMerchants(newMerchants)
+  // ===================================
+  // 🔄 Update merchant
+  // ===================================
+  const updateMerchant = async (id: string, updates: Partial<Merchant>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('merchants')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating merchant:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating merchant:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🗑️ Delete merchant
+  // ===================================
+  const deleteMerchant = async (id: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('merchants')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting merchant:', deleteError)
+        setError(deleteError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error deleting merchant:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🔍 Get merchant by ID
+  // ===================================
+  const getMerchantById = (id: string): Merchant | undefined => {
+    return merchants.find((m) => m.id === id)
+  }
+
+  // ===================================
+  // 🔎 Search merchants
+  // ===================================
+  const searchMerchants = (query: string): Merchant[] => {
+    const lowerQuery = query.toLowerCase()
+    return merchants.filter(
+      (m) =>
+        m.merchant_name.toLowerCase().includes(lowerQuery) ||
+        m.category?.toLowerCase().includes(lowerQuery)
+    )
+  }
+
+  // ===================================
+  // 📂 Get merchants by category
+  // ===================================
+  const getMerchantsByCategory = (category: string): Merchant[] => {
+    return merchants.filter((m) => m.category === category)
+  }
+
+  // ===================================
+  // 💰 Get total spent
+  // ===================================
+  const getTotalSpent = (): number => {
+    return merchants.reduce((sum, m) => sum + (m.total_spent || 0), 0)
   }
 
   return (
-    <MerchantsContext.Provider value={{ merchants, updateMerchants, addMerchant, removeMerchant }}>
+    <MerchantsContext.Provider
+      value={{
+        merchants,
+        loading,
+        error,
+        addMerchant,
+        updateMerchant,
+        deleteMerchant,
+        getMerchantById,
+        searchMerchants,
+        getMerchantsByCategory,
+        getTotalSpent,
+      }}
+    >
       {children}
     </MerchantsContext.Provider>
   )
@@ -102,7 +288,7 @@ export function MerchantsProvider({ children }: { children: ReactNode }) {
 
 export function useMerchants() {
   const context = useContext(MerchantsContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useMerchants must be used within a MerchantsProvider')
   }
   return context

@@ -78,7 +78,7 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider)} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? '')} p-6 text-white relative`}>
         {/* حالة المحفظة */}
         {wallet.status !== 'active' && (
           <div className="absolute top-2 left-2">
@@ -123,7 +123,7 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
             <Badge className={getStatusColor(wallet.status)}>
               {getStatusLabel(wallet.status)}
             </Badge>
-            <Badge variant="outline">{getWalletTypeLabel(wallet.walletType)}</Badge>
+            <Badge variant="outline">{getWalletTypeLabel(wallet.walletType ?? '')}</Badge>
           </div>
           <div className="flex items-center gap-2">
             {wallet.isVerified ? (

@@ -64,9 +64,13 @@ export async function sendOTPEmail(
     try {
       const supabase = createClientComponentClient()
 
-      // Send email using Supabase's email service
-      const { error: emailError } = await supabase.auth.resendIdentityConfirmationLink(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
+      // Send email using Supabase's email service (resend method)
+      const { error: emailError } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
       })
 
       if (emailError) {

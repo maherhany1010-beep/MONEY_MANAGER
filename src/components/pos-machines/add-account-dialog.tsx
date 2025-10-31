@@ -28,15 +28,14 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, machineId, provide
 
     const newAccount: POSAccount = {
       id: `acc-${Date.now()}`,
+      name: formData.accountName,
       accountName: formData.accountName,
       accountNumber: formData.accountNumber,
       balance: parseFloat(formData.balance) || 0,
       isPrimary: false,
       currency: 'EGP',
-      createdDate: new Date().toISOString().split('T')[0],
       totalDeposits: 0,
       totalWithdrawals: 0,
-      transactionCount: 0,
     }
 
     onAdd(newAccount)

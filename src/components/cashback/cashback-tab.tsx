@@ -38,7 +38,7 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
   }
 
   const handleProcessAutoRedemptions = () => {
-    processAutomaticRedemptions()
+    processAutomaticRedemptions(cardId)
   }
 
   const getStatusBadge = (status: string) => {
@@ -169,7 +169,7 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {cashbackRecords.map((record) => (
+              {cashbackRecords.map((record: any) => (
                 <div
                   key={record.id}
                   className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -247,7 +247,7 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {redemptions.map((redemption) => (
+              {redemptions.map((redemption: any) => (
                 <div
                   key={redemption.id}
                   className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

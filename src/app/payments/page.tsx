@@ -204,7 +204,7 @@ export default function PaymentsPage() {
           <PaymentsList
             payments={payments as any}
             onPaymentUpdate={(paymentId, updates) => {
-              console.log('Update payment:', paymentId, updates)
+              // Update payment functionality
             }}
           />
         </TabsContent>
@@ -213,7 +213,7 @@ export default function PaymentsPage() {
           <PaymentCalendar
             payments={payments as any}
             onDateSelect={(date) => {
-              console.log('Selected date:', date)
+              // Handle date selection
             }}
           />
         </TabsContent>
@@ -222,7 +222,7 @@ export default function PaymentsPage() {
           <PaymentReminders
             payments={payments as any}
             onReminderUpdate={(paymentId, enabled) => {
-              console.log('Update reminder:', paymentId, enabled)
+              // Update reminder functionality
             }}
           />
         </TabsContent>
@@ -232,7 +232,7 @@ export default function PaymentsPage() {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSuccess={(newPayment) => {
-          console.log('New payment added:', newPayment)
+          // New payment added successfully
           setIsAddDialogOpen(false)
         }}
       />

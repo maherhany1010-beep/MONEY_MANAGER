@@ -111,7 +111,7 @@ export function DepositDialog({ open, onOpenChange, wallet }: DepositDialogProps
         updateCard(sourceId, { currentBalance: sourceDetails.balance - totalAmount })
         break
       case 'prepaid':
-        updatePrepaidBalance(sourceId, sourceDetails.balance - totalAmount, -totalAmount)
+        updatePrepaidBalance(sourceId, sourceDetails.balance - totalAmount)
         break
     }
 

@@ -97,7 +97,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       name: formData.name.trim(),
       barcode: formData.barcode.trim() || undefined,
       category: formData.category,
-      description: formData.description.trim() || undefined,
+      description: formData.description.trim() || null,
       imageUrl: formData.imageUrl.trim() || undefined,
       unitsPerBox: parseInt(formData.unitsPerBox) || 1,
       unitType: formData.unitType,
@@ -111,7 +111,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       expiryDate: formData.expiryDate || undefined,
       storageLocation: formData.storageLocation.trim() || undefined,
       notes: formData.notes.trim() || undefined,
-    })
+    } as any)
 
     // Reset form
     setFormData({

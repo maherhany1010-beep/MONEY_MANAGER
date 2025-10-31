@@ -145,7 +145,7 @@ export default function POSMachineDetailsPage() {
       }
 
       // إضافة المبلغ للحساب المستهدف
-      const targetAccount = machine.accounts.find(acc => acc.id === data.targetAccountId)
+      const targetAccount = (machine.accounts ?? []).find(acc => acc.id === data.targetAccountId)
       if (targetAccount) {
         updateAccountBalance(machine.id, data.targetAccountId, targetAccount.balance + data.amount)
       }
@@ -167,7 +167,7 @@ export default function POSMachineDetailsPage() {
       const amountToDestination = data.amount - fee
 
       // خصم المبلغ من الحساب المصدر
-      const sourceAccount = machine.accounts.find((acc: any) => acc.id === data.sourceAccountId)
+      const sourceAccount = (machine.accounts ?? []).find((acc: any) => acc.id === data.sourceAccountId)
       if (!sourceAccount || sourceAccount.balance < data.amount) {
         addNotification('general', 'خطأ', 'الرصيد غير كافٍ في الحساب المصدر')
         return
@@ -232,8 +232,8 @@ export default function POSMachineDetailsPage() {
     }
   }
 
-  const totalBalance = machine.accounts.reduce((sum, acc) => sum + acc.balance, 0)
-  const primaryAccount = machine.accounts.find(acc => acc.isPrimary)
+  const totalBalance = (machine.accounts ?? []).reduce((sum, acc) => sum + acc.balance, 0)
+  const primaryAccount = (machine.accounts ?? []).find(acc => acc.isPrimary)
   const transfers = getTransfersByMachine(machine.id)
 
   const handleAddAccount = (account: POSAccount) => {
@@ -275,7 +275,7 @@ export default function POSMachineDetailsPage() {
               <div>
                 <p className="text-sm opacity-75 mb-1">إجمالي الرصيد</p>
                 <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
-                <p className="text-xs opacity-75 mt-1">{machine.accounts.length} حساب</p>
+                <p className="text-xs opacity-75 mt-1">{(machine.accounts ?? []).length} حساب</p>
               </div>
               <div>
                 <p className="text-sm opacity-75 mb-1">المزود</p>
@@ -339,14 +339,14 @@ export default function POSMachineDetailsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {machine.accounts.map((account) => (
+              {(machine.accounts ?? []).map((account) => (
                 <Card key={account.id} className={account.isPrimary ? 'border-indigo-500 border-2' : ''}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg">{account.accountName}</CardTitle>
+                        <CardTitle className="text-lg">{account.accountName ?? account.name}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {account.accountNumber}
+                          {account.accountNumber ?? ''}
                         </p>
                       </div>
                       {account.isPrimary && (
@@ -433,8 +433,8 @@ export default function POSMachineDetailsPage() {
             ) : (
               <div className="space-y-3">
                 {transfers.map((transfer) => {
-                  const fromAcc = machine.accounts.find(a => a.id === transfer.fromAccountId)
-                  const toAcc = machine.accounts.find(a => a.id === transfer.toAccountId)
+                  const fromAcc = (machine.accounts ?? []).find(a => a.id === (transfer.fromAccountId ?? transfer.fromAccount))
+                  const toAcc = (machine.accounts ?? []).find(a => a.id === (transfer.toAccountId ?? transfer.toAccount))
 
                   return (
                     <Card key={transfer.id}>
@@ -603,8 +603,8 @@ export default function POSMachineDetailsPage() {
         open={isAddAccountDialogOpen}
         onOpenChange={setIsAddAccountDialogOpen}
         onAdd={handleAddAccount}
-        machineId={machine.machineId}
-        provider={machine.provider}
+        machineId={machine.machineId ?? machine.id}
+        provider={machine.provider ?? ''}
       />
 
       <InternalTransferDialog
@@ -612,7 +612,7 @@ export default function POSMachineDetailsPage() {
         onOpenChange={setIsTransferDialogOpen}
         onTransfer={handleInternalTransfer}
         machineId={machine.id}
-        accounts={machine.accounts}
+        accounts={machine.accounts ?? []}
         updateAccountBalance={handleUpdateBalance}
       />
 

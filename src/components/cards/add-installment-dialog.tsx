@@ -96,7 +96,7 @@ export function AddInstallmentDialog({ open, onOpenChange, cardId, onAdd }: AddI
     const installment = {
       id: Date.now().toString(),
       cardId,
-      merchantName: selectedMerchant.name,
+      merchantName: selectedMerchant.name ?? 'تاجر',
       merchantId: formData.merchantId,
       totalAmount,
       monthlyPayment: calculatedValues.finalMonthlyPayment,
@@ -177,7 +177,7 @@ export function AddInstallmentDialog({ open, onOpenChange, cardId, onAdd }: AddI
                 <SelectContent>
                   {merchants.map((merchant) => (
                     <SelectItem key={merchant.id} value={merchant.id}>
-                      {merchant.name}
+                      {merchant.name ?? 'تاجر'}
                     </SelectItem>
                   ))}
                 </SelectContent>

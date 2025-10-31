@@ -1,7 +1,13 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/auth-provider'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
+// ===================================
+// 📦 Types
+// ===================================
 export type CardTier = 'classic' | 'gold' | 'platinum' | 'titanium' | 'black'
 
 export interface CardHolderInfo {
@@ -12,23 +18,41 @@ export interface CardHolderInfo {
   address: string
 }
 
+// ===================================
+// 📦 Database Schema Interface
+// ===================================
 export interface CreditCard {
+  // Database fields (snake_case)
   id: string
-  name: string
-  bankName: string
-  cardNumberLastFour: string
-  cardType: 'visa' | 'mastercard' | 'amex' | 'other'
-  cardTier: CardTier
-  creditLimit: number
-  currentBalance: number
-  cashbackRate: number
-  dueDate: number
-  isActive: boolean
+  user_id?: string
+  card_name: string
+  bank_name: string
+  card_number_last_four: string
+  card_type: 'visa' | 'mastercard' | 'amex' | 'other'
+  credit_limit: number
+  current_balance: number
+  available_credit: number
+  due_date: number
+  minimum_payment: number
+  interest_rate: number
+  status: 'active' | 'blocked' | 'cancelled'
+  created_at?: string
+  updated_at?: string
+  
+  // Legacy fields for backward compatibility (camelCase)
+  name?: string
+  bankName?: string
+  cardNumberLastFour?: string
+  cardType?: 'visa' | 'mastercard' | 'amex' | 'other'
+  cardTier?: CardTier
+  creditLimit?: number
+  currentBalance?: number
+  cashbackRate?: number
+  dueDate?: number
+  isActive?: boolean
   createdAt?: string
   updatedAt?: string
-  // Card Holder Info
   holderInfo?: CardHolderInfo
-  // Fees & Charges
   annualFee?: number
   cashWithdrawalFee?: number
   latePaymentFee?: number
@@ -58,232 +82,268 @@ export interface Payment {
   description?: string
 }
 
+export interface Merchant {
+  id: string
+  name: string
+  category?: string
+  logo?: string
+  installmentPlans?: any[]
+}
+
 interface CardsContextType {
   cards: CreditCard[]
   purchases: Purchase[]
   payments: Payment[]
-  addCard: (card: Omit<CreditCard, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateCard: (id: string, updates: Partial<CreditCard>) => void
-  deleteCard: (id: string) => void
-  deleteCards: (ids: string[]) => void
-  toggleCardActive: (id: string) => void
+  loading: boolean
+  error: string | null
+  addCard: (card: Omit<CreditCard, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<CreditCard | null>
+  updateCard: (id: string, updates: Partial<CreditCard>) => Promise<void>
+  deleteCard: (id: string) => Promise<void>
   addPurchase: (purchase: Omit<Purchase, 'id'>) => void
   addPayment: (payment: Omit<Payment, 'id'>) => void
-  getCardById: (id: string) => CreditCard | undefined
-  getCardPurchases: (cardId: string) => Purchase[]
-  getCardPayments: (cardId: string) => Payment[]
   getTotalCreditLimit: () => number
   getTotalBalance: () => number
+  getTotalAvailableCredit: () => number
+  getCardById: (id: string) => CreditCard | undefined
+  getCardPurchases: (cardId: string) => Purchase[]
   getTotalCashback: () => number
-  importCards: (cards: CreditCard[]) => void
-  clearAllData: () => void
 }
 
 const CardsContext = createContext<CardsContextType | undefined>(undefined)
 
-const STORAGE_KEY = 'credit-cards-data'
-
-// Mock initial data
-const initialCards: CreditCard[] = [
-  {
-    id: '1',
-    name: 'بطاقة البنك الأهلي المصري الذهبية',
-    bankName: 'البنك الأهلي المصري',
-    cardNumberLastFour: '1234',
-    cardType: 'visa',
-    cardTier: 'gold',
-    creditLimit: 80000,
-    currentBalance: 18500,
-    cashbackRate: 2.5,
-    dueDate: 15,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    holderInfo: {
-      fullName: 'أحمد محمد علي',
-      phoneNumber: '+20 100 123 4567',
-      email: 'ahmed.mohamed@example.com',
-      nationalId: '29012011234567',
-      address: 'القاهرة، مصر الجديدة، شارع النزهة',
-    },
-  },
-  {
-    id: '2',
-    name: 'بطاقة بنك مصر البلاتينية',
-    bankName: 'بنك مصر',
-    cardNumberLastFour: '5678',
-    cardType: 'mastercard',
-    cardTier: 'platinum',
-    creditLimit: 100000,
-    currentBalance: 15750,
-    cashbackRate: 3.0,
-    dueDate: 25,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    holderInfo: {
-      fullName: 'فاطمة حسن محمود',
-      phoneNumber: '+20 101 234 5678',
-      email: 'fatma.hassan@example.com',
-      nationalId: '29105011234568',
-      address: 'الجيزة، المهندسين، شارع جامعة الدول العربية',
-    },
-  },
-  {
-    id: '3',
-    name: 'بطاقة البنك التجاري الدولي الكلاسيكية',
-    bankName: 'البنك التجاري الدولي',
-    cardNumberLastFour: '9012',
-    cardType: 'visa',
-    cardTier: 'classic',
-    creditLimit: 60000,
-    currentBalance: 11000,
-    cashbackRate: 1.8,
-    dueDate: 10,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    holderInfo: {
-      fullName: 'محمد أحمد السيد',
-      phoneNumber: '+20 102 345 6789',
-      email: 'mohamed.ahmed@example.com',
-      nationalId: '29203011234569',
-      address: 'الإسكندرية، سموحة، شارع فوزي معاذ',
-    },
-  },
-]
-
+// ===================================
+// 🎯 Provider Component
+// ===================================
 export function CardsProvider({ children }: { children: ReactNode }) {
   const [cards, setCards] = useState<CreditCard[]>([])
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const supabase = createClientComponentClient()
 
-  // Load data from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        setCards(data.cards || initialCards)
-        setPurchases(data.purchases || [])
-        setPayments(data.payments || [])
-      } catch (error) {
-        console.error('Error loading cards data:', error)
-        setCards(initialCards)
+  // ===================================
+  // 📥 Load cards from Supabase
+  // ===================================
+  const loadCards = async () => {
+    if (!user) {
+      setCards([])
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('credit_cards')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error loading credit cards:', fetchError)
+        setError(fetchError.message)
+      } else {
+        setCards(data || [])
       }
-    } else {
-      setCards(initialCards)
+    } catch (err) {
+      console.error('Unexpected error loading credit cards:', err)
+      setError('حدث خطأ غير متوقع')
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }
 
-  // Save data to localStorage
+  // ===================================
+  // 🔄 Real-time subscription
+  // ===================================
   useEffect(() => {
-    if (cards.length > 0) {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ cards, purchases, payments })
+    if (!user) {
+      setCards([])
+      setLoading(false)
+      return
+    }
+
+    loadCards()
+
+    const channel: RealtimeChannel = supabase
+      .channel('credit_cards_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'credit_cards',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setCards((prev) => [payload.new as CreditCard, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setCards((prev) =>
+              prev.map((card) =>
+                card.id === (payload.new as CreditCard).id
+                  ? (payload.new as CreditCard)
+                  : card
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setCards((prev) =>
+              prev.filter((card) => card.id !== (payload.old as CreditCard).id)
+            )
+          }
+        }
       )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
     }
-  }, [cards, purchases, payments])
+  }, [user, supabase])
 
-  const addCard = (cardData: Omit<CreditCard, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newCard: CreditCard = {
-      ...cardData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  // ===================================
+  // ➕ Add card
+  // ===================================
+  const addCard = async (
+    card: Omit<CreditCard, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<CreditCard | null> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return null
     }
-    setCards(prev => [...prev, newCard])
-  }
 
-  const updateCard = (id: string, updates: Partial<CreditCard>) => {
-    setCards(prev =>
-      prev.map(card =>
-        card.id === id
-          ? { ...card, ...updates, updatedAt: new Date().toISOString() }
-          : card
-      )
-    )
-  }
+    try {
+      const { data, error: insertError } = await supabase
+        .from('credit_cards')
+        .insert([
+          {
+            user_id: user.id,
+            card_name: card.card_name,
+            bank_name: card.bank_name,
+            card_number_last_four: card.card_number_last_four,
+            card_type: card.card_type,
+            credit_limit: card.credit_limit,
+            current_balance: card.current_balance,
+            available_credit: card.available_credit,
+            due_date: card.due_date,
+            minimum_payment: card.minimum_payment,
+            interest_rate: card.interest_rate,
+            status: card.status || 'active',
+          },
+        ])
+        .select()
+        .single()
 
-  const deleteCard = (id: string) => {
-    setCards(prev => prev.filter(card => card.id !== id))
-    setPurchases(prev => prev.filter(p => p.cardId !== id))
-    setPayments(prev => prev.filter(p => p.cardId !== id))
-  }
+      if (insertError) {
+        console.error('Error adding card:', insertError)
+        setError(insertError.message)
+        return null
+      }
 
-  const deleteCards = (ids: string[]) => {
-    setCards(prev => prev.filter(card => !ids.includes(card.id)))
-    setPurchases(prev => prev.filter(p => !ids.includes(p.cardId)))
-    setPayments(prev => prev.filter(p => !ids.includes(p.cardId)))
-  }
-
-  const toggleCardActive = (id: string) => {
-    setCards(prev =>
-      prev.map(card =>
-        card.id === id
-          ? { ...card, isActive: !card.isActive, updatedAt: new Date().toISOString() }
-          : card
-      )
-    )
-  }
-
-  const addPurchase = (purchaseData: Omit<Purchase, 'id'>) => {
-    const newPurchase: Purchase = {
-      ...purchaseData,
-      id: Date.now().toString(),
+      return data
+    } catch (err) {
+      console.error('Unexpected error adding card:', err)
+      setError('حدث خطأ غير متوقع')
+      return null
     }
-    setPurchases(prev => [...prev, newPurchase])
-    
-    // Update card balance
-    updateCard(purchaseData.cardId, {
-      currentBalance: (getCardById(purchaseData.cardId)?.currentBalance || 0) + purchaseData.amount,
-    })
   }
 
-  const addPayment = (paymentData: Omit<Payment, 'id'>) => {
-    const newPayment: Payment = {
-      ...paymentData,
-      id: Date.now().toString(),
+  // ===================================
+  // 🔄 Update card
+  // ===================================
+  const updateCard = async (id: string, updates: Partial<CreditCard>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
     }
-    setPayments(prev => [...prev, newPayment])
-    
-    // Update card balance
-    updateCard(paymentData.cardId, {
-      currentBalance: (getCardById(paymentData.cardId)?.currentBalance || 0) - paymentData.amount,
-    })
+
+    try {
+      const { error: updateError } = await supabase
+        .from('credit_cards')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating card:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
-  const getCardById = (id: string) => {
-    return cards.find(card => card.id === id)
+  // ===================================
+  // 🗑️ Delete card
+  // ===================================
+  const deleteCard = async (id: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('credit_cards')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting card:', deleteError)
+        setError(deleteError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error deleting card:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
-  const getCardPurchases = (cardId: string) => {
-    return purchases.filter(p => p.cardId === cardId)
+  // ===================================
+  // 🛒 Add purchase (legacy - kept for compatibility)
+  // ===================================
+  const addPurchase = (purchase: Omit<Purchase, 'id'>): void => {
+    const newPurchase = { ...purchase, id: Date.now().toString() }
+    setPurchases((prev) => [newPurchase, ...prev])
   }
 
-  const getCardPayments = (cardId: string) => {
-    return payments.filter(p => p.cardId === cardId)
+  // ===================================
+  // 💳 Add payment (legacy - kept for compatibility)
+  // ===================================
+  const addPayment = (payment: Omit<Payment, 'id'>): void => {
+    const newPayment = { ...payment, id: Date.now().toString() }
+    setPayments((prev) => [newPayment, ...prev])
   }
 
-  const getTotalCreditLimit = () => {
-    return cards.reduce((sum, card) => sum + card.creditLimit, 0)
+  // ===================================
+  // 📊 Helper functions
+  // ===================================
+  const getTotalCreditLimit = (): number => {
+    return cards.reduce((sum, card) => sum + (card.credit_limit || 0), 0)
   }
 
-  const getTotalBalance = () => {
-    return cards.reduce((sum, card) => sum + card.currentBalance, 0)
+  const getTotalBalance = (): number => {
+    return cards.reduce((sum, card) => sum + (card.current_balance || 0), 0)
   }
 
-  const getTotalCashback = () => {
-    return purchases.reduce((sum, purchase) => sum + purchase.cashbackEarned, 0)
+  const getTotalAvailableCredit = (): number => {
+    return cards.reduce((sum, card) => sum + (card.available_credit || 0), 0)
   }
 
-  const importCards = (importedCards: CreditCard[]) => {
-    setCards(importedCards)
+  const getCardById = (id: string): CreditCard | undefined => {
+    return cards.find((card) => card.id === id)
   }
 
-  const clearAllData = () => {
-    setCards([])
-    setPurchases([])
-    setPayments([])
-    localStorage.removeItem(STORAGE_KEY)
+  const getCardPurchases = (cardId: string): Purchase[] => {
+    return purchases.filter((p) => p.cardId === cardId)
+  }
+
+  const getTotalCashback = (): number => {
+    return purchases.reduce((sum, p) => sum + (p.cashbackEarned || 0), 0)
   }
 
   return (
@@ -292,21 +352,19 @@ export function CardsProvider({ children }: { children: ReactNode }) {
         cards,
         purchases,
         payments,
+        loading,
+        error,
         addCard,
         updateCard,
         deleteCard,
-        deleteCards,
-        toggleCardActive,
         addPurchase,
         addPayment,
-        getCardById,
-        getCardPurchases,
-        getCardPayments,
         getTotalCreditLimit,
         getTotalBalance,
+        getTotalAvailableCredit,
+        getCardById,
+        getCardPurchases,
         getTotalCashback,
-        importCards,
-        clearAllData,
       }}
     >
       {children}
@@ -316,7 +374,7 @@ export function CardsProvider({ children }: { children: ReactNode }) {
 
 export function useCards() {
   const context = useContext(CardsContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useCards must be used within a CardsProvider')
   }
   return context

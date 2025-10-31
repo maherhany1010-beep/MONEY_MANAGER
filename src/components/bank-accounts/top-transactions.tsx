@@ -90,7 +90,7 @@ export function TopTransactions({ accounts }: TopTransactionsProps) {
                   <div>
                     <p className="font-medium text-foreground">{account.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {account.bank} • {getAccountTypeLabel(account.accountType)}
+                      {account.bank} • {getAccountTypeLabel(account.accountType ?? 'checking')}
                     </p>
                   </div>
                 </div>

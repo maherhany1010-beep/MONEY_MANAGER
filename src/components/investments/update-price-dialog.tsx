@@ -22,7 +22,7 @@ export function UpdatePriceDialog({ open, onOpenChange, investment }: UpdatePric
 
   useEffect(() => {
     if (investment && investment.type !== 'certificate') {
-      setNewPrice(investment.currentPrice.toString())
+      setNewPrice((investment.currentPrice ?? 0).toString())
     }
   }, [investment])
 
@@ -30,7 +30,7 @@ export function UpdatePriceDialog({ open, onOpenChange, investment }: UpdatePric
     return null
   }
 
-  const currentPrice = investment.currentPrice
+  const currentPrice = investment.currentPrice ?? 0
   const currency = investment.type === 'cryptocurrency' || investment.type === 'stock' ? 'USD' : 'EGP'
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -113,7 +113,7 @@ export function UpdatePriceDialog({ open, onOpenChange, investment }: UpdatePric
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">السعر الحالي</p>
               <p className="text-2xl font-bold">
-                {currentPrice.toFixed(2)} {currency}
+                {(currentPrice ?? 0).toFixed(2)} {currency}
               </p>
             </div>
           </div>

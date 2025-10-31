@@ -129,19 +129,13 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
         // إضافة عميل جديد
         const initialDebt = formData.initialDebt ? parseFloat(formData.initialDebt) : 0
         addCustomer({
+          name: formData.fullName.trim(),
+          phone: formData.phone.trim() || null,
+          email: formData.email.trim() || null,
+          address: formData.address.trim() || null,
+          notes: formData.notes.trim() || null,
           fullName: formData.fullName.trim(),
-          phone: formData.phone.trim(),
-          email: formData.email.trim() || undefined,
-          address: formData.address.trim() || undefined,
           company: formData.company.trim() || undefined,
-          profession: formData.profession.trim() || undefined,
-          commercialRegister: formData.commercialRegister.trim() || undefined,
-          registrationDate: new Date().toISOString().split('T')[0],
-          status: formData.status,
-          category: formData.category,
-          notes: formData.notes.trim() || undefined,
-          debtAlertThreshold: formData.debtAlertThreshold ? parseFloat(formData.debtAlertThreshold) : undefined,
-          openingBalance: initialDebt, // مديونية بداية المدة
         })
       }
 

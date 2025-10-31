@@ -120,7 +120,7 @@ export function DepositDialog({ open, onOpenChange, machine, onDeposit }: Deposi
                   <SelectValue placeholder="اختر الحساب" />
                 </SelectTrigger>
                 <SelectContent>
-                  {machine.accounts.map((account) => (
+                  {(machine.accounts ?? []).map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.accountName} - {formatCurrency(account.balance)}
                     </SelectItem>

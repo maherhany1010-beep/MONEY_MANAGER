@@ -49,7 +49,7 @@ export function WithdrawalDialog({ open, onOpenChange, machine, onWithdrawal }: 
     setError('')
 
     // التحقق من كفاية الرصيد
-    const sourceAccount = machine.accounts.find(acc => acc.id === formData.sourceAccountId)
+    const sourceAccount = (machine.accounts ?? []).find(acc => acc.id === formData.sourceAccountId)
     const amount = parseFloat(formData.amount) || 0
 
     if (!sourceAccount) {
@@ -115,7 +115,7 @@ export function WithdrawalDialog({ open, onOpenChange, machine, onWithdrawal }: 
 
   const fee = calculateFee()
   const amountToDestination = (parseFloat(formData.amount) || 0) - fee
-  const sourceAccount = machine.accounts.find(acc => acc.id === formData.sourceAccountId)
+  const sourceAccount = (machine.accounts ?? []).find(acc => acc.id === formData.sourceAccountId)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -154,7 +154,7 @@ export function WithdrawalDialog({ open, onOpenChange, machine, onWithdrawal }: 
                   <SelectValue placeholder="اختر الحساب" />
                 </SelectTrigger>
                 <SelectContent>
-                  {machine.accounts.map((account) => (
+                  {(machine.accounts ?? []).map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.accountName} - {formatCurrency(account.balance)}
                     </SelectItem>

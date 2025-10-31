@@ -46,7 +46,7 @@ export function AddQuantityDialog({ open, onOpenChange, investment }: AddQuantit
       return
     }
 
-    addQuantity(investment.id, parseFloat(quantity), parseFloat(purchasePrice))
+    addQuantity(investment.id, parseFloat(quantity), parseFloat(purchasePrice), 0)
     setSuccess(true)
     
     setTimeout(() => {
@@ -63,14 +63,14 @@ export function AddQuantityDialog({ open, onOpenChange, investment }: AddQuantit
   let currentAvgPrice = 0
 
   if (investment.type === 'precious_metals') {
-    currentQuantity = investment.quantity
-    currentAvgPrice = investment.purchasePrice
+    currentQuantity = investment.quantity ?? 0
+    currentAvgPrice = investment.purchasePrice ?? 0
   } else if (investment.type === 'cryptocurrency') {
-    currentQuantity = investment.quantity
-    currentAvgPrice = investment.purchasePrice
+    currentQuantity = investment.quantity ?? 0
+    currentAvgPrice = investment.purchasePrice ?? 0
   } else if (investment.type === 'stock') {
-    currentQuantity = investment.shares
-    currentAvgPrice = investment.purchasePrice
+    currentQuantity = investment.shares ?? 0
+    currentAvgPrice = investment.purchasePrice ?? 0
   }
 
   const newQuantity = quantity ? parseFloat(quantity) : 0

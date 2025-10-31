@@ -15,10 +15,10 @@ export type DestinationType = 'bank' | 'vault' | 'ewallet' | 'card' | 'prepaid' 
 
 export interface DestinationItem {
   id: string
-  name: string
+  name?: string
   balance: number
   type: DestinationType
-  isActive: boolean
+  isActive: boolean | true
 }
 
 interface DestinationSelectorProps {
@@ -57,7 +57,7 @@ export function DestinationSelector({
         .forEach(acc => {
           destinations.push({
             id: `bank-${acc.id}`,
-            name: acc.accountName,
+            name: acc.accountName ?? acc.account_name ?? 'حساب بنكي',
             balance: acc.balance,
             type: 'bank',
             isActive: acc.isActive ?? true,
@@ -72,7 +72,7 @@ export function DestinationSelector({
         .forEach(vault => {
           destinations.push({
             id: `vault-${vault.id}`,
-            name: vault.vaultName,
+            name: vault.vaultName ?? vault.vault_name ?? 'خزينة',
             balance: vault.balance,
             type: 'vault',
             isActive: true,
@@ -87,7 +87,7 @@ export function DestinationSelector({
         .forEach(wallet => {
           destinations.push({
             id: `ewallet-${wallet.id}`,
-            name: wallet.walletName,
+            name: wallet.walletName ?? wallet.wallet_name ?? 'محفظة إلكترونية',
             balance: wallet.balance,
             type: 'ewallet',
             isActive: wallet.status === 'active',
@@ -102,10 +102,10 @@ export function DestinationSelector({
         .forEach(card => {
           destinations.push({
             id: `card-${card.id}`,
-            name: card.name || 'بطاقة ائتمان',
-            balance: card.creditLimit - card.currentBalance,
+            name: card.name ?? card.card_name ?? 'بطاقة ائتمان',
+            balance: (card.creditLimit ?? 0) - (card.currentBalance ?? 0),
             type: 'card',
-            isActive: card.isActive,
+            isActive: card.isActive ?? true,
           })
         })
     }
@@ -117,7 +117,7 @@ export function DestinationSelector({
         .forEach(card => {
           destinations.push({
             id: `prepaid-${card.id}`,
-            name: card.cardName,
+            name: card.cardName ?? card.card_name ?? 'بطاقة مدفوعة مسبقاً',
             balance: card.balance,
             type: 'prepaid',
             isActive: card.status === 'active',
@@ -315,9 +315,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!account) return null
         return {
           id: destinationId,
-          name: account.accountName,
+          name: account.accountName ?? account.account_name ?? 'حساب بنكي',
           balance: account.balance,
-          type: 'bank',
+          type: 'bank' as DestinationType,
           isActive: account.isActive ?? true,
         }
       }
@@ -326,9 +326,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!vault) return null
         return {
           id: destinationId,
-          name: vault.vaultName,
+          name: vault.vaultName ?? vault.vault_name ?? 'خزينة',
           balance: vault.balance,
-          type: 'vault',
+          type: 'vault' as DestinationType,
           isActive: true,
         }
       }
@@ -337,9 +337,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         if (!wallet) return null
         return {
           id: destinationId,
-          name: wallet.walletName,
+          name: wallet.walletName ?? wallet.wallet_name ?? 'محفظة إلكترونية',
           balance: wallet.balance,
-          type: 'ewallet',
+          type: 'ewallet' as DestinationType,
           isActive: wallet.status === 'active',
         }
       }
@@ -349,9 +349,9 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
         return {
           id: destinationId,
           name: card.name || 'بطاقة ائتمان',
-          balance: card.creditLimit - card.currentBalance,
-          type: 'card',
-          isActive: card.isActive,
+          balance: (card.creditLimit ?? 0) - (card.currentBalance ?? 0),
+          type: 'card' as DestinationType,
+          isActive: card.isActive ?? true,
         }
       }
       case 'prepaid': {
@@ -361,7 +361,7 @@ export function useDestinationDetails(destinationId: string): DestinationItem | 
           id: destinationId,
           name: card.cardName,
           balance: card.balance,
-          type: 'prepaid',
+          type: 'prepaid' as DestinationType,
           isActive: card.status === 'active',
         }
       }

@@ -1,359 +1,395 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import {
-  CashbackRecord,
-  CashbackRedemption,
-  CardCashbackSettings,
-  CashbackStats,
-  CashbackFilter,
-  CashbackSortOptions,
-  CashbackStatus,
-  RedemptionType,
-  RedemptionMode,
-} from '@/types/cashback'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/auth-provider'
+import type { RealtimeChannel } from '@supabase/supabase-js'
+
+// ===================================
+// 📦 Database Schema Interface
+// ===================================
+export interface Cashback {
+  // Database fields (snake_case)
+  id: string
+  user_id?: string
+  source: string
+  amount: number
+  cashback_date: string
+  status: string
+  created_at?: string
+  updated_at?: string
+  
+  // Legacy fields for backward compatibility (camelCase)
+  cashbackSource?: string
+  cashbackAmount?: number
+  cashbackDate?: string
+  cashbackStatus?: 'pending' | 'received' | 'expired'
+  merchant?: string
+  cardId?: string
+  cardName?: string
+  transactionId?: string
+  transactionAmount?: number
+  cashbackRate?: number
+  expiryDate?: string
+  notes?: string
+  category?: string
+  isRedeemed?: boolean
+}
 
 interface CashbackContextType {
-  // سجلات الكاش باك
-  cashbackRecords: CashbackRecord[]
-  addCashbackRecord: (record: Omit<CashbackRecord, 'id' | 'createdAt' | 'updatedAt' | 'redeemedAmount' | 'remainingAmount' | 'status'>) => void
-  updateCashbackRecord: (id: string, updates: Partial<CashbackRecord>) => void
-  deleteCashbackRecord: (id: string) => void
-  getCashbackRecord: (id: string) => CashbackRecord | undefined
-  getCardCashbackRecords: (cardId: string) => CashbackRecord[]
-  
-  // عمليات الاسترداد
-  redemptions: CashbackRedemption[]
-  redeemCashback: (redemption: Omit<CashbackRedemption, 'id' | 'createdAt'>) => void
-  getCardRedemptions: (cardId: string) => CashbackRedemption[]
-  
-  // الإعدادات
-  settings: CardCashbackSettings[]
-  getCardSettings: (cardId: string) => CardCashbackSettings | undefined
-  updateCardSettings: (cardId: string, settings: Partial<CardCashbackSettings>) => void
-  
-  // الإحصائيات
-  getCardStats: (cardId: string) => CashbackStats
-  
-  // البحث والتصفية
-  searchCashback: (filter: CashbackFilter, sort?: CashbackSortOptions) => CashbackRecord[]
-  
-  // الاسترداد التلقائي
-  processAutomaticRedemptions: () => void
+  cashbacks: Cashback[]
+  loading: boolean
+  error: string | null
+  addCashback: (cashback: Omit<Cashback, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Cashback | null>
+  updateCashback: (id: string, updates: Partial<Cashback>) => Promise<void>
+  deleteCashback: (id: string) => Promise<void>
+  getCashbackById: (id: string) => Cashback | undefined
+  getCashbacksBySource: (source: string) => Cashback[]
+  getTotalCashback: () => number
+  getPendingCashback: () => number
+  getReceivedCashback: () => number
+  getCardCashbackRecords: (cardId: string) => any[]
+  getCardRedemptions: (cardId: string) => any[]
+  getCardStats: (cardId: string) => any
+  processAutomaticRedemptions: (cardId: string) => void
+  addCashbackRecord: (record: any) => Promise<void>
+  getCardSettings: (cardId: string) => any
+  updateCardSettings: (cardId: string, settings: any) => Promise<void>
+  getCashbackRecord: (recordId: string) => any
+  redeemCashback: (recordId: string, amount: number) => Promise<void>
 }
 
 const CashbackContext = createContext<CashbackContextType | undefined>(undefined)
 
-export function CashbackProvider({ children }: { children: React.ReactNode }) {
-  const [cashbackRecords, setCashbackRecords] = useState<CashbackRecord[]>([])
-  const [redemptions, setRedemptions] = useState<CashbackRedemption[]>([])
-  const [settings, setSettings] = useState<CardCashbackSettings[]>([])
+// ===================================
+// 🎯 Provider Component
+// ===================================
+export function CashbackProvider({ children }: { children: ReactNode }) {
+  const [cashbacks, setCashbacks] = useState<Cashback[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const supabase = createClientComponentClient()
 
-  // تحميل البيانات من localStorage
-  useEffect(() => {
-    const savedRecords = localStorage.getItem('cashbackRecords')
-    const savedRedemptions = localStorage.getItem('cashbackRedemptions')
-    const savedSettings = localStorage.getItem('cashbackSettings')
-
-    if (savedRecords) setCashbackRecords(JSON.parse(savedRecords))
-    if (savedRedemptions) setRedemptions(JSON.parse(savedRedemptions))
-    if (savedSettings) setSettings(JSON.parse(savedSettings))
-  }, [])
-
-  // حفظ البيانات في localStorage
-  useEffect(() => {
-    localStorage.setItem('cashbackRecords', JSON.stringify(cashbackRecords))
-  }, [cashbackRecords])
-
-  useEffect(() => {
-    localStorage.setItem('cashbackRedemptions', JSON.stringify(redemptions))
-  }, [redemptions])
-
-  useEffect(() => {
-    localStorage.setItem('cashbackSettings', JSON.stringify(settings))
-  }, [settings])
-
-  /**
-   * إضافة سجل كاش باك جديد
-   */
-  const addCashbackRecord = useCallback((recordData: Omit<CashbackRecord, 'id' | 'createdAt' | 'updatedAt' | 'redeemedAmount' | 'remainingAmount' | 'status'>) => {
-    const newRecord: CashbackRecord = {
-      ...recordData,
-      id: `cashback-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-      redeemedAmount: 0,
-      remainingAmount: recordData.amount,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  // ===================================
+  // 📥 Load cashbacks from Supabase
+  // ===================================
+  const loadCashbacks = async () => {
+    if (!user) {
+      setCashbacks([])
+      setLoading(false)
+      return
     }
 
-    // حساب تاريخ الاسترداد التلقائي
-    if (newRecord.autoRedeemEnabled && newRecord.autoRedeemDays > 0) {
-      const autoRedeemDate = new Date()
-      autoRedeemDate.setDate(autoRedeemDate.getDate() + newRecord.autoRedeemDays)
-      newRecord.autoRedeemDate = autoRedeemDate.toISOString().split('T')[0]
-    }
+    try {
+      setLoading(true)
+      setError(null)
 
-    setCashbackRecords(prev => [...prev, newRecord])
-  }, [])
+      const { data, error: fetchError } = await supabase
+        .from('cashback')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
 
-  /**
-   * تحديث سجل كاش باك
-   */
-  const updateCashbackRecord = useCallback((id: string, updates: Partial<CashbackRecord>) => {
-    setCashbackRecords(prev => prev.map(record =>
-      record.id === id
-        ? { ...record, ...updates, updatedAt: new Date().toISOString() }
-        : record
-    ))
-  }, [])
-
-  /**
-   * حذف سجل كاش باك
-   */
-  const deleteCashbackRecord = useCallback((id: string) => {
-    setCashbackRecords(prev => prev.filter(record => record.id !== id))
-  }, [])
-
-  /**
-   * الحصول على سجل كاش باك
-   */
-  const getCashbackRecord = useCallback((id: string) => {
-    return cashbackRecords.find(record => record.id === id)
-  }, [cashbackRecords])
-
-  /**
-   * الحصول على سجلات كاش باك البطاقة
-   */
-  const getCardCashbackRecords = useCallback((cardId: string) => {
-    return cashbackRecords.filter(record => record.cardId === cardId)
-  }, [cashbackRecords])
-
-  /**
-   * استرداد الكاش باك
-   */
-  const redeemCashback = useCallback((redemptionData: Omit<CashbackRedemption, 'id' | 'createdAt'>) => {
-    const newRedemption: CashbackRedemption = {
-      ...redemptionData,
-      id: `redemption-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-      createdAt: new Date().toISOString(),
-    }
-
-    setRedemptions(prev => [...prev, newRedemption])
-
-    // تحديث سجل الكاش باك
-    const cashbackRecord = cashbackRecords.find(r => r.id === redemptionData.cashbackId)
-    if (cashbackRecord) {
-      const newRedeemedAmount = cashbackRecord.redeemedAmount + redemptionData.amount
-      const newRemainingAmount = cashbackRecord.amount - newRedeemedAmount
-
-      let newStatus: CashbackStatus = cashbackRecord.status
-      if (newRemainingAmount === 0) {
-        newStatus = 'redeemed'
-      } else if (newRedeemedAmount > 0) {
-        newStatus = 'approved'
-      }
-
-      updateCashbackRecord(redemptionData.cashbackId, {
-        redeemedAmount: newRedeemedAmount,
-        remainingAmount: newRemainingAmount,
-        status: newStatus,
-      })
-    }
-  }, [cashbackRecords, updateCashbackRecord])
-
-  /**
-   * الحصول على عمليات استرداد البطاقة
-   */
-  const getCardRedemptions = useCallback((cardId: string) => {
-    return redemptions.filter(redemption => redemption.cardId === cardId)
-  }, [redemptions])
-
-  /**
-   * الحصول على إعدادات البطاقة
-   */
-  const getCardSettings = useCallback((cardId: string) => {
-    return settings.find(s => s.cardId === cardId)
-  }, [settings])
-
-  /**
-   * تحديث إعدادات البطاقة
-   */
-  const updateCardSettings = useCallback((cardId: string, updates: Partial<CardCashbackSettings>) => {
-    setSettings(prev => {
-      const existing = prev.find(s => s.cardId === cardId)
-      if (existing) {
-        return prev.map(s =>
-          s.cardId === cardId
-            ? { ...s, ...updates, updatedAt: new Date().toISOString() }
-            : s
-        )
+      if (fetchError) {
+        console.error('Error loading cashback:', fetchError)
+        setError(fetchError.message)
       } else {
-        // إنشاء إعدادات جديدة
-        const newSettings: CardCashbackSettings = {
-          cardId,
-          cashbackEnabled: true,
-          cashbackRate: 1,
-          autoRedeemEnabled: false,
-          autoRedeemDays: 30,
-          autoRedeemType: 'balance',
-          minRedemptionAmount: 10,
-          maxCashbackPerTransaction: 1000,
-          ...updates,
-          updatedAt: new Date().toISOString(),
-        }
-        return [...prev, newSettings]
+        setCashbacks(data || [])
       }
-    })
-  }, [])
-
-  /**
-   * الحصول على إحصائيات البطاقة
-   */
-  const getCardStats = useCallback((cardId: string): CashbackStats => {
-    const cardRecords = cashbackRecords.filter(r => r.cardId === cardId)
-    const cardRedemptions = redemptions.filter(r => r.cardId === cardId)
-
-    const totalEarned = cardRecords.reduce((sum, r) => sum + r.amount, 0)
-    const totalRedeemed = cardRecords.reduce((sum, r) => sum + r.redeemedAmount, 0)
-    const totalPending = cardRecords.filter(r => r.status === 'pending').reduce((sum, r) => sum + r.remainingAmount, 0)
-    const totalExpired = cardRecords.filter(r => r.status === 'expired').reduce((sum, r) => sum + r.remainingAmount, 0)
-    const availableBalance = cardRecords.filter(r => r.status !== 'expired' && r.status !== 'cancelled').reduce((sum, r) => sum + r.remainingAmount, 0)
-
-    const redemptionsByType = {
-      balance: cardRedemptions.filter(r => r.redemptionType === 'balance').length,
-      voucher: cardRedemptions.filter(r => r.redemptionType === 'voucher').length,
+    } catch (err) {
+      console.error('Unexpected error loading cashback:', err)
+      setError('حدث خطأ غير متوقع')
+    } finally {
+      setLoading(false)
     }
-
-    const sortedRecords = [...cardRecords].sort((a, b) => new Date(b.earnedDate).getTime() - new Date(a.earnedDate).getTime())
-    const sortedRedemptions = [...cardRedemptions].sort((a, b) => new Date(b.redemptionDate).getTime() - new Date(a.redemptionDate).getTime())
-
-    return {
-      cardId,
-      totalEarned,
-      totalRedeemed,
-      totalPending,
-      totalExpired,
-      availableBalance,
-      totalRecords: cardRecords.length,
-      totalRedemptions: cardRedemptions.length,
-      redemptionsByType,
-      lastEarnedDate: sortedRecords[0]?.earnedDate,
-      lastRedeemedDate: sortedRedemptions[0]?.redemptionDate,
-    }
-  }, [cashbackRecords, redemptions])
-
-  /**
-   * البحث والتصفية
-   */
-  const searchCashback = useCallback((filter: CashbackFilter, sort?: CashbackSortOptions) => {
-    let filtered = [...cashbackRecords]
-
-    if (filter.cardId) {
-      filtered = filtered.filter(r => r.cardId === filter.cardId)
-    }
-
-    if (filter.status && filter.status.length > 0) {
-      filtered = filtered.filter(r => filter.status!.includes(r.status))
-    }
-
-    if (filter.dateFrom) {
-      filtered = filtered.filter(r => r.earnedDate >= filter.dateFrom!)
-    }
-
-    if (filter.dateTo) {
-      filtered = filtered.filter(r => r.earnedDate <= filter.dateTo!)
-    }
-
-    if (filter.minAmount !== undefined) {
-      filtered = filtered.filter(r => r.amount >= filter.minAmount!)
-    }
-
-    if (filter.maxAmount !== undefined) {
-      filtered = filtered.filter(r => r.amount <= filter.maxAmount!)
-    }
-
-    // الفرز
-    if (sort) {
-      filtered.sort((a, b) => {
-        let aValue: any = a[sort.field]
-        let bValue: any = b[sort.field]
-
-        if (sort.field === 'earnedDate') {
-          aValue = new Date(aValue).getTime()
-          bValue = new Date(bValue).getTime()
-        }
-
-        if (sort.direction === 'asc') {
-          return aValue > bValue ? 1 : -1
-        } else {
-          return aValue < bValue ? 1 : -1
-        }
-      })
-    }
-
-    return filtered
-  }, [cashbackRecords])
-
-  /**
-   * معالجة الاستردادات التلقائية
-   */
-  const processAutomaticRedemptions = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0]
-
-    cashbackRecords.forEach(record => {
-      if (
-        record.autoRedeemEnabled &&
-        record.autoRedeemDate &&
-        record.autoRedeemDate <= today &&
-        record.status === 'pending' &&
-        record.remainingAmount > 0
-      ) {
-        const cardSettings = getCardSettings(record.cardId)
-        if (cardSettings && cardSettings.autoRedeemEnabled) {
-          // استرداد تلقائي
-          redeemCashback({
-            cashbackId: record.id,
-            cardId: record.cardId,
-            redemptionDate: today,
-            amount: record.remainingAmount,
-            redemptionType: cardSettings.autoRedeemType,
-            redemptionMode: 'full',
-            voucherDetails: cardSettings.autoRedeemType === 'voucher' && cardSettings.autoRedeemStoreName
-              ? { storeName: cardSettings.autoRedeemStoreName }
-              : undefined,
-            isAutomatic: true,
-          })
-        }
-      }
-    })
-  }, [cashbackRecords, getCardSettings, redeemCashback])
-
-  const value: CashbackContextType = {
-    cashbackRecords,
-    addCashbackRecord,
-    updateCashbackRecord,
-    deleteCashbackRecord,
-    getCashbackRecord,
-    getCardCashbackRecords,
-    redemptions,
-    redeemCashback,
-    getCardRedemptions,
-    settings,
-    getCardSettings,
-    updateCardSettings,
-    getCardStats,
-    searchCashback,
-    processAutomaticRedemptions,
   }
 
-  return <CashbackContext.Provider value={value}>{children}</CashbackContext.Provider>
+  // ===================================
+  // 🔄 Real-time subscription
+  // ===================================
+  useEffect(() => {
+    if (!user) {
+      setCashbacks([])
+      setLoading(false)
+      return
+    }
+
+    loadCashbacks()
+
+    const channel: RealtimeChannel = supabase
+      .channel('cashback_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cashback',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setCashbacks((prev) => [payload.new as Cashback, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setCashbacks((prev) =>
+              prev.map((cashback) =>
+                cashback.id === (payload.new as Cashback).id
+                  ? (payload.new as Cashback)
+                  : cashback
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setCashbacks((prev) =>
+              prev.filter((cashback) => cashback.id !== (payload.old as Cashback).id)
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user, supabase])
+
+  // ===================================
+  // ➕ Add cashback
+  // ===================================
+  const addCashback = async (
+    cashback: Omit<Cashback, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<Cashback | null> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return null
+    }
+
+    try {
+      const { data, error: insertError } = await supabase
+        .from('cashback')
+        .insert([
+          {
+            user_id: user.id,
+            source: cashback.source,
+            amount: cashback.amount,
+            cashback_date: cashback.cashback_date || new Date().toISOString().split('T')[0],
+            status: cashback.status || 'pending',
+          },
+        ])
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Error adding cashback:', insertError)
+        setError(insertError.message)
+        return null
+      }
+
+      return data
+    } catch (err) {
+      console.error('Unexpected error adding cashback:', err)
+      setError('حدث خطأ غير متوقع')
+      return null
+    }
+  }
+
+  // ===================================
+  // 🔄 Update cashback
+  // ===================================
+  const updateCashback = async (id: string, updates: Partial<Cashback>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('cashback')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating cashback:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating cashback:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🗑️ Delete cashback
+  // ===================================
+  const deleteCashback = async (id: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('cashback')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting cashback:', deleteError)
+        setError(deleteError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error deleting cashback:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🔍 Get cashback by ID
+  // ===================================
+  const getCashbackById = (id: string): Cashback | undefined => {
+    return cashbacks.find((c) => c.id === id)
+  }
+
+  // ===================================
+  // 📂 Get cashbacks by source
+  // ===================================
+  const getCashbacksBySource = (source: string): Cashback[] => {
+    return cashbacks.filter((c) => c.source === source)
+  }
+
+  // ===================================
+  // 💰 Get total cashback
+  // ===================================
+  const getTotalCashback = (): number => {
+    return cashbacks.reduce((sum, c) => sum + (c.amount || 0), 0)
+  }
+
+  // ===================================
+  // ⏳ Get pending cashback
+  // ===================================
+  const getPendingCashback = (): number => {
+    return cashbacks
+      .filter((c) => c.status === 'pending')
+      .reduce((sum, c) => sum + (c.amount || 0), 0)
+  }
+
+  // ===================================
+  // ✅ Get received cashback
+  // ===================================
+  const getReceivedCashback = (): number => {
+    return cashbacks
+      .filter((c) => c.status === 'received')
+      .reduce((sum, c) => sum + (c.amount || 0), 0)
+  }
+
+  // ===================================
+  // 💳 Get card cashback records
+  // ===================================
+  const getCardCashbackRecords = (cardId: string): any[] => {
+    return cashbacks.filter((c) => c.source === cardId || c.cardId === cardId)
+  }
+
+  // ===================================
+  // 🎁 Get card redemptions
+  // ===================================
+  const getCardRedemptions = (cardId: string): any[] => {
+    return cashbacks.filter((c) => (c.source === cardId || c.cardId === cardId) && c.isRedeemed)
+  }
+
+  // ===================================
+  // 📊 Get card stats
+  // ===================================
+  const getCardStats = (cardId: string): any => {
+    const records = getCardCashbackRecords(cardId)
+    return {
+      totalEarned: records.reduce((sum, r) => sum + (r.amount || 0), 0),
+      totalRedeemed: records.filter(r => r.isRedeemed).reduce((sum, r) => sum + (r.amount || 0), 0),
+      available: records.filter(r => !r.isRedeemed).reduce((sum, r) => sum + (r.amount || 0), 0),
+    }
+  }
+
+  // ===================================
+  // 🔄 Process automatic redemptions
+  // ===================================
+  const processAutomaticRedemptions = (cardId: string): void => {
+    // Placeholder for automatic redemption logic
+    console.log('Processing automatic redemptions for card:', cardId)
+  }
+
+  // ===================================
+  // ➕ Add cashback record
+  // ===================================
+  const addCashbackRecord = async (record: any): Promise<void> => {
+    await addCashback(record)
+  }
+
+  // ===================================
+  // ⚙️ Get card settings
+  // ===================================
+  const getCardSettings = (cardId: string): any => {
+    return {
+      autoRedeem: false,
+      redeemThreshold: 100,
+      notifyOnEarn: true,
+    }
+  }
+
+  // ===================================
+  // 🔧 Update card settings
+  // ===================================
+  const updateCardSettings = async (cardId: string, settings: any): Promise<void> => {
+    console.log('Updating card settings:', cardId, settings)
+  }
+
+  // ===================================
+  // 📄 Get cashback record
+  // ===================================
+  const getCashbackRecord = (recordId: string): any => {
+    return getCashbackById(recordId)
+  }
+
+  // ===================================
+  // 💰 Redeem cashback
+  // ===================================
+  const redeemCashback = async (recordId: string, amount: number): Promise<void> => {
+    await updateCashback(recordId, { isRedeemed: true, status: 'received' })
+  }
+
+  return (
+    <CashbackContext.Provider
+      value={{
+        cashbacks,
+        loading,
+        error,
+        addCashback,
+        updateCashback,
+        deleteCashback,
+        getCashbackById,
+        getCashbacksBySource,
+        getTotalCashback,
+        getPendingCashback,
+        getReceivedCashback,
+        getCardCashbackRecords,
+        getCardRedemptions,
+        getCardStats,
+        processAutomaticRedemptions,
+        addCashbackRecord,
+        getCardSettings,
+        updateCardSettings,
+        getCashbackRecord,
+        redeemCashback,
+      }}
+    >
+      {children}
+    </CashbackContext.Provider>
+  )
 }
 
 export function useCashback() {
   const context = useContext(CashbackContext)
   if (!context) {
-    throw new Error('useCashback must be used within CashbackProvider')
+    throw new Error('useCashback must be used within a CashbackProvider')
   }
   return context
 }

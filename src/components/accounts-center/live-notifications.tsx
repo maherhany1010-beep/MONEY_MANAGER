@@ -155,12 +155,10 @@ export function LiveNotifications() {
 
   const handleMarkAllAsRead = () => {
     // في التطبيق الحقيقي، سيتم تحديث الحالة
-    console.log('Mark all as read')
   }
 
   const handleClearAll = () => {
     // في التطبيق الحقيقي، سيتم حذف جميع الإشعارات
-    console.log('Clear all notifications')
   }
 
   return (

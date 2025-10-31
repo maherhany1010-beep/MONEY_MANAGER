@@ -94,7 +94,6 @@ export default function StatementsPage() {
   })
 
   const handleExportStatement = (statementId: string, format: 'pdf' | 'excel') => {
-    console.log(`Exporting statement ${statementId} as ${format}`)
     // Implement export functionality
   }
 

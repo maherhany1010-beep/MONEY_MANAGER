@@ -70,7 +70,7 @@ export default function CardsPage() {
 
   // Get unique bank names for filter
   const uniqueBanks = useMemo(() => {
-    const banks = new Set(cards.map(card => card.bankName))
+    const banks = new Set(cards.map(card => card.bankName).filter((b): b is string => b !== undefined))
     return Array.from(banks).sort()
   }, [cards])
 
@@ -82,9 +82,9 @@ export default function CardsPage() {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(card =>
-        card.name.toLowerCase().includes(query) ||
-        card.cardNumberLastFour.toLowerCase().includes(query) ||
-        card.bankName.toLowerCase().includes(query)
+        (card.name ?? '').toLowerCase().includes(query) ||
+        (card.cardNumberLastFour ?? '').toLowerCase().includes(query) ||
+        (card.bankName ?? '').toLowerCase().includes(query)
       )
     }
 
@@ -109,25 +109,25 @@ export default function CardsPage() {
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'name-asc':
-          return a.name.localeCompare(b.name, 'ar')
+          return (a.name ?? '').localeCompare(b.name ?? '', 'ar')
         case 'name-desc':
-          return b.name.localeCompare(a.name, 'ar')
+          return (b.name ?? '').localeCompare(a.name ?? '', 'ar')
         case 'limit-desc':
-          return b.creditLimit - a.creditLimit
+          return (b.creditLimit ?? 0) - (a.creditLimit ?? 0)
         case 'limit-asc':
-          return a.creditLimit - b.creditLimit
+          return (a.creditLimit ?? 0) - (b.creditLimit ?? 0)
         case 'balance-desc':
-          return b.currentBalance - a.currentBalance
+          return (b.currentBalance ?? 0) - (a.currentBalance ?? 0)
         case 'balance-asc':
-          return a.currentBalance - b.currentBalance
+          return (a.currentBalance ?? 0) - (b.currentBalance ?? 0)
         case 'available-desc':
-          return (b.creditLimit - b.currentBalance) - (a.creditLimit - a.currentBalance)
+          return ((b.creditLimit ?? 0) - (b.currentBalance ?? 0)) - ((a.creditLimit ?? 0) - (a.currentBalance ?? 0))
         case 'available-asc':
-          return (a.creditLimit - a.currentBalance) - (b.creditLimit - b.currentBalance)
+          return ((a.creditLimit ?? 0) - (a.currentBalance ?? 0)) - ((b.creditLimit ?? 0) - (b.currentBalance ?? 0))
         case 'utilization-desc':
-          return (b.currentBalance / b.creditLimit) - (a.currentBalance / a.creditLimit)
+          return ((b.currentBalance ?? 0) / (b.creditLimit ?? 1)) - ((a.currentBalance ?? 0) / (a.creditLimit ?? 1))
         case 'utilization-asc':
-          return (a.currentBalance / a.creditLimit) - (b.currentBalance / b.creditLimit)
+          return ((a.currentBalance ?? 0) / (a.creditLimit ?? 1)) - ((b.currentBalance ?? 0) / (b.creditLimit ?? 1))
         default:
           return 0
       }

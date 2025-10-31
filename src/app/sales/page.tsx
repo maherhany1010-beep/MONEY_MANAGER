@@ -60,11 +60,11 @@ export default function SalesPage() {
 
   // Statistics
   const todaySales = getTodaySales()
-  const todayTotal = todaySales.reduce((sum, sale) => sum + sale.total, 0)
+  const todayTotal = todaySales.reduce((sum, sale) => sum + (sale.total ?? sale.total_amount ?? 0), 0)
   const todayCount = todaySales.length
 
   // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0)
+  const subtotal = cart.reduce((sum, item) => sum + (item.subtotal ?? item.total_price ?? 0), 0)
   const discountAmount = discountType === 'percentage'
     ? (subtotal * (parseFloat(discountValue) || 0)) / 100
     : parseFloat(discountValue) || 0
@@ -82,7 +82,7 @@ export default function SalesPage() {
     const product = products.find(p => p.id === productId)
     if (!product) return
 
-    if (product.totalStock <= 0) {
+    if ((product.totalStock ?? 0) <= 0) {
       setError('المنتج غير متوفر في المخزون')
       setTimeout(() => setError(''), 3000)
       return
@@ -90,7 +90,7 @@ export default function SalesPage() {
 
     const existingItem = cart.find(item => item.productId === productId)
     if (existingItem) {
-      if (existingItem.quantity >= product.totalStock) {
+      if (existingItem.quantity >= (product.totalStock ?? 0)) {
         setError('الكمية المطلوبة أكبر من المتوفر في المخزون')
         setTimeout(() => setError(''), 3000)
         return
@@ -98,11 +98,15 @@ export default function SalesPage() {
       updateQuantity(productId, existingItem.quantity + 1)
     } else {
       const newItem: SaleItem = {
+        product_id: product.id,
+        product_name: product.name,
+        quantity: 1,
+        unit_price: product.sellingPrice ?? product.price,
+        total_price: product.sellingPrice ?? product.price,
         productId: product.id,
         productName: product.name,
-        quantity: 1,
-        unitPrice: product.sellingPrice,
-        subtotal: product.sellingPrice,
+        unitPrice: product.sellingPrice ?? product.price,
+        subtotal: product.sellingPrice ?? product.price,
       }
       setCart([...cart, newItem])
     }
@@ -112,7 +116,7 @@ export default function SalesPage() {
     const product = products.find(p => p.id === productId)
     if (!product) return
 
-    if (newQuantity > product.totalStock) {
+    if (newQuantity > (product.totalStock ?? 0)) {
       setError('الكمية المطلوبة أكبر من المتوفر في المخزون')
       setTimeout(() => setError(''), 3000)
       return
@@ -125,7 +129,7 @@ export default function SalesPage() {
 
     setCart(cart.map(item =>
       item.productId === productId
-        ? { ...item, quantity: newQuantity, subtotal: item.unitPrice * newQuantity }
+        ? { ...item, quantity: newQuantity, subtotal: (item.unitPrice ?? 0) * newQuantity, total_price: (item.unit_price ?? 0) * newQuantity }
         : item
     ))
   }
@@ -148,7 +152,7 @@ export default function SalesPage() {
     setError('')
   }
 
-  const completeSale = () => {
+  const completeSale = async () => {
     setError('')
     setSuccess('')
 
@@ -192,7 +196,7 @@ export default function SalesPage() {
     // Check stock availability
     for (const item of cart) {
       const product = products.find(p => p.id === item.productId)
-      if (!product || product.totalStock < item.quantity) {
+      if (!product || (product.totalStock ?? 0) < item.quantity) {
         setError(`الكمية المتوفرة من ${item.productName} غير كافية`)
         return
       }
@@ -225,9 +229,16 @@ export default function SalesPage() {
 
     // Create sale
     const customer = customers.find(c => c.id === customerId)
-    const saleId = addSale({
+    const saleId = await addSale({
+      customer_id: customerId || null,
+      invoice_number: `INV-${Date.now()}`,
+      invoice_date: new Date().toISOString(),
+      total_amount: total,
+      paid_amount: parseFloat(amountPaid) || 0,
+      status: 'paid',
+      notes: null,
       customerId: customerId || undefined,
-      customerName: customer?.fullName || 'مبيعات نقدية',
+      customerName: customer?.fullName ?? customer?.name ?? 'مبيعات نقدية',
       items: cart,
       subtotal,
       discount: discountAmount,
@@ -238,10 +249,8 @@ export default function SalesPage() {
       paymentMethod: paymentMethod as 'cash' | 'deferred' | 'credit_card' | 'bank_transfer' | 'e_wallet',
       amountPaid: parseFloat(amountPaid) || total,
       change: Math.max(0, change),
-      status: 'completed',
       date: new Date().toISOString(),
-      notes: notes || undefined,
-    })
+    }, cart)
 
     // Process payment based on method
     if (paymentMethod === 'credit_card') {
@@ -262,7 +271,7 @@ export default function SalesPage() {
     if (paymentMethod === 'prepaid_card') {
       const prepaidCard = prepaidCards.find(c => c.id === selectedPrepaidCardId)
       if (prepaidCard) {
-        addPrepaidPurchase(selectedPrepaidCardId, total, 'نقطة البيع', 'مبيعات', `فاتورة: ${saleId}`)
+        addPrepaidPurchase(selectedPrepaidCardId, total, 'نقطة البيع', 'مبيعات')
       }
     }
 
@@ -275,7 +284,7 @@ export default function SalesPage() {
 
     if (paymentMethod === 'pos_machine') {
       const machine = machines.find(m => m.id === selectedPOSMachineId)
-      if (machine && machine.accounts.length > 0) {
+      if (machine && machine.accounts && machine.accounts.length > 0) {
         const primaryAccount = machine.accounts.find(a => a.isPrimary) || machine.accounts[0]
         updateAccountBalance(selectedPOSMachineId, primaryAccount.id, primaryAccount.balance + total)
       }
@@ -283,7 +292,9 @@ export default function SalesPage() {
 
     // Update stock
     cart.forEach(item => {
-      adjustStock(item.productId, -item.quantity, 'بيع', `فاتورة رقم: ${saleId}`)
+      if (item.productId) {
+        adjustStock(item.productId, -item.quantity)
+      }
     })
 
     setSuccess('تمت عملية البيع بنجاح!')
@@ -403,9 +414,9 @@ export default function SalesPage() {
                     <div className="flex-1">
                       <p className="font-medium">{product.name}</p>
                       <div className="flex gap-3 text-sm text-muted-foreground">
-                        <span>{formatCurrency(product.sellingPrice)}</span>
+                        <span>{formatCurrency(product.sellingPrice ?? 0)}</span>
                         <span>•</span>
-                        <span>متوفر: {product.totalStock} {product.unitType}</span>
+                        <span>متوفر: {product.totalStock ?? 0} {product.unitType ?? 'قطعة'}</span>
                       </div>
                     </div>
                     <Button size="sm" variant="outline">
@@ -445,16 +456,16 @@ export default function SalesPage() {
                 {cart.map((item) => (
                   <div key={item.productId} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="flex-1">
-                      <p className="font-medium">{item.productName}</p>
+                      <p className="font-medium">{item.productName ?? item.product_name ?? 'منتج'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {formatCurrency(item.unitPrice)} × {item.quantity}
+                        {formatCurrency(item.unitPrice ?? item.unit_price ?? 0)} × {item.quantity}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId ?? '', item.quantity - 1)}
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
@@ -462,7 +473,7 @@ export default function SalesPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId ?? '', item.quantity + 1)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
@@ -470,13 +481,13 @@ export default function SalesPage() {
                         size="sm"
                         variant="outline"
                         className="text-red-600"
-                        onClick={() => removeFromCart(item.productId)}
+                        onClick={() => removeFromCart(item.productId ?? '')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="font-bold">
-                      {formatCurrency(item.subtotal)}
+                      {formatCurrency(item.subtotal ?? item.total_price ?? 0)}
                     </div>
                   </div>
                 ))}

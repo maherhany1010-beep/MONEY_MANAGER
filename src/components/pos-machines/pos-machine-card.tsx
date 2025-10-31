@@ -52,10 +52,10 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
   }
 
   // حساب إجمالي الرصيد في جميع الحسابات
-  const totalBalance = machine.accounts.reduce((sum, acc) => sum + acc.balance, 0)
+  const totalBalance = (machine.accounts ?? []).reduce((sum, acc) => sum + acc.balance, 0)
 
   // الحساب الرئيسي
-  const primaryAccount = machine.accounts.find(acc => acc.isPrimary)
+  const primaryAccount = (machine.accounts ?? []).find(acc => acc.isPrimary)
 
   // حالة الهدف
   const getTargetStatus = () => {
@@ -125,7 +125,7 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
             {formatCurrency(totalBalance)}
           </p>
           <p className="text-xs text-indigo-600 dark:text-indigo-300 mt-1">
-            {machine.accounts.length} حساب
+            {(machine.accounts ?? []).length} حساب
           </p>
         </div>
 

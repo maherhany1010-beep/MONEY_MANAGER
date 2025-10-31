@@ -42,7 +42,7 @@ export function DashboardStats({ cards, transactions }: DashboardStatsProps) {
       purchases: currentMonthTransactions
         .filter(t => t.type === 'purchase')
         .reduce((sum, t) => sum + t.amount, 0),
-      fees: currentMonthTransactions.reduce((sum, t) => sum + t.fee, 0),
+      fees: currentMonthTransactions.reduce((sum, t) => sum + (t.fee ?? 0), 0),
       count: currentMonthTransactions.length,
     }
   }, [transactions])

@@ -38,14 +38,14 @@ export function SellInvestmentDialog({ open, onOpenChange, investment }: SellInv
   let avgPurchasePrice = 0
 
   if (investment.type === 'precious_metals') {
-    currentQuantity = investment.quantity
-    avgPurchasePrice = investment.purchasePrice
+    currentQuantity = investment.quantity ?? 0
+    avgPurchasePrice = investment.purchasePrice ?? 0
   } else if (investment.type === 'cryptocurrency') {
-    currentQuantity = investment.quantity
-    avgPurchasePrice = investment.purchasePrice
+    currentQuantity = investment.quantity ?? 0
+    avgPurchasePrice = investment.purchasePrice ?? 0
   } else if (investment.type === 'stock') {
-    currentQuantity = investment.shares
-    avgPurchasePrice = investment.purchasePrice
+    currentQuantity = investment.shares ?? 0
+    avgPurchasePrice = investment.purchasePrice ?? 0
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,11 +71,10 @@ export function SellInvestmentDialog({ open, onOpenChange, investment }: SellInv
     const commissionValue = commission ? parseFloat(commission) : 0
 
     sellInvestment(
-      investment.id, 
-      parseFloat(quantity), 
-      parseFloat(sellPrice), 
-      commissionValue, 
-      commissionType
+      investment.id,
+      parseFloat(quantity),
+      parseFloat(sellPrice),
+      commissionValue
     )
     
     setSuccess(true)

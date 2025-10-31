@@ -65,14 +65,14 @@ export function ReconciliationDialog({
     // Add reconciliation record
     addReconciliation({
       accountId,
-      accountType,
+      accountType: accountType as any,
       accountName,
       systemBalance: currentBalance,
       actualBalance: actualBalanceNum,
       difference,
-      notes: notes.trim() || undefined,
+      notes: notes.trim() || null,
       reconciliationDate: new Date().toISOString(),
-    })
+    } as any)
 
     // Call the onReconcile callback to update the account balance
     onReconcile(actualBalanceNum, difference, notes.trim() || undefined)

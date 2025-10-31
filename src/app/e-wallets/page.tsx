@@ -97,7 +97,7 @@ export default function EWalletsPage() {
   // Get unique providers for filter
   const providers = useMemo(() => {
     const uniqueProviders = new Set(wallets.map(w => w.provider))
-    return Array.from(uniqueProviders).filter(Boolean)
+    return Array.from(uniqueProviders).filter(Boolean) as string[]
   }, [wallets])
 
   // Filter and sort wallets
@@ -108,8 +108,8 @@ export default function EWalletsPage() {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(w =>
-        w.walletName.toLowerCase().includes(query) ||
-        w.provider.toLowerCase().includes(query) ||
+        (w.walletName ?? w.wallet_name ?? '').toLowerCase().includes(query) ||
+        (w.provider ?? '').toLowerCase().includes(query) ||
         w.phoneNumber?.toLowerCase().includes(query)
       )
     }
@@ -130,9 +130,9 @@ export default function EWalletsPage() {
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'name-asc':
-          return a.walletName.localeCompare(b.walletName, 'ar')
+          return (a.walletName ?? a.wallet_name ?? '').localeCompare((b.walletName ?? b.wallet_name ?? ''), 'ar')
         case 'name-desc':
-          return b.walletName.localeCompare(a.walletName, 'ar')
+          return (b.walletName ?? b.wallet_name ?? '').localeCompare((a.walletName ?? a.wallet_name ?? ''), 'ar')
         case 'balance-desc':
           return b.balance - a.balance
         case 'balance-asc':
@@ -247,7 +247,7 @@ export default function EWalletsPage() {
             open={isReconciliationDialogOpen}
             onOpenChange={setIsReconciliationDialogOpen}
             accountId={selectedWallet.id}
-            accountName={selectedWallet.walletName}
+            accountName={selectedWallet.walletName ?? selectedWallet.wallet_name ?? 'محفظة'}
             accountType="e_wallet"
             currentBalance={selectedWallet.balance}
             onReconcile={handleReconcileConfirm}

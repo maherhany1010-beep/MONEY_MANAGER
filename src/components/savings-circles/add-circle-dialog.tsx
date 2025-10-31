@@ -89,7 +89,29 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
     }
 
     try {
-      addCircle(formData)
+      addCircle({
+        circle_name: formData.name,
+        total_amount: parseFloat(formData.monthlyAmount) * parseFloat(formData.totalMembers),
+        monthly_payment: parseFloat(formData.monthlyAmount),
+        start_date: formData.startDate,
+        end_date: null,
+        status: 'active',
+        // Legacy fields
+        name: formData.name,
+        description: formData.description,
+        type: formData.type,
+        role: formData.role,
+        monthlyAmount: parseFloat(formData.monthlyAmount),
+        totalMembers: parseFloat(formData.totalMembers),
+        duration: parseFloat(formData.duration),
+        startDate: formData.startDate,
+        hasFees: formData.hasFees,
+        paymentMethod: formData.paymentMethod,
+        totalFees: 0,
+        currentBalance: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
       onOpenChange(false)
       // إعادة تعيين النموذج
       setFormData({

@@ -1,293 +1,329 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/auth-provider'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
+// ===================================
+// 📦 Database Schema Interface
+// ===================================
 export interface EWallet {
+  // Database fields (snake_case)
   id: string
-  walletName: string
-  provider: string // فودافون كاش، اتصالات كاش، أورانج كاش، إلخ
-  phoneNumber: string
+  user_id?: string
+  wallet_name: string
+  wallet_type: 'stc_pay' | 'apple_pay' | 'mada_pay' | 'urpay' | 'other'
+  phone_number: string | null
   balance: number
+  currency: string
+  status: string
+  created_at?: string
+  updated_at?: string
+
+  // Legacy fields for backward compatibility (camelCase)
+  walletName?: string
+  provider?: string
+  phoneNumber?: string
   isDefault?: boolean
-  // حدود المحفظة
   dailyLimit?: number
   monthlyLimit?: number
   transactionLimit?: number
-  dailyUsed?: number // المستخدم اليوم
-  monthlyUsed?: number // المستخدم هذا الشهر
-  // بيانات صاحب المحفظة
+  dailyUsed?: number
+  monthlyUsed?: number
   holderName?: string
   holderNationalId?: string
   holderEmail?: string
-  // إعدادات
-  walletType: 'personal' | 'business' | 'savings' // شخصية، تجارية، توفير
-  status: 'active' | 'suspended' | 'blocked' // نشطة، معلقة، محظورة
+  walletType?: 'personal' | 'business' | 'savings'
   isVerified?: boolean
-  kycLevel?: 1 | 2 | 3 // مستوى التحقق
-  // تواريخ
+  kycLevel?: 1 | 2 | 3
   createdDate?: string
   lastTransactionDate?: string
   verificationDate?: string
-  // إحصائيات
   totalDeposits?: number
   totalWithdrawals?: number
   totalTransfers?: number
   monthlyDeposits?: number
   monthlyWithdrawals?: number
   transactionCount?: number
-  // رسوم
-  depositFee?: number // رسوم الإيداع (نسبة مئوية)
-  withdrawalFee?: number // رسوم السحب (نسبة مئوية)
-  transferFee?: number // رسوم التحويل (نسبة مئوية)
-  // ملاحظات
+  depositFee?: number
+  withdrawalFee?: number
+  transferFee?: number
   notes?: string
   description?: string
 }
 
 interface EWalletsContextType {
   wallets: EWallet[]
-  updateWallets: (wallets: EWallet[]) => void
-  addWallet: (wallet: EWallet) => void
-  removeWallet: (id: string) => void
+  loading: boolean
+  error: string | null
+  updateWallets: (wallets: EWallet[]) => Promise<void>
+  addWallet: (wallet: Omit<EWallet, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<EWallet | null>
+  removeWallet: (id: string) => Promise<void>
   getDefaultWallet: () => EWallet | undefined
-  updateWalletBalance: (id: string, newBalance: number, transactionAmount?: number) => void
+  updateWalletBalance: (id: string, newBalance: number, transactionAmount?: number) => Promise<void>
   getWalletById: (id: string) => EWallet | undefined
-  updateDailyUsage: (id: string, amount: number) => void
-  updateMonthlyUsage: (id: string, amount: number) => void
+  updateDailyUsage: (id: string, amount: number) => Promise<void>
+  updateMonthlyUsage: (id: string, amount: number) => Promise<void>
 }
 
 const EWalletsContext = createContext<EWalletsContextType | undefined>(undefined)
 
-// البيانات الافتراضية
-const defaultWallets: EWallet[] = [
-  {
-    id: '1',
-    walletName: 'فودافون كاش الرئيسية',
-    provider: 'Vodafone Cash',
-    phoneNumber: '01012345678',
-    balance: 15000,
-    isDefault: true,
-    dailyLimit: 10000,
-    monthlyLimit: 100000,
-    transactionLimit: 5000,
-    dailyUsed: 2500,
-    monthlyUsed: 35000,
-    holderName: 'أحمد محمد علي',
-    holderNationalId: '29012011234567',
-    holderEmail: 'ahmed@example.com',
-    walletType: 'personal',
-    status: 'active',
-    isVerified: true,
-    kycLevel: 3,
-    createdDate: '2023-01-15',
-    lastTransactionDate: '2025-10-08',
-    verificationDate: '2023-01-20',
-    totalDeposits: 500000,
-    totalWithdrawals: 450000,
-    totalTransfers: 35000,
-    monthlyDeposits: 50000,
-    monthlyWithdrawals: 45000,
-    transactionCount: 342,
-    depositFee: 0,
-    withdrawalFee: 0,
-    transferFee: 0,
-    description: 'المحفظة الرئيسية للمعاملات اليومية',
-  },
-  {
-    id: '2',
-    walletName: 'اتصالات كاش',
-    provider: 'Etisalat Cash',
-    phoneNumber: '01112345678',
-    balance: 8500,
-    isDefault: false,
-    dailyLimit: 7000,
-    monthlyLimit: 70000,
-    transactionLimit: 3000,
-    dailyUsed: 1200,
-    monthlyUsed: 18000,
-    holderName: 'أحمد محمد علي',
-    holderNationalId: '29012011234567',
-    holderEmail: 'ahmed@example.com',
-    walletType: 'personal',
-    status: 'active',
-    isVerified: true,
-    kycLevel: 2,
-    createdDate: '2023-06-10',
-    lastTransactionDate: '2025-10-07',
-    verificationDate: '2023-06-15',
-    totalDeposits: 250000,
-    totalWithdrawals: 230000,
-    totalTransfers: 11500,
-    monthlyDeposits: 25000,
-    monthlyWithdrawals: 23000,
-    transactionCount: 156,
-    depositFee: 0,
-    withdrawalFee: 0.5,
-    transferFee: 0,
-    description: 'محفظة احتياطية للمعاملات',
-  },
-  {
-    id: '3',
-    walletName: 'أورانج كاش',
-    provider: 'Orange Cash',
-    phoneNumber: '01212345678',
-    balance: 5200,
-    isDefault: false,
-    dailyLimit: 5000,
-    monthlyLimit: 50000,
-    transactionLimit: 2000,
-    dailyUsed: 800,
-    monthlyUsed: 12000,
-    holderName: 'أحمد محمد علي',
-    holderNationalId: '29012011234567',
-    holderEmail: 'ahmed@example.com',
-    walletType: 'personal',
-    status: 'active',
-    isVerified: true,
-    kycLevel: 2,
-    createdDate: '2024-02-20',
-    lastTransactionDate: '2025-10-06',
-    verificationDate: '2024-02-25',
-    totalDeposits: 150000,
-    totalWithdrawals: 140000,
-    totalTransfers: 4800,
-    monthlyDeposits: 15000,
-    monthlyWithdrawals: 14000,
-    transactionCount: 89,
-    depositFee: 0,
-    withdrawalFee: 1,
-    transferFee: 0.5,
-    description: 'محفظة للمدفوعات الصغيرة',
-  },
-  {
-    id: '4',
-    walletName: 'محفظة الأعمال',
-    provider: 'Vodafone Cash',
-    phoneNumber: '01512345678',
-    balance: 45000,
-    isDefault: false,
-    dailyLimit: 50000,
-    monthlyLimit: 500000,
-    transactionLimit: 20000,
-    dailyUsed: 15000,
-    monthlyUsed: 180000,
-    holderName: 'شركة أحمد للتجارة',
-    holderNationalId: '12345678901234',
-    holderEmail: 'business@example.com',
-    walletType: 'business',
-    status: 'active',
-    isVerified: true,
-    kycLevel: 3,
-    createdDate: '2023-03-01',
-    lastTransactionDate: '2025-10-08',
-    verificationDate: '2023-03-05',
-    totalDeposits: 2000000,
-    totalWithdrawals: 1800000,
-    totalTransfers: 155000,
-    monthlyDeposits: 200000,
-    monthlyWithdrawals: 180000,
-    transactionCount: 567,
-    depositFee: 0,
-    withdrawalFee: 0,
-    transferFee: 0,
-    description: 'محفظة الأعمال للمعاملات التجارية',
-  },
-]
-
+// ===================================
+// 🎯 Provider Component
+// ===================================
 export function EWalletsProvider({ children }: { children: ReactNode }) {
-  const [wallets, setWallets] = useState<EWallet[]>(defaultWallets)
+  const [wallets, setWallets] = useState<EWallet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const supabase = createClientComponentClient()
 
-  // تحميل البيانات من localStorage عند بدء التطبيق
+  // ===================================
+  // 📥 Load wallets from Supabase
+  // ===================================
+  const loadWallets = async () => {
+    if (!user) {
+      setWallets([])
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('e_wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error loading e-wallets:', fetchError)
+        setError(fetchError.message)
+      } else {
+        setWallets(data || [])
+      }
+    } catch (err) {
+      console.error('Unexpected error loading e-wallets:', err)
+      setError('حدث خطأ غير متوقع')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ===================================
+  // 🔄 Real-time subscription
+  // ===================================
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedWallets = localStorage.getItem('eWallets')
-      if (savedWallets) {
-        try {
-          setWallets(JSON.parse(savedWallets))
-        } catch (error) {
-          console.error('Error loading e-wallets:', error)
-        }
-      }
+    if (!user) {
+      setWallets([])
+      setLoading(false)
+      return
     }
-  }, [])
 
-  // حفظ البيانات في localStorage عند التحديث
-  const updateWallets = (newWallets: EWallet[]) => {
-    setWallets(newWallets)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('eWallets', JSON.stringify(newWallets))
+    loadWallets()
+
+    const channel: RealtimeChannel = supabase
+      .channel('e_wallets_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'e_wallets',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setWallets((prev) => [payload.new as EWallet, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setWallets((prev) =>
+              prev.map((wallet) =>
+                wallet.id === (payload.new as EWallet).id
+                  ? (payload.new as EWallet)
+                  : wallet
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setWallets((prev) =>
+              prev.filter((wallet) => wallet.id !== (payload.old as EWallet).id)
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user, supabase])
+
+  // ===================================
+  // ➕ Add wallet
+  // ===================================
+  const addWallet = async (
+    wallet: Omit<EWallet, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<EWallet | null> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return null
+    }
+
+    try {
+      const { data, error: insertError } = await supabase
+        .from('e_wallets')
+        .insert([
+          {
+            user_id: user.id,
+            wallet_name: wallet.wallet_name,
+            wallet_type: wallet.wallet_type,
+            phone_number: wallet.phone_number,
+            balance: wallet.balance,
+            currency: wallet.currency || 'SAR',
+            status: wallet.status || 'active',
+          },
+        ])
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Error adding wallet:', insertError)
+        setError(insertError.message)
+        return null
+      }
+
+      return data
+    } catch (err) {
+      console.error('Unexpected error adding wallet:', err)
+      setError('حدث خطأ غير متوقع')
+      return null
     }
   }
 
-  const addWallet = (wallet: EWallet) => {
-    const newWallets = [...wallets, wallet]
-    updateWallets(newWallets)
-  }
+  // ===================================
+  // 🗑️ Remove wallet
+  // ===================================
+  const removeWallet = async (id: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
 
-  const removeWallet = (id: string) => {
-    const newWallets = wallets.filter(w => w.id !== id)
-    updateWallets(newWallets)
-  }
+    try {
+      const { error: deleteError } = await supabase
+        .from('e_wallets')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
 
-  const getDefaultWallet = () => {
-    return wallets.find(w => w.isDefault) || wallets[0]
-  }
-
-  const updateWalletBalance = (id: string, newBalance: number, transactionAmount?: number) => {
-    const updatedWallets = wallets.map(w => {
-      if (w.id === id) {
-        const updates: Partial<EWallet> = { balance: newBalance }
-
-        // تحديث الحدود المستخدمة إذا كان هناك مبلغ معاملة
-        if (transactionAmount) {
-          const amount = Math.abs(transactionAmount)
-          // تحديث الحدود لكل من السحب والإيداع
-          updates.dailyUsed = (w.dailyUsed || 0) + amount
-          updates.monthlyUsed = (w.monthlyUsed || 0) + amount
-        }
-
-        return { ...w, ...updates }
+      if (deleteError) {
+        console.error('Error removing wallet:', deleteError)
+        setError(deleteError.message)
       }
-      return w
-    })
-    updateWallets(updatedWallets)
+    } catch (err) {
+      console.error('Unexpected error removing wallet:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
-  const getWalletById = (id: string) => {
-    return wallets.find(w => w.id === id)
+  // ===================================
+  // 🔄 Update wallets (bulk update)
+  // ===================================
+  const updateWallets = async (newWallets: EWallet[]): Promise<void> => {
+    // This is kept for backward compatibility but not recommended
+    // Better to use individual update operations
+    console.warn('updateWallets: Bulk updates not implemented, use individual operations')
   }
 
-  const updateDailyUsage = (id: string, amount: number) => {
-    const updatedWallets = wallets.map(w => 
-      w.id === id ? { ...w, dailyUsed: (w.dailyUsed || 0) + amount } : w
-    )
-    updateWallets(updatedWallets)
+  // ===================================
+  // 💰 Update wallet balance
+  // ===================================
+  const updateWalletBalance = async (
+    id: string,
+    newBalance: number,
+    transactionAmount?: number
+  ): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('e_wallets')
+        .update({ balance: newBalance })
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating wallet balance:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating wallet balance:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
-  const updateMonthlyUsage = (id: string, amount: number) => {
-    const updatedWallets = wallets.map(w => 
-      w.id === id ? { ...w, monthlyUsed: (w.monthlyUsed || 0) + amount } : w
-    )
-    updateWallets(updatedWallets)
+  // ===================================
+  // 🔍 Get wallet by ID
+  // ===================================
+  const getWalletById = (id: string): EWallet | undefined => {
+    return wallets.find((w) => w.id === id)
   }
 
+  // ===================================
+  // 🎯 Get default wallet
+  // ===================================
+  const getDefaultWallet = (): EWallet | undefined => {
+    return wallets.find((w) => w.isDefault) || wallets[0]
+  }
+
+  // ===================================
+  // 📊 Update daily usage (legacy - kept for compatibility)
+  // ===================================
+  const updateDailyUsage = async (id: string, amount: number): Promise<void> => {
+    // This is a legacy function - daily usage tracking should be done differently
+    console.warn('updateDailyUsage: Legacy function, consider alternative tracking')
+  }
+
+  // ===================================
+  // 📊 Update monthly usage (legacy - kept for compatibility)
+  // ===================================
+  const updateMonthlyUsage = async (id: string, amount: number): Promise<void> => {
+    // This is a legacy function - monthly usage tracking should be done differently
+    console.warn('updateMonthlyUsage: Legacy function, consider alternative tracking')
+  }
+
+  // ===================================
+  // 🎁 Provider Value
+  // ===================================
   return (
-    <EWalletsContext.Provider value={{ 
-      wallets, 
-      updateWallets, 
-      addWallet, 
-      removeWallet,
-      getDefaultWallet,
-      updateWalletBalance,
-      getWalletById,
-      updateDailyUsage,
-      updateMonthlyUsage
-    }}>
+    <EWalletsContext.Provider
+      value={{
+        wallets,
+        loading,
+        error,
+        updateWallets,
+        addWallet,
+        removeWallet,
+        getDefaultWallet,
+        updateWalletBalance,
+        getWalletById,
+        updateDailyUsage,
+        updateMonthlyUsage,
+      }}
+    >
       {children}
     </EWalletsContext.Provider>
   )
 }
 
+// ===================================
+// 🪝 Custom Hook
+// ===================================
 export function useEWallets() {
   const context = useContext(EWalletsContext)
   if (context === undefined) {

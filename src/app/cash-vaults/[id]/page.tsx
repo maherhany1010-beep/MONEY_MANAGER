@@ -94,15 +94,15 @@ export default function CashVaultDetailsPage() {
 
         {/* معلومات الخزينة */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType)} p-8 text-white`}>
+          <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-8 text-white`}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Vault className="h-8 w-8" />
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">{vault.vaultName}</h1>
+                  <h1 className="text-3xl font-bold mb-2">{vault.vaultName ?? vault.vault_name ?? 'خزينة'}</h1>
                   <div className="flex items-center gap-2 text-sm opacity-90">
                     <MapPin className="h-4 w-4" />
-                    <p>{vault.location}</p>
+                    <p>{vault.location ?? 'غير محدد'}</p>
                   </div>
                 </div>
               </div>
@@ -113,11 +113,11 @@ export default function CashVaultDetailsPage() {
                   </Badge>
                 )}
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                  {getVaultTypeLabel(vault.vaultType)}
+                  {getVaultTypeLabel(vault.vaultType ?? 'main')}
                 </Badge>
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30 flex items-center gap-1">
-                  {getAccessLevelIcon(vault.accessLevel)}
-                  <span>{getAccessLevelLabel(vault.accessLevel)}</span>
+                  {getAccessLevelIcon(vault.accessLevel ?? 'private')}
+                  <span>{getAccessLevelLabel(vault.accessLevel ?? 'private')}</span>
                 </Badge>
               </div>
             </div>

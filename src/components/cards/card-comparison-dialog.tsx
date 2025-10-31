@@ -37,12 +37,12 @@ export function CardComparisonDialog({ cards }: CardComparisonDialogProps) {
 
     // Calculate scores
     const scores = compareCards.map(card => {
-      const utilization = calculateCreditUtilization(card.currentBalance, card.creditLimit)
-      const availableCredit = card.creditLimit - card.currentBalance
-      
+      const utilization = calculateCreditUtilization(card.currentBalance ?? 0, card.creditLimit ?? 0)
+      const availableCredit = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
+
       // Score calculation (higher is better)
       let score = 0
-      score += card.cashbackRate * 10 // Cashback weight
+      score += (card.cashbackRate ?? 0) * 10 // Cashback weight
       score += (availableCredit / 10000) * 5 // Available credit weight
       score += (100 - utilization) * 2 // Low utilization is better
       score += card.isActive ? 10 : 0 // Active card bonus
@@ -135,7 +135,7 @@ export function CardComparisonDialog({ cards }: CardComparisonDialogProps) {
                 <Card key={card.id} className={bestCard?.id === card.id ? 'border-green-500 dark:border-green-400' : ''}>
                   <CardContent className="p-4">
                     <div className="text-center space-y-2">
-                      <div className="text-2xl">{getCardTypeIcon(card.cardType)}</div>
+                      <div className="text-2xl">{getCardTypeIcon(card.cardType ?? '')}</div>
                       <div className="font-semibold text-sm">{card.name}</div>
                       <div className="text-xs text-muted-foreground">{card.bankName}</div>
                       {bestCard?.id === card.id && (
@@ -159,21 +159,21 @@ export function CardComparisonDialog({ cards }: CardComparisonDialogProps) {
                 <ComparisonRow
                   label="الحد الائتماني"
                   icon={CreditCard}
-                  getValue={(card) => formatCurrency(card.creditLimit)}
+                  getValue={(card) => formatCurrency(card.creditLimit ?? 0)}
                 />
                 <ComparisonRow
                   label="الرصيد المستخدم"
                   icon={DollarSign}
-                  getValue={(card) => formatCurrency(card.currentBalance)}
+                  getValue={(card) => formatCurrency(card.currentBalance ?? 0)}
                 />
                 <ComparisonRow
                   label="الرصيد المتاح"
-                  getValue={(card) => formatCurrency(card.creditLimit - card.currentBalance)}
+                  getValue={(card) => formatCurrency((card.creditLimit ?? 0) - (card.currentBalance ?? 0))}
                 />
                 <ComparisonRow
                   label="نسبة الاستخدام"
                   icon={TrendingUp}
-                  getValue={(card) => formatPercentage(calculateCreditUtilization(card.currentBalance, card.creditLimit))}
+                  getValue={(card) => formatPercentage(calculateCreditUtilization(card.currentBalance ?? 0, card.creditLimit ?? 0))}
                 />
                 <ComparisonRow
                   label="نسبة الكاش باك"
@@ -208,8 +208,8 @@ export function CardComparisonDialog({ cards }: CardComparisonDialogProps) {
                       </p>
                       <ul className="text-sm text-green-800 dark:text-green-200 mt-2 space-y-1 mr-4">
                         <li>• نسبة كاش باك عالية ({bestCard.cashbackRate}%)</li>
-                        <li>• رصيد متاح جيد ({formatCurrency(bestCard.creditLimit - bestCard.currentBalance)})</li>
-                        <li>• نسبة استخدام منخفضة ({formatPercentage(calculateCreditUtilization(bestCard.currentBalance, bestCard.creditLimit))})</li>
+                        <li>• رصيد متاح جيد ({formatCurrency((bestCard.creditLimit ?? 0) - (bestCard.currentBalance ?? 0))})</li>
+                        <li>• نسبة استخدام منخفضة ({formatPercentage(calculateCreditUtilization(bestCard.currentBalance ?? 0, bestCard.creditLimit ?? 0))})</li>
                       </ul>
                     </div>
                   </div>

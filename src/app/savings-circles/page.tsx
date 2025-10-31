@@ -65,8 +65,8 @@ export default function SavingsCirclesPage() {
 
   // مكون بطاقة الجمعية
   const CircleCard = ({ circle }: { circle: SavingsCircle }) => {
-    const totalAmount = circle.monthlyAmount * circle.totalMembers
-    const progress = (circle.currentRound / circle.duration) * 100
+    const totalAmount = (circle.monthlyAmount ?? 0) * (circle.totalMembers ?? 0)
+    const progress = ((circle.currentRound ?? 0) / (circle.duration ?? 1)) * 100
 
     return (
       <Card className="hover:shadow-lg transition-shadow duration-300 border-2">
@@ -186,9 +186,9 @@ export default function SavingsCirclesPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCircles}</div>
+            <div className="text-2xl font-bold">{stats?.totalCircles ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.activeCircles} نشطة
+              {stats?.activeCircles ?? 0} نشطة
             </p>
           </CardContent>
         </Card>
@@ -200,7 +200,7 @@ export default function SavingsCirclesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats.totalMonthlyCommitment)}
+              {formatCurrency(stats?.totalMonthlyCommitment ?? 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               كعضو في الجمعيات
@@ -215,7 +215,7 @@ export default function SavingsCirclesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats.totalInCircles)}
+              {formatCurrency(stats?.totalInCircles ?? 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               في جميع الجمعيات
@@ -230,7 +230,7 @@ export default function SavingsCirclesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats.totalFeesEarned)}
+              {formatCurrency(stats?.totalFeesEarned ?? 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               كمدير للجمعيات
@@ -271,7 +271,7 @@ export default function SavingsCirclesPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {managerCircles.map(circle => (
-                <CircleCard key={circle.id} circle={circle} />
+                <CircleCard key={circle.id} circle={circle as any} />
               ))}
             </div>
           )}
@@ -295,7 +295,7 @@ export default function SavingsCirclesPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {memberCircles.map(circle => (
-                <CircleCard key={circle.id} circle={circle} />
+                <CircleCard key={circle.id} circle={circle as any} />
               ))}
             </div>
           )}
@@ -315,7 +315,7 @@ export default function SavingsCirclesPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {completedCircles.map(circle => (
-                <CircleCard key={circle.id} circle={circle} />
+                <CircleCard key={circle.id} circle={circle as any} />
               ))}
             </div>
           )}

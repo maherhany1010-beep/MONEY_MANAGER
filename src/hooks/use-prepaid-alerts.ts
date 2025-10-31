@@ -61,12 +61,12 @@ export function usePrepaidAlerts() {
         }
 
         // 2. Daily Limit Warning (80% or more)
-        const dailyUsagePercentage = (card.dailyUsed / card.dailyLimit) * 100
+        const dailyUsagePercentage = ((card.dailyUsed ?? 0) / (card.dailyLimit ?? 1)) * 100
         if (
           dailyUsagePercentage >= LIMIT_WARNING_PERCENTAGE &&
           !alertsSent.dailyLimit.includes(card.id)
         ) {
-          const remaining = card.dailyLimit - card.dailyUsed
+          const remaining = (card.dailyLimit ?? 0) - (card.dailyUsed ?? 0)
           addNotification(
             'credit_limit',
             'اقتراب من الحد اليومي',
@@ -77,12 +77,12 @@ export function usePrepaidAlerts() {
         }
 
         // 3. Monthly Limit Warning (80% or more)
-        const monthlyUsagePercentage = (card.monthlyUsed / card.monthlyLimit) * 100
+        const monthlyUsagePercentage = ((card.monthlyUsed ?? 0) / (card.monthlyLimit ?? 1)) * 100
         if (
           monthlyUsagePercentage >= LIMIT_WARNING_PERCENTAGE &&
           !alertsSent.monthlyLimit.includes(card.id)
         ) {
-          const remaining = card.monthlyLimit - card.monthlyUsed
+          const remaining = (card.monthlyLimit ?? 0) - (card.monthlyUsed ?? 0)
           addNotification(
             'credit_limit',
             'اقتراب من الحد الشهري',
@@ -93,7 +93,7 @@ export function usePrepaidAlerts() {
         }
 
         // 4. Card Expiring Soon (30 days or less)
-        const expiryDate = new Date(card.expiryDate)
+        const expiryDate = new Date(card.expiryDate ?? '')
         const now = new Date()
         const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 

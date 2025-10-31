@@ -50,9 +50,13 @@ export default function TransfersPage() {
   const completedCount = transfers.filter(t => t.status === 'completed').length
 
   // تصفية التحويلات
-  const filteredTransfers = filterType === 'all' 
-    ? transfers 
-    : transfers.filter(t => t.fromAccount.type === filterType || t.toAccount.type === filterType)
+  const filteredTransfers = filterType === 'all'
+    ? transfers
+    : transfers.filter(t => {
+        const fromType = typeof t.fromAccount === 'object' ? t.fromAccount?.type : undefined
+        const toType = typeof t.toAccount === 'object' ? t.toAccount?.type : undefined
+        return fromType === filterType || toType === filterType
+      })
 
   const getTypeIcon = (type: AccountType) => {
     switch (type) {
@@ -185,12 +189,12 @@ export default function TransfersPage() {
                         {/* الحساب المصدر */}
                         <div className="flex items-center gap-2 min-w-[200px]">
                           <div className="p-2 bg-red-100 rounded-lg">
-                            {getTypeIcon(transfer.fromAccount.type)}
+                            {getTypeIcon(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{transfer.fromAccount.name}</p>
-                            <Badge className={`text-xs ${getTypeBadgeColor(transfer.fromAccount.type)}`}>
-                              {getTypeLabel(transfer.fromAccount.type)}
+                            <p className="font-medium text-sm">{typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount}</p>
+                            <Badge className={`text-xs ${getTypeBadgeColor(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}`}>
+                              {getTypeLabel(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}
                             </Badge>
                           </div>
                         </div>
@@ -203,12 +207,12 @@ export default function TransfersPage() {
                         {/* الحساب المستهدف */}
                         <div className="flex items-center gap-2 min-w-[200px]">
                           <div className="p-2 bg-green-100 rounded-lg">
-                            {getTypeIcon(transfer.toAccount.type)}
+                            {getTypeIcon(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{transfer.toAccount.name}</p>
-                            <Badge className={`text-xs ${getTypeBadgeColor(transfer.toAccount.type)}`}>
-                              {getTypeLabel(transfer.toAccount.type)}
+                            <p className="font-medium text-sm">{typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}</p>
+                            <Badge className={`text-xs ${getTypeBadgeColor(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}`}>
+                              {getTypeLabel(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}
                             </Badge>
                           </div>
                         </div>
@@ -216,11 +220,11 @@ export default function TransfersPage() {
                         {/* التفاصيل */}
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground">
-                            {transfer.date} - {transfer.time}
+                            {transfer.date ?? transfer.transfer_date} - {transfer.time ?? ''}
                           </p>
-                          {transfer.fee && transfer.fee > 0 && (
+                          {(transfer.fee ?? transfer.fees ?? 0) > 0 && (
                             <p className="text-xs text-orange-600 mt-1">
-                              رسوم: {formatCurrency(transfer.fee)}
+                              رسوم: {formatCurrency(transfer.fee ?? transfer.fees ?? 0)}
                               {transfer.feeBearer && ` (${transfer.feeBearer === 'sender' ? 'المرسل' : transfer.feeBearer === 'receiver' ? 'المستقبل' : 'لا أحد'})`}
                             </p>
                           )}
@@ -237,9 +241,9 @@ export default function TransfersPage() {
                         <p className="text-xl font-bold text-blue-600">
                           {formatCurrency(transfer.amount)}
                         </p>
-                        {transfer.fee && transfer.fee > 0 && (
+                        {(transfer.fee ?? transfer.fees ?? 0) > 0 && (
                           <p className="text-xs text-muted-foreground">
-                            + {formatCurrency(transfer.fee)} رسوم
+                            + {formatCurrency(transfer.fee ?? transfer.fees ?? 0)} رسوم
                           </p>
                         )}
                         <Badge
@@ -281,9 +285,9 @@ export default function TransfersPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">
-                            {transfer.fromAccount.name} → {transfer.toAccount.name}
+                            {typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount} → {typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}
                           </p>
-                          <p className="text-xs text-muted-foreground">{transfer.time}</p>
+                          <p className="text-xs text-muted-foreground">{transfer.time ?? ''}</p>
                         </div>
                       </div>
                       <p className="text-lg font-bold text-blue-600">
@@ -321,10 +325,10 @@ export default function TransfersPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">
-                            {transfer.fromAccount.name} → {transfer.toAccount.name}
+                            {typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount} → {typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {transfer.date} - {transfer.time}
+                            {transfer.date ?? transfer.transfer_date} - {transfer.time ?? ''}
                           </p>
                         </div>
                       </div>

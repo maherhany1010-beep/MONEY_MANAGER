@@ -1,6 +1,7 @@
 {
   "name": "comprehensive-financial-management",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "الإدارة المالية الشاملة - لإدارة أموالك بشكل أكثر احترافية ودقة",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,7 +10,9 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf .next out node_modules/.cache"
+    "clean": "rm -rf .next out node_modules/.cache",
+    "migrate": "tsx scripts/apply-migrations.ts",
+    "migrate:verify": "tsx scripts/verify-migrations.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -48,7 +51,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "xlsx": "^0.18.5",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -56,9 +60,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

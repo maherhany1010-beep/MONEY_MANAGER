@@ -119,16 +119,16 @@ export default function CustomerDetailsPage() {
               </Button>
             </Link>
             <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-              {customer.fullName.charAt(0)}
+              {(customer.fullName ?? customer.name ?? 'C').charAt(0)}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{customer.fullName}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{customer.fullName ?? customer.name}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(customer.status)}`}>
-                  {getStatusText(customer.status)}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(customer.status ?? 'active')}`}>
+                  {getStatusText(customer.status ?? 'active')}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(customer.category)}`}>
-                  {getCategoryText(customer.category)}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(customer.category ?? 'regular')}`}>
+                  {getCategoryText(customer.category ?? 'regular')}
                 </span>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function CustomerDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-700 font-medium">إجمالي المشتريات</p>
-                <p className="text-3xl font-bold text-blue-900 mt-1">{formatCurrency(customer.totalPurchases)}</p>
+                <p className="text-3xl font-bold text-blue-900 mt-1">{formatCurrency(customer.totalPurchases ?? 0)}</p>
               </div>
               <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
                 <TrendingUp className="h-6 w-6 text-white" />
@@ -168,7 +168,7 @@ export default function CustomerDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-emerald-700 font-medium">إجمالي المدفوعات</p>
-                <p className="text-3xl font-bold text-emerald-900 mt-1">{formatCurrency(customer.totalPayments)}</p>
+                <p className="text-3xl font-bold text-emerald-900 mt-1">{formatCurrency(customer.totalPayments ?? 0)}</p>
               </div>
               <div className="p-3 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg shadow-md">
                 <TrendingDown className="h-6 w-6 text-white" />
@@ -177,21 +177,21 @@ export default function CustomerDetailsPage() {
           </div>
 
           <div className={`bg-gradient-to-br rounded-xl p-6 shadow-sm border-2 ${
-            customer.currentDebt > 0
+            (customer.currentDebt ?? 0) > 0
               ? 'from-rose-50 to-red-50 border-rose-200'
               : 'from-emerald-50 to-green-50 border-emerald-200'
           }`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${customer.currentDebt > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                <p className={`text-sm font-medium ${(customer.currentDebt ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
                   المديونية الحالية
                 </p>
-                <p className={`text-3xl font-bold mt-1 ${customer.currentDebt > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
-                  {formatCurrency(customer.currentDebt)}
+                <p className={`text-3xl font-bold mt-1 ${(customer.currentDebt ?? 0) > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
+                  {formatCurrency(customer.currentDebt ?? 0)}
                 </p>
               </div>
               <div className={`p-3 rounded-lg shadow-md ${
-                customer.currentDebt > 0
+                (customer.currentDebt ?? 0) > 0
                   ? 'bg-gradient-to-br from-red-600 to-rose-600'
                   : 'bg-gradient-to-br from-green-600 to-emerald-600'
               }`}>
@@ -386,7 +386,7 @@ export default function CustomerDetailsPage() {
         <CustomerDialog
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
-          customer={customer}
+          customer={customer as any}
         />
 
         <InvoiceDialog

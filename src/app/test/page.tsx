@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function TestPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
@@ -12,12 +14,12 @@ export default function TestPage() {
           <p className="text-lg text-gray-700 dark:text-gray-200">
             🎉 مرحباً بك في تطبيق إدارة البطاقات الائتمانية الشامل
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             اذهب إلى لوحة التحكم
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,0 +1,154 @@
+# ============================================
+# Code Owners for Money Manager Project
+# ============================================
+# 
+# هذا الملف يحدد من هم المسؤولون عن مراجعة التغييرات
+# في أجزاء مختلفة من المشروع
+#
+# المزيد من المعلومات:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+
+# ============================================
+# Global Owners (المالكون العامون)
+# ============================================
+# هؤلاء المالكون سيتم طلب مراجعتهم لأي تغيير
+# ما لم يتم تحديد مالك أكثر تحديداً أدناه
+
+* @maherhany1010-beep
+
+# ============================================
+# Application Code (كود التطبيق)
+# ============================================
+
+# App Router & Pages
+/src/app/ @maherhany1010-beep
+
+# Components
+/src/components/ @maherhany1010-beep
+/src/components/ui/ @maherhany1010-beep
+
+# Contexts & State Management
+/src/contexts/ @maherhany1010-beep
+
+# Custom Hooks
+/src/hooks/ @maherhany1010-beep
+
+# Utilities & Libraries
+/src/lib/ @maherhany1010-beep
+
+# Type Definitions
+/src/types/ @maherhany1010-beep
+
+# ============================================
+# Database & Backend (قاعدة البيانات)
+# ============================================
+
+# Supabase Schema & Migrations
+/supabase/ @maherhany1010-beep
+/supabase/schema.sql @maherhany1010-beep
+/supabase/migrations/ @maherhany1010-beep
+
+# API Routes
+/src/app/api/ @maherhany1010-beep
+
+# ============================================
+# Configuration Files (ملفات الإعدادات)
+# ============================================
+
+# Next.js Configuration
+next.config.* @maherhany1010-beep
+next-env.d.ts @maherhany1010-beep
+
+# TypeScript Configuration
+tsconfig.json @maherhany1010-beep
+
+# ESLint Configuration
+eslint.config.* @maherhany1010-beep
+.eslintrc* @maherhany1010-beep
+
+# Tailwind CSS Configuration
+tailwind.config.* @maherhany1010-beep
+postcss.config.* @maherhany1010-beep
+
+# Package Management
+package.json @maherhany1010-beep
+package-lock.json @maherhany1010-beep
+yarn.lock @maherhany1010-beep
+pnpm-lock.yaml @maherhany1010-beep
+
+# Environment Variables
+.env.example @maherhany1010-beep
+
+# ============================================
+# CI/CD & GitHub (التكامل المستمر)
+# ============================================
+
+# GitHub Actions
+/.github/workflows/ @maherhany1010-beep
+
+# GitHub Configuration
+/.github/ @maherhany1010-beep
+/.github/CODEOWNERS @maherhany1010-beep
+
+# Vercel Configuration
+vercel.json @maherhany1010-beep
+.vercel/ @maherhany1010-beep
+
+# ============================================
+# Documentation (التوثيق)
+# ============================================
+
+# Main Documentation
+README.md @maherhany1010-beep
+DOCUMENTATION_GUIDE.md @maherhany1010-beep
+START_HERE.md @maherhany1010-beep
+
+# Security & Contributing
+SECURITY.md @maherhany1010-beep
+CONTRIBUTING.md @maherhany1010-beep
+LICENSE.md @maherhany1010-beep
+
+# Reports & Guides
+*.md @maherhany1010-beep
+
+# ============================================
+# Styles (الأنماط)
+# ============================================
+
+# Global Styles
+/src/app/globals.css @maherhany1010-beep
+
+# Component Styles
+/src/components/**/*.css @maherhany1010-beep
+
+# ============================================
+# Assets (الملفات الثابتة)
+# ============================================
+
+# Public Assets
+/public/ @maherhany1010-beep
+
+# ============================================
+# Testing (الاختبارات)
+# ============================================
+
+# Test Files
+**/*.test.ts @maherhany1010-beep
+**/*.test.tsx @maherhany1010-beep
+**/*.spec.ts @maherhany1010-beep
+**/*.spec.tsx @maherhany1010-beep
+
+# Test Configuration
+jest.config.* @maherhany1010-beep
+vitest.config.* @maherhany1010-beep
+
+# ============================================
+# Notes (ملاحظات)
+# ============================================
+#
+# - يمكنك إضافة مراجعين إضافيين بإضافة @username
+# - الترتيب مهم: القواعد الأكثر تحديداً تأتي أخيراً
+# - يمكنك استخدام teams بدلاً من users: @org/team-name
+#
+

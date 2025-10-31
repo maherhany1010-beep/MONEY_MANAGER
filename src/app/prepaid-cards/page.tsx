@@ -82,9 +82,9 @@ export default function PrepaidCardsPage() {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(
         card =>
-          card.cardName.toLowerCase().includes(query) ||
-          card.cardNumber.toLowerCase().includes(query) ||
-          card.provider.toLowerCase().includes(query)
+          (card.cardName ?? '').toLowerCase().includes(query) ||
+          (card.cardNumber ?? '').toLowerCase().includes(query) ||
+          (card.provider ?? '').toLowerCase().includes(query)
       )
     }
 
@@ -100,7 +100,7 @@ export default function PrepaidCardsPage() {
 
     // Provider filter
     if (filters.provider !== 'all') {
-      filtered = filtered.filter(card => card.provider.includes(filters.provider))
+      filtered = filtered.filter(card => (card.provider ?? '').includes(filters.provider))
     }
 
     // Sort
@@ -111,17 +111,17 @@ export default function PrepaidCardsPage() {
         case 'balance-asc':
           return a.balance - b.balance
         case 'usage-desc':
-          return (b.dailyUsed + b.monthlyUsed) - (a.dailyUsed + a.monthlyUsed)
+          return ((b.dailyUsed ?? 0) + (b.monthlyUsed ?? 0)) - ((a.dailyUsed ?? 0) + (a.monthlyUsed ?? 0))
         case 'usage-asc':
-          return (a.dailyUsed + a.monthlyUsed) - (b.dailyUsed + b.monthlyUsed)
+          return ((a.dailyUsed ?? 0) + (a.monthlyUsed ?? 0)) - ((b.dailyUsed ?? 0) + (b.monthlyUsed ?? 0))
         case 'date-desc':
-          return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
+          return new Date(b.issueDate ?? 0).getTime() - new Date(a.issueDate ?? 0).getTime()
         case 'date-asc':
-          return new Date(a.issueDate).getTime() - new Date(b.issueDate).getTime()
+          return new Date(a.issueDate ?? 0).getTime() - new Date(b.issueDate ?? 0).getTime()
         case 'name-asc':
-          return a.cardName.localeCompare(b.cardName, 'ar')
+          return (a.cardName ?? a.card_name ?? '').localeCompare((b.cardName ?? b.card_name ?? ''), 'ar')
         case 'name-desc':
-          return b.cardName.localeCompare(a.cardName, 'ar')
+          return (b.cardName ?? b.card_name ?? '').localeCompare((a.cardName ?? a.card_name ?? ''), 'ar')
         default:
           return 0
       }
@@ -385,7 +385,7 @@ export default function PrepaidCardsPage() {
             open={isReconciliationDialogOpen}
             onOpenChange={setIsReconciliationDialogOpen}
             accountId={selectedCard.id}
-            accountName={selectedCard.cardName}
+            accountName={selectedCard.cardName ?? selectedCard.card_name ?? 'بطاقة'}
             accountType="prepaid_card"
             currentBalance={selectedCard.balance}
             onReconcile={handleReconcileConfirm}

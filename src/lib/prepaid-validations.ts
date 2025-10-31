@@ -47,18 +47,18 @@ export function validateDailyLimit(card: PrepaidCard, amount: number): Validatio
     return { isValid: true } // لا يوجد حد يومي
   }
 
-  const newDailyUsed = card.dailyUsed + amount
+  const newDailyUsed = (card.dailyUsed ?? 0) + amount
 
-  if (newDailyUsed > card.dailyLimit) {
+  if (newDailyUsed > (card.dailyLimit ?? Infinity)) {
     return {
       isValid: false,
-      message: `تجاوز الحد اليومي. الحد: ${card.dailyLimit.toFixed(2)} ج.م، المستخدم: ${card.dailyUsed.toFixed(2)} ج.م`,
+      message: `تجاوز الحد اليومي. الحد: ${(card.dailyLimit ?? 0).toFixed(2)} ج.م، المستخدم: ${(card.dailyUsed ?? 0).toFixed(2)} ج.م`,
       severity: 'error',
     }
   }
 
   // تحذير إذا كان قريب من الحد (80% أو أكثر)
-  const usagePercentage = (newDailyUsed / card.dailyLimit) * 100
+  const usagePercentage = (newDailyUsed / (card.dailyLimit ?? 1)) * 100
   if (usagePercentage >= 80) {
     return {
       isValid: true,
@@ -78,18 +78,18 @@ export function validateMonthlyLimit(card: PrepaidCard, amount: number): Validat
     return { isValid: true } // لا يوجد حد شهري
   }
 
-  const newMonthlyUsed = card.monthlyUsed + amount
+  const newMonthlyUsed = (card.monthlyUsed ?? 0) + amount
 
-  if (newMonthlyUsed > card.monthlyLimit) {
+  if (newMonthlyUsed > (card.monthlyLimit ?? Infinity)) {
     return {
       isValid: false,
-      message: `تجاوز الحد الشهري. الحد: ${card.monthlyLimit.toFixed(2)} ج.م، المستخدم: ${card.monthlyUsed.toFixed(2)} ج.م`,
+      message: `تجاوز الحد الشهري. الحد: ${(card.monthlyLimit ?? 0).toFixed(2)} ج.م، المستخدم: ${(card.monthlyUsed ?? 0).toFixed(2)} ج.م`,
       severity: 'error',
     }
   }
 
   // تحذير إذا كان قريب من الحد (80% أو أكثر)
-  const usagePercentage = (newMonthlyUsed / card.monthlyLimit) * 100
+  const usagePercentage = (newMonthlyUsed / (card.monthlyLimit ?? 1)) * 100
   if (usagePercentage >= 80) {
     return {
       isValid: true,
@@ -109,16 +109,16 @@ export function validateTransactionLimit(card: PrepaidCard, amount: number): Val
     return { isValid: true } // لا يوجد حد للمعاملة
   }
 
-  if (amount > card.transactionLimit) {
+  if (amount > (card.transactionLimit ?? Infinity)) {
     return {
       isValid: false,
-      message: `تجاوز حد المعاملة الواحدة. الحد الأقصى: ${card.transactionLimit.toFixed(2)} ج.م`,
+      message: `تجاوز حد المعاملة الواحدة. الحد الأقصى: ${(card.transactionLimit ?? 0).toFixed(2)} ج.م`,
       severity: 'error',
     }
   }
 
   // تحذير إذا كان المبلغ كبير (80% أو أكثر من الحد)
-  const percentage = (amount / card.transactionLimit) * 100
+  const percentage = (amount / (card.transactionLimit ?? 1)) * 100
   if (percentage >= 80) {
     return {
       isValid: true,
@@ -172,7 +172,7 @@ export function validateCardStatus(card: PrepaidCard): ValidationResult {
   }
 
   // التحقق من تاريخ الانتهاء
-  const expiryDate = new Date(card.expiryDate)
+  const expiryDate = new Date(card.expiryDate ?? new Date())
   const now = new Date()
 
   if (expiryDate < now) {

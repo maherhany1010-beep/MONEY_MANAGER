@@ -139,7 +139,7 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
         }
       }
 
-      addInvoice(invoiceData)
+      addInvoice(customerId, invoiceData)
 
       setSuccess(true)
       setTimeout(() => {

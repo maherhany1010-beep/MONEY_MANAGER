@@ -1,495 +1,433 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/components/auth/auth-provider'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
+// ===================================
+// 📦 Database Schema Interface
+// ===================================
 export interface PrepaidCard {
+  // Database fields (snake_case)
   id: string
-  cardName: string
-  provider: string
-  cardNumber: string
+  user_id?: string
+  card_name: string
+  card_number: string | null
   balance: number
-  isDefault?: boolean
-  holderName: string
-  holderNationalId: string
-  holderPhone: string
-  holderEmail?: string
-  dailyLimit: number
-  monthlyLimit: number
-  transactionLimit: number
-  dailyUsed: number
-  monthlyUsed: number
-  cardType: 'physical' | 'virtual'
-  status: 'active' | 'suspended' | 'blocked' | 'expired'
-  expiryDate: string
-  issueDate: string
-  totalDeposits: number
-  totalWithdrawals: number
-  totalPurchases: number
-  transactionCount: number
-  depositFee: number
-  withdrawalFee: number
-  purchaseFee: number
-  createdDate: string
-  lastTransactionDate?: string
+  currency: string
+  expiry_date: string | null
+  status: string
+  created_at?: string
+  updated_at?: string
+  
+  // Legacy fields for backward compatibility (camelCase)
+  cardName?: string
+  cardNumber?: string
+  cardBalance?: number
+  expiryDate?: string
+  cardStatus?: 'active' | 'expired' | 'blocked'
+  cardType?: string
+  provider?: string
+  isReloadable?: boolean
+  maxBalance?: number
+  dailyLimit?: number
+  monthlyLimit?: number
+  transactionLimit?: number
+  fees?: number
   notes?: string
+  dailyUsed?: number
+  monthlyUsed?: number
+  issueDate?: string
+  purchaseFee?: number
+  withdrawalFee?: number
+  isDefault?: boolean
+  holderName?: string
+  holderPhone?: string
+  holderNationalId?: string
+  transactionCount?: number
+  totalDeposits?: number
+  totalWithdrawals?: number
+  totalPurchases?: number
 }
-
-export type TransactionType = 'deposit' | 'withdrawal' | 'purchase' | 'transfer_in' | 'transfer_out' | 'fee'
 
 export interface PrepaidTransaction {
   id: string
-  cardId: string
-  type: TransactionType
+  card_id: string
+  cardId?: string
+  type: 'purchase' | 'withdrawal' | 'transfer' | 'reload' | 'deposit' | 'transfer_in' | 'transfer_out'
   amount: number
-  fee: number
-  totalAmount: number
-  description: string
   date: string
-  // For deposits/withdrawals
-  sourceType?: 'bank' | 'vault'
-  sourceId?: string
-  sourceName?: string
-  // For purchases
+  merchant?: string
   merchantName?: string
   category?: string
-  // For transfers
-  targetCardId?: string
-  targetCardName?: string
-  // Additional info
-  balanceBefore: number
-  balanceAfter: number
-  status: 'completed' | 'pending' | 'failed'
-  createdAt: string
+  location?: string
+  destination?: string
+  sourceName?: string
+  description?: string
+  notes?: string
+  fee?: number
+  totalAmount?: number
+  balanceAfter?: number
+  created_at?: string
 }
+
+export type TransactionType = 'all' | 'purchase' | 'withdrawal' | 'transfer' | 'reload' | 'deposit' | 'transfer_in' | 'transfer_out' | 'fee'
 
 interface PrepaidCardsContextType {
   cards: PrepaidCard[]
-  transactions: PrepaidTransaction[]
-  updateCards: (cards: PrepaidCard[]) => void
-  addCard: (card: PrepaidCard) => void
+  loading: boolean
+  error: string | null
+  addCard: (card: Omit<PrepaidCard, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<PrepaidCard | null>
+  updateCard: (id: string, updates: Partial<PrepaidCard>) => Promise<void>
+  deleteCard: (id: string) => Promise<void>
+  updateBalance: (id: string, newBalance: number) => Promise<void>
   getCardById: (id: string) => PrepaidCard | undefined
-  updateCardBalance: (id: string, newBalance: number, transactionAmount?: number) => void
-  // Transaction methods
-  addDeposit: (cardId: string, amount: number, sourceType: 'bank' | 'vault', sourceId: string, sourceName: string, description?: string) => void
-  addWithdrawal: (cardId: string, amount: number, sourceType: 'bank' | 'vault', sourceId: string, sourceName: string, description?: string) => void
-  addPurchase: (cardId: string, amount: number, merchantName: string, category: string, description?: string) => void
-  addTransfer: (fromCardId: string, toCardId: string, amount: number, description?: string) => void
-  getCardTransactions: (cardId: string) => PrepaidTransaction[]
-  getAllTransactions: () => PrepaidTransaction[]
+  getTotalBalance: () => number
+  updateCards: (cards: PrepaidCard[]) => void
+  getAllTransactions: () => any[]
+  addPurchase: (cardId: string, amount: number, merchant: string, category?: string) => void
+  addPrepaidPurchase: (cardId: string, amount: number, merchant: string, category?: string, notes?: string) => void
+  addWithdrawal: (cardId: string, amount: number, location: string) => void
+  updateCardBalance: (cardId: string, newBalance: number) => void
+  addTransfer: (cardId: string, amount: number, destination: string) => void
+  transactions: any[]
+  getCardTransactions: (cardId: string) => any[]
+  addDeposit: (cardId: string, amount: number, source: string, notes?: string) => void
 }
 
 const PrepaidCardsContext = createContext<PrepaidCardsContextType | undefined>(undefined)
 
+// ===================================
+// 🎯 Provider Component
+// ===================================
 export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
   const [cards, setCards] = useState<PrepaidCard[]>([])
-  const [transactions, setTransactions] = useState<PrepaidTransaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const supabase = createClientComponentClient()
 
+  // ===================================
+  // 📥 Load cards from Supabase
+  // ===================================
+  const loadCards = async () => {
+    if (!user) {
+      setCards([])
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('prepaid_cards')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Error loading prepaid cards:', fetchError)
+        setError(fetchError.message)
+      } else {
+        setCards(data || [])
+      }
+    } catch (err) {
+      console.error('Unexpected error loading prepaid cards:', err)
+      setError('حدث خطأ غير متوقع')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ===================================
+  // 🔄 Real-time subscription
+  // ===================================
   useEffect(() => {
-    const savedCards = localStorage.getItem('prepaidCards')
-    const savedTransactions = localStorage.getItem('prepaidTransactions')
-
-    if (savedCards) {
-      setCards(JSON.parse(savedCards))
-    } else {
-      const defaultCards: PrepaidCard[] = [
-        {
-          id: '1',
-          cardName: 'بطاقة فوري الرئيسية',
-          provider: 'فوري',
-          cardNumber: '6221234567890123',
-          balance: 5000,
-          holderName: 'أحمد محمد علي',
-          holderNationalId: '29012011234567',
-          holderPhone: '01012345678',
-          holderEmail: 'ahmed@example.com',
-          dailyLimit: 5000,
-          monthlyLimit: 50000,
-          transactionLimit: 2000,
-          dailyUsed: 1200,
-          monthlyUsed: 15000,
-          cardType: 'physical',
-          status: 'active',
-          expiryDate: '2026-12-31',
-          issueDate: '2024-01-15',
-          totalDeposits: 25000,
-          totalWithdrawals: 8000,
-          totalPurchases: 12000,
-          transactionCount: 45,
-          depositFee: 0,
-          withdrawalFee: 1.5,
-          purchaseFee: 0,
-          createdDate: '2024-01-15',
-          lastTransactionDate: '2025-10-08',
-          isDefault: true,
-        },
-        {
-          id: '2',
-          cardName: 'بطاقة أمان الافتراضية',
-          provider: 'أمان',
-          cardNumber: '6221876543210987',
-          balance: 3500,
-          holderName: 'أحمد محمد علي',
-          holderNationalId: '29012011234567',
-          holderPhone: '01012345678',
-          holderEmail: 'ahmed@example.com',
-          dailyLimit: 3000,
-          monthlyLimit: 30000,
-          transactionLimit: 1500,
-          dailyUsed: 800,
-          monthlyUsed: 8500,
-          cardType: 'virtual',
-          status: 'active',
-          expiryDate: '2025-06-30',
-          issueDate: '2024-03-20',
-          totalDeposits: 15000,
-          totalWithdrawals: 5000,
-          totalPurchases: 6500,
-          transactionCount: 28,
-          depositFee: 0.5,
-          withdrawalFee: 2,
-          purchaseFee: 0.5,
-          createdDate: '2024-03-20',
-          lastTransactionDate: '2025-10-07',
-        },
-        {
-          id: '3',
-          cardName: 'بطاقة ممكن',
-          provider: 'ممكن',
-          cardNumber: '6221555566667777',
-          balance: 2800,
-          holderName: 'أحمد محمد علي',
-          holderNationalId: '29012011234567',
-          holderPhone: '01012345678',
-          dailyLimit: 4000,
-          monthlyLimit: 40000,
-          transactionLimit: 2500,
-          dailyUsed: 500,
-          monthlyUsed: 6200,
-          cardType: 'physical',
-          status: 'active',
-          expiryDate: '2027-03-31',
-          issueDate: '2024-05-10',
-          totalDeposits: 12000,
-          totalWithdrawals: 4000,
-          totalPurchases: 5200,
-          transactionCount: 32,
-          depositFee: 0,
-          withdrawalFee: 1,
-          purchaseFee: 0,
-          createdDate: '2024-05-10',
-          lastTransactionDate: '2025-10-06',
-        },
-      ]
-      setCards(defaultCards)
-      localStorage.setItem('prepaidCards', JSON.stringify(defaultCards))
+    if (!user) {
+      setCards([])
+      setLoading(false)
+      return
     }
 
-    if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions))
-    }
-  }, [])
+    loadCards()
 
-  const updateCards = (newCards: PrepaidCard[]) => {
-    setCards(newCards)
-    localStorage.setItem('prepaidCards', JSON.stringify(newCards))
-  }
-
-  const addCard = (card: PrepaidCard) => {
-    const newCards = [...cards, card]
-    updateCards(newCards)
-  }
-
-  const getCardById = (id: string) => {
-    return cards.find(card => card.id === id)
-  }
-
-  const updateCardBalance = (id: string, newBalance: number, transactionAmount?: number) => {
-    const updatedCards = cards.map(card => {
-      if (card.id === id) {
-        const updates: Partial<PrepaidCard> = { balance: newBalance }
-
-        // تحديث الحدود المستخدمة إذا كان هناك مبلغ معاملة
-        if (transactionAmount) {
-          const amount = Math.abs(transactionAmount)
-          // تحديث الحدود لكل من السحب والإيداع
-          updates.dailyUsed = (card.dailyUsed || 0) + amount
-          updates.monthlyUsed = (card.monthlyUsed || 0) + amount
+    const channel: RealtimeChannel = supabase
+      .channel('prepaid_cards_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'prepaid_cards',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setCards((prev) => [payload.new as PrepaidCard, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setCards((prev) =>
+              prev.map((card) =>
+                card.id === (payload.new as PrepaidCard).id
+                  ? (payload.new as PrepaidCard)
+                  : card
+              )
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setCards((prev) =>
+              prev.filter((card) => card.id !== (payload.old as PrepaidCard).id)
+            )
+          }
         }
+      )
+      .subscribe()
 
-        return { ...card, ...updates }
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user, supabase])
+
+  // ===================================
+  // ➕ Add card
+  // ===================================
+  const addCard = async (
+    card: Omit<PrepaidCard, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<PrepaidCard | null> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return null
+    }
+
+    try {
+      const { data, error: insertError } = await supabase
+        .from('prepaid_cards')
+        .insert([
+          {
+            user_id: user.id,
+            card_name: card.card_name,
+            card_number: card.card_number,
+            balance: card.balance,
+            currency: card.currency || 'SAR',
+            expiry_date: card.expiry_date,
+            status: card.status || 'active',
+          },
+        ])
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Error adding prepaid card:', insertError)
+        setError(insertError.message)
+        return null
+      }
+
+      return data
+    } catch (err) {
+      console.error('Unexpected error adding prepaid card:', err)
+      setError('حدث خطأ غير متوقع')
+      return null
+    }
+  }
+
+  // ===================================
+  // 🔄 Update card
+  // ===================================
+  const updateCard = async (id: string, updates: Partial<PrepaidCard>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('prepaid_cards')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating prepaid card:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating prepaid card:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🗑️ Delete card
+  // ===================================
+  const deleteCard = async (id: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('prepaid_cards')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting prepaid card:', deleteError)
+        setError(deleteError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error deleting prepaid card:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 💰 Update balance
+  // ===================================
+  const updateBalance = async (id: string, newBalance: number): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newBalance })
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating balance:', updateError)
+        setError(updateError.message)
+      }
+    } catch (err) {
+      console.error('Unexpected error updating balance:', err)
+      setError('حدث خطأ غير متوقع')
+    }
+  }
+
+  // ===================================
+  // 🔍 Get card by ID
+  // ===================================
+  const getCardById = (id: string): PrepaidCard | undefined => {
+    return cards.find((c) => c.id === id)
+  }
+
+  // ===================================
+  // 💵 Get total balance
+  // ===================================
+  const getTotalBalance = (): number => {
+    return cards.reduce((sum, card) => sum + (card.balance || 0), 0)
+  }
+
+  // ===================================
+  // 🔄 Update cards
+  // ===================================
+  const updateCards = (newCards: PrepaidCard[]): void => {
+    setCards(newCards)
+  }
+
+  // ===================================
+  // 📋 Get all transactions (placeholder)
+  // ===================================
+  const getAllTransactions = (): any[] => {
+    // This is a placeholder - in real implementation, this would fetch from database
+    return []
+  }
+
+  // ===================================
+  // 🛒 Add purchase
+  // ===================================
+  const addPurchase = (cardId: string, amount: number, merchant: string, category?: string): void => {
+    setCards(prev => prev.map(card => {
+      if (card.id === cardId) {
+        return {
+          ...card,
+          balance: card.balance - amount,
+          dailyUsed: (card.dailyUsed ?? 0) + amount,
+          monthlyUsed: (card.monthlyUsed ?? 0) + amount,
+        }
       }
       return card
-    })
-    updateCards(updatedCards)
+    }))
   }
 
-  // Helper function to save transactions
-  const saveTransactions = (newTransactions: PrepaidTransaction[]) => {
-    setTransactions(newTransactions)
-    localStorage.setItem('prepaidTransactions', JSON.stringify(newTransactions))
-  }
-
-  // Add Deposit
-  const addDeposit = (
-    cardId: string,
-    amount: number,
-    sourceType: 'bank' | 'vault',
-    sourceId: string,
-    sourceName: string,
-    description?: string
-  ) => {
-    const card = cards.find(c => c.id === cardId)
-    if (!card) return
-
-    const fee = amount * (card.depositFee / 100)
-    const netAmount = amount - fee
-    const newBalance = card.balance + netAmount
-
-    // Create transaction
-    const transaction: PrepaidTransaction = {
-      id: Date.now().toString(),
-      cardId,
-      type: 'deposit',
-      amount,
-      fee,
-      totalAmount: netAmount,
-      description: description || `شحن من ${sourceName}`,
-      date: new Date().toISOString(),
-      sourceType,
-      sourceId,
-      sourceName,
-      balanceBefore: card.balance,
-      balanceAfter: newBalance,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    }
-
-    // Update card
-    const updatedCards = cards.map(c =>
-      c.id === cardId
-        ? {
-            ...c,
-            balance: newBalance,
-            totalDeposits: c.totalDeposits + amount,
-            transactionCount: c.transactionCount + 1,
-            lastTransactionDate: new Date().toISOString(),
-          }
-        : c
-    )
-
-    updateCards(updatedCards)
-    saveTransactions([...transactions, transaction])
-  }
-
-  // Add Withdrawal
-  const addWithdrawal = (
-    cardId: string,
-    amount: number,
-    sourceType: 'bank' | 'vault',
-    sourceId: string,
-    sourceName: string,
-    description?: string
-  ) => {
-    const card = cards.find(c => c.id === cardId)
-    if (!card) return
-
-    const fee = amount * (card.withdrawalFee / 100)
-    const totalAmount = amount + fee
-    const newBalance = card.balance - totalAmount
-
-    // Create transaction
-    const transaction: PrepaidTransaction = {
-      id: Date.now().toString(),
-      cardId,
-      type: 'withdrawal',
-      amount,
-      fee,
-      totalAmount,
-      description: description || `سحب إلى ${sourceName}`,
-      date: new Date().toISOString(),
-      sourceType,
-      sourceId,
-      sourceName,
-      balanceBefore: card.balance,
-      balanceAfter: newBalance,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    }
-
-    // Update card
-    const updatedCards = cards.map(c =>
-      c.id === cardId
-        ? {
-            ...c,
-            balance: newBalance,
-            totalWithdrawals: c.totalWithdrawals + amount,
-            dailyUsed: c.dailyUsed + totalAmount,
-            monthlyUsed: c.monthlyUsed + totalAmount,
-            transactionCount: c.transactionCount + 1,
-            lastTransactionDate: new Date().toISOString(),
-          }
-        : c
-    )
-
-    updateCards(updatedCards)
-    saveTransactions([...transactions, transaction])
-  }
-
-  // Add Purchase
-  const addPurchase = (
-    cardId: string,
-    amount: number,
-    merchantName: string,
-    category: string,
-    description?: string
-  ) => {
-    const card = cards.find(c => c.id === cardId)
-    if (!card) return
-
-    const fee = amount * (card.purchaseFee / 100)
-    const totalAmount = amount + fee
-    const newBalance = card.balance - totalAmount
-
-    // Create transaction
-    const transaction: PrepaidTransaction = {
-      id: Date.now().toString(),
-      cardId,
-      type: 'purchase',
-      amount,
-      fee,
-      totalAmount,
-      description: description || `شراء من ${merchantName}`,
-      date: new Date().toISOString(),
-      merchantName,
-      category,
-      balanceBefore: card.balance,
-      balanceAfter: newBalance,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    }
-
-    // Update card
-    const updatedCards = cards.map(c =>
-      c.id === cardId
-        ? {
-            ...c,
-            balance: newBalance,
-            totalPurchases: c.totalPurchases + amount,
-            dailyUsed: c.dailyUsed + totalAmount,
-            monthlyUsed: c.monthlyUsed + totalAmount,
-            transactionCount: c.transactionCount + 1,
-            lastTransactionDate: new Date().toISOString(),
-          }
-        : c
-    )
-
-    updateCards(updatedCards)
-    saveTransactions([...transactions, transaction])
-  }
-
-  // Add Transfer
-  const addTransfer = (fromCardId: string, toCardId: string, amount: number, description?: string) => {
-    const fromCard = cards.find(c => c.id === fromCardId)
-    const toCard = cards.find(c => c.id === toCardId)
-    if (!fromCard || !toCard) return
-
-    // Transfer fee (using withdrawal fee from source card)
-    const fee = amount * (fromCard.withdrawalFee / 100)
-    const totalAmount = amount + fee
-    const netAmount = amount // Amount received by target card
-
-    // Create outgoing transaction
-    const outTransaction: PrepaidTransaction = {
-      id: Date.now().toString(),
-      cardId: fromCardId,
-      type: 'transfer_out',
-      amount,
-      fee,
-      totalAmount,
-      description: description || `تحويل إلى ${toCard.cardName}`,
-      date: new Date().toISOString(),
-      targetCardId: toCardId,
-      targetCardName: toCard.cardName,
-      balanceBefore: fromCard.balance,
-      balanceAfter: fromCard.balance - totalAmount,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    }
-
-    // Create incoming transaction
-    const inTransaction: PrepaidTransaction = {
-      id: (Date.now() + 1).toString(),
-      cardId: toCardId,
-      type: 'transfer_in',
-      amount: netAmount,
-      fee: 0,
-      totalAmount: netAmount,
-      description: description || `تحويل من ${fromCard.cardName}`,
-      date: new Date().toISOString(),
-      targetCardId: fromCardId,
-      targetCardName: fromCard.cardName,
-      balanceBefore: toCard.balance,
-      balanceAfter: toCard.balance + netAmount,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    }
-
-    // Update cards
-    const updatedCards = cards.map(c => {
-      if (c.id === fromCardId) {
+  // ===================================
+  // 💰 Add withdrawal
+  // ===================================
+  const addWithdrawal = (cardId: string, amount: number, location: string): void => {
+    setCards(prev => prev.map(card => {
+      if (card.id === cardId) {
         return {
-          ...c,
-          balance: c.balance - totalAmount,
-          dailyUsed: c.dailyUsed + totalAmount,
-          monthlyUsed: c.monthlyUsed + totalAmount,
-          transactionCount: c.transactionCount + 1,
-          lastTransactionDate: new Date().toISOString(),
+          ...card,
+          balance: card.balance - amount,
+          dailyUsed: (card.dailyUsed ?? 0) + amount,
+          monthlyUsed: (card.monthlyUsed ?? 0) + amount,
         }
       }
-      if (c.id === toCardId) {
-        return {
-          ...c,
-          balance: c.balance + netAmount,
-          transactionCount: c.transactionCount + 1,
-          lastTransactionDate: new Date().toISOString(),
-        }
-      }
-      return c
-    })
-
-    updateCards(updatedCards)
-    saveTransactions([...transactions, outTransaction, inTransaction])
+      return card
+    }))
   }
 
-  // Get card transactions
-  const getCardTransactions = (cardId: string) => {
-    return transactions.filter(t => t.cardId === cardId).sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+  // ===================================
+  // 💳 Update card balance (alias)
+  // ===================================
+  const updateCardBalance = (cardId: string, newBalance: number): void => {
+    updateBalance(cardId, newBalance)
   }
 
-  // Get all transactions
-  const getAllTransactions = () => {
-    return transactions.sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+  // ===================================
+  // 🔄 Add transfer
+  // ===================================
+  const addTransfer = (cardId: string, amount: number, destination: string): void => {
+    // Placeholder - in real implementation, this would save to database
+    console.log('Add transfer:', cardId, amount, destination)
+  }
+
+  // ===================================
+  // 🛒 Add prepaid purchase (alias for addPurchase with notes)
+  // ===================================
+  const addPrepaidPurchase = (cardId: string, amount: number, merchant: string, category?: string, notes?: string): void => {
+    addPurchase(cardId, amount, merchant, category)
+  }
+
+  // ===================================
+  // 📊 Get card transactions
+  // ===================================
+  const getCardTransactions = (cardId: string): any[] => {
+    return []
+  }
+
+  const addDeposit = (cardId: string, amount: number, source: string, notes?: string): void => {
+    // Placeholder implementation
+    console.log('addDeposit called', { cardId, amount, source, notes })
   }
 
   return (
     <PrepaidCardsContext.Provider
       value={{
         cards,
-        transactions,
-        updateCards,
+        loading,
+        error,
         addCard,
+        updateCard,
+        deleteCard,
+        updateBalance,
         getCardById,
-        updateCardBalance,
-        addDeposit,
-        addWithdrawal,
-        addPurchase,
-        addTransfer,
-        getCardTransactions,
+        getTotalBalance,
+        updateCards,
         getAllTransactions,
+        addPurchase,
+        addPrepaidPurchase,
+        addWithdrawal,
+        updateCardBalance,
+        addTransfer,
+        transactions: [],
+        getCardTransactions,
+        addDeposit,
       }}
     >
       {children}
@@ -499,8 +437,9 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
 
 export function usePrepaidCards() {
   const context = useContext(PrepaidCardsContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('usePrepaidCards must be used within a PrepaidCardsProvider')
   }
   return context
 }
+

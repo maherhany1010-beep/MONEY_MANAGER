@@ -82,7 +82,7 @@ export default function EWalletDetailsPage() {
 
         {/* معلومات المحفظة */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider)} p-8 text-white`}>
+          <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? 'other')} p-8 text-white`}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Wallet className="h-8 w-8" />

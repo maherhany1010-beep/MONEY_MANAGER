@@ -35,15 +35,15 @@ export default function CustomersPage() {
 
   // البحث والتصفية
   const filteredCustomers = useMemo(() => {
-    return searchCustomers({ ...filter, searchQuery }, sort)
-  }, [searchCustomers, filter, searchQuery, sort])
+    return searchCustomers({ ...filter, searchQuery })
+  }, [searchCustomers, filter, searchQuery])
 
   // الإحصائيات العامة
   const stats = useMemo(() => {
     const totalCustomers = customers.length
     const activeCustomers = customers.filter(c => c.status === 'active').length
-    const totalDebt = customers.reduce((sum, c) => sum + c.currentDebt, 0)
-    const customersWithDebt = customers.filter(c => c.currentDebt > 0).length
+    const totalDebt = customers.reduce((sum, c) => sum + (c.currentDebt ?? 0), 0)
+    const customersWithDebt = customers.filter(c => (c.currentDebt ?? 0) > 0).length
 
     return {
       totalCustomers,
@@ -289,10 +289,10 @@ export default function CustomersPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
-                            {customer.fullName.charAt(0)}
+                            {(customer.fullName ?? customer.name ?? 'C').charAt(0)}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900">{customer.fullName}</div>
+                            <div className="font-medium text-gray-900">{customer.fullName ?? customer.name}</div>
                             {customer.company && (
                               <div className="text-sm text-gray-500">{customer.company}</div>
                             )}
@@ -307,26 +307,26 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status).className}`}
-                          style={getStatusColor(customer.status).style}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor((customer.status ?? 'active') as any).className}`}
+                          style={getStatusColor((customer.status ?? 'active') as any).style}
                         >
-                          {getStatusText(customer.status)}
+                          {getStatusText((customer.status ?? 'active') as any)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(customer.category).className}`}
-                          style={getCategoryColor(customer.category).style}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor((customer.category ?? 'regular') as any).className}`}
+                          style={getCategoryColor((customer.category ?? 'regular') as any).style}
                         >
-                          {getCategoryText(customer.category)}
+                          {getCategoryText((customer.category ?? 'regular') as any)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div
-                          className={`font-semibold ${customer.currentDebt > 0 ? 'dark:text-red-400' : 'dark:text-green-400'}`}
-                          style={{ color: customer.currentDebt > 0 ? '#dc2626' : '#16a34a' }}
+                          className={`font-semibold ${(customer.currentDebt ?? 0) > 0 ? 'dark:text-red-400' : 'dark:text-green-400'}`}
+                          style={{ color: (customer.currentDebt ?? 0) > 0 ? '#dc2626' : '#16a34a' }}
                         >
-                          {formatCurrency(customer.currentDebt)}
+                          {formatCurrency(customer.currentDebt ?? 0)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">

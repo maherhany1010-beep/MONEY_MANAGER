@@ -94,8 +94,6 @@ export function AddDepositDialog({ open, onOpenChange, card }: AddDepositDialogP
       card.id,
       amount,
       sourceType as any,
-      sourceId,
-      sourceDetails.name,
       formData.description || `شحن من ${sourceDetails.name}`
     )
 

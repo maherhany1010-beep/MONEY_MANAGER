@@ -55,7 +55,7 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getAccountTypeColor(account.accountType)} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getAccountTypeColor(account.accountType ?? account.account_type)} p-6 text-white relative`}>
         {/* حالة الحساب */}
         {!account.isActive && (
           <div className="absolute top-2 left-2">
@@ -100,7 +100,7 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
         {/* نوع الحساب */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">نوع الحساب</span>
-          <Badge variant="outline">{getAccountTypeLabel(account.accountType)}</Badge>
+          <Badge variant="outline">{getAccountTypeLabel(account.accountType ?? account.account_type)}</Badge>
         </div>
 
         {/* الحدود */}

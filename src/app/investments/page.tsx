@@ -75,22 +75,22 @@ export default function InvestmentsPage() {
 
     switch (investment.type) {
       case 'precious_metals':
-        currentValueInOriginalCurrency = investment.quantity * investment.currentPrice
-        costInOriginalCurrency = (investment.quantity * investment.purchasePrice) + (investment.purchaseFee || 0)
+        currentValueInOriginalCurrency = (investment.quantity ?? 0) * (investment.currentPrice ?? 0)
+        costInOriginalCurrency = ((investment.quantity ?? 0) * (investment.purchasePrice ?? 0)) + (investment.purchaseFee ?? 0)
         break
       case 'cryptocurrency':
-        currentValueInOriginalCurrency = investment.quantity * investment.currentPrice
-        costInOriginalCurrency = (investment.quantity * investment.purchasePrice) + (investment.cryptoPurchaseFee || 0)
+        currentValueInOriginalCurrency = (investment.quantity ?? 0) * (investment.currentPrice ?? 0)
+        costInOriginalCurrency = ((investment.quantity ?? 0) * (investment.purchasePrice ?? 0)) + (investment.cryptoPurchaseFee ?? 0)
         originalCurrency = 'USD'
         break
       case 'certificate':
-        currentValueInOriginalCurrency = investment.amount
-        costInOriginalCurrency = investment.amount
+        currentValueInOriginalCurrency = investment.amount ?? 0
+        costInOriginalCurrency = investment.amount ?? 0
         originalCurrency = 'EGP'
         break
       case 'stock':
-        currentValueInOriginalCurrency = investment.shares * investment.currentPrice
-        costInOriginalCurrency = (investment.shares * investment.purchasePrice) + (investment.commission || 0)
+        currentValueInOriginalCurrency = (investment.shares ?? 0) * (investment.currentPrice ?? 0)
+        costInOriginalCurrency = ((investment.shares ?? 0) * (investment.purchasePrice ?? 0)) + (investment.commission ?? 0)
         originalCurrency = 'USD'
         break
     }
@@ -141,7 +141,7 @@ export default function InvestmentsPage() {
 
   // Filter investments
   const filteredInvestments = investments.filter(inv => {
-    const matchesSearch = inv.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = (inv.name ?? '').toLowerCase().includes(searchQuery.toLowerCase())
     const matchesType = filterType === 'all' || inv.type === filterType
     return matchesSearch && matchesType
   })
@@ -253,7 +253,12 @@ export default function InvestmentsPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredInvestments.map((investment) => {
                 const metrics = calculateInvestmentMetrics(investment)
-                const priceChange = investment.type !== 'certificate' ? getPriceChange(investment.id) : null
+                const priceChangeObj = investment.type !== 'certificate' ? getPriceChange(investment.id) : { direction: 'neutral', value: 0, percentage: 0 }
+                const priceChange = priceChangeObj.value !== 0 ? {
+                  direction: priceChangeObj.value > 0 ? 'up' : priceChangeObj.value < 0 ? 'down' : 'neutral',
+                  value: priceChangeObj.value,
+                  percentage: priceChangeObj.percentage
+                } : null
 
                 return (
                   <Card key={investment.id} className="hover:shadow-lg transition-shadow">
@@ -263,8 +268,8 @@ export default function InvestmentsPage() {
                           <CardTitle className="text-lg">{investment.name}</CardTitle>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className="text-xs">
-                              {getTypeIcon(investment.type)}
-                              <span className="mr-1">{getTypeLabel(investment.type)}</span>
+                              {getTypeIcon(investment.type ?? 'stock')}
+                              <span className="mr-1">{getTypeLabel(investment.type ?? 'stock')}</span>
                             </Badge>
 
                             {/* Price Change Indicator */}
@@ -313,24 +318,24 @@ export default function InvestmentsPage() {
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">النوع:</span>
                             <span className="font-medium">
-                              {investment.metalType === 'gold' ? 'ذهب' :
-                               investment.metalType === 'silver' ? 'فضة' :
-                               investment.metalType === 'platinum' ? 'بلاتين' : 'بلاديوم'}
+                              {(investment.metalType ?? 'gold') === 'gold' ? 'ذهب' :
+                               (investment.metalType ?? 'gold') === 'silver' ? 'فضة' :
+                               (investment.metalType ?? 'gold') === 'platinum' ? 'بلاتين' : 'بلاديوم'}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">الكمية:</span>
                             <span className="font-medium">
-                              {investment.quantity} {investment.unit === 'gram' ? 'جرام' : 'أونصة'}
+                              {investment.quantity ?? 0} {(investment.unit ?? 'gram') === 'gram' ? 'جرام' : 'أونصة'}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">سعر الشراء:</span>
-                            <span className="font-medium">{formatCurrency(investment.purchasePrice)}</span>
+                            <span className="font-medium">{formatCurrency(investment.purchasePrice ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">السعر الحالي:</span>
-                            <span className="font-medium">{formatCurrency(investment.currentPrice)}</span>
+                            <span className="font-medium">{formatCurrency(investment.currentPrice ?? 0)}</span>
                           </div>
                         </div>
                       )}
@@ -339,19 +344,19 @@ export default function InvestmentsPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">الرمز:</span>
-                            <span className="font-medium">{investment.cryptoSymbol}</span>
+                            <span className="font-medium">{investment.cryptoSymbol ?? 'BTC'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">الكمية:</span>
-                            <span className="font-medium">{investment.quantity}</span>
+                            <span className="font-medium">{investment.quantity ?? 0}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">سعر الشراء:</span>
-                            <span className="font-medium">{formatCurrency(investment.purchasePrice, 'USD')}</span>
+                            <span className="font-medium">{formatCurrency(investment.purchasePrice ?? 0, 'USD')}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">السعر الحالي:</span>
-                            <span className="font-medium">{formatCurrency(investment.currentPrice, 'USD')}</span>
+                            <span className="font-medium">{formatCurrency(investment.currentPrice ?? 0, 'USD')}</span>
                           </div>
                         </div>
                       )}
@@ -360,20 +365,20 @@ export default function InvestmentsPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">البنك:</span>
-                            <span className="font-medium">{investment.bank}</span>
+                            <span className="font-medium">{investment.bank ?? 'غير محدد'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-medium">{formatCurrency(investment.amount)}</span>
+                            <span className="font-medium">{formatCurrency(investment.amount ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">معدل الفائدة:</span>
-                            <span className="font-medium">{investment.interestRate}%</span>
+                            <span className="font-medium">{investment.interestRate ?? 0}%</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">تاريخ الاستحقاق:</span>
                             <span className="font-medium">
-                              {new Date(investment.maturityDate).toLocaleDateString('ar-EG')}
+                              {new Date(investment.maturityDate ?? '').toLocaleDateString('ar-EG')}
                             </span>
                           </div>
                         </div>
@@ -383,23 +388,23 @@ export default function InvestmentsPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">الرمز:</span>
-                            <span className="font-medium">{investment.tickerSymbol}</span>
+                            <span className="font-medium">{investment.tickerSymbol ?? 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">السوق:</span>
-                            <span className="font-medium">{investment.market}</span>
+                            <span className="font-medium">{investment.market ?? 'غير محدد'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">عدد الأسهم:</span>
-                            <span className="font-medium">{investment.shares}</span>
+                            <span className="font-medium">{investment.shares ?? 0}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">سعر الشراء:</span>
-                            <span className="font-medium">{formatCurrency(investment.purchasePrice, 'USD')}</span>
+                            <span className="font-medium">{formatCurrency(investment.purchasePrice ?? 0, 'USD')}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">السعر الحالي:</span>
-                            <span className="font-medium">{formatCurrency(investment.currentPrice, 'USD')}</span>
+                            <span className="font-medium">{formatCurrency(investment.currentPrice ?? 0, 'USD')}</span>
                           </div>
                         </div>
                       )}

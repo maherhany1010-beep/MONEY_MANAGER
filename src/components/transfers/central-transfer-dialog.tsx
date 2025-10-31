@@ -11,6 +11,7 @@ import { Combobox, ComboboxOption } from '@/components/ui/combobox'
 import {
   AccountType,
   TransferAccount,
+  AccountInfo,
   CentralTransfer,
   FeeBearer,
   useCentralTransfers
@@ -91,8 +92,8 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
       accounts.push({
         id: accountId,
         type: 'bank-account' as AccountType,
-        name: acc.accountName,
-        accountNumber: acc.accountNumber,
+        name: acc.accountName ?? acc.account_name ?? 'حساب بنكي',
+        accountNumber: acc.accountNumber ?? acc.account_number ?? '',
         balance: acc.balance,
         dailyLimit: acc.dailyLimit,
         monthlyLimit: acc.monthlyLimit,
@@ -106,7 +107,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
       accounts.push({
         id: `vault-${v.id}`,
         type: 'cash-vault' as AccountType,
-        name: v.vaultName,
+        name: v.vaultName ?? v.vault_name ?? 'خزينة',
         balance: v.balance,
       })
     })
@@ -122,8 +123,8 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
         accounts.push({
           id: accountId,
           type: 'e-wallet' as AccountType,
-          name: w.walletName,
-          accountNumber: w.phoneNumber,
+          name: w.walletName ?? w.wallet_name ?? 'محفظة إلكترونية',
+          accountNumber: w.phoneNumber ?? w.phone_number ?? '',
           balance: w.balance,
           dailyLimit: w.dailyLimit,
           monthlyLimit: w.monthlyLimit,
@@ -143,8 +144,8 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
         accounts.push({
           id: accountId,
           type: 'prepaid-card' as AccountType,
-          name: c.cardName,
-          accountNumber: c.cardNumber.slice(-4),
+          name: c.cardName ?? c.card_name ?? 'بطاقة مسبقة الدفع',
+          accountNumber: (c.cardNumber ?? c.card_number ?? '').slice(-4),
           balance: c.balance,
           dailyLimit: c.dailyLimit,
           monthlyLimit: c.monthlyLimit,
@@ -157,12 +158,12 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
     machines
       .filter(m => m.status === 'active')
       .forEach(m => {
-        const primaryAccount = m.accounts.find(acc => acc.isPrimary)
+        const primaryAccount = (m.accounts ?? []).find(acc => acc.isPrimary)
         if (primaryAccount) {
           accounts.push({
             id: `pos-${m.id}-${primaryAccount.id}`,
             type: 'pos-machine' as AccountType,
-            name: `${m.machineName} - ${primaryAccount.accountName}`,
+            name: `${m.machineName ?? m.machine_name ?? 'ماكينة'} - ${primaryAccount.accountName ?? 'حساب'}`,
             accountNumber: primaryAccount.accountNumber,
             balance: primaryAccount.balance,
           })
@@ -174,12 +175,12 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
 
   // الحصول على الحساب المصدر والمستهدف
   const fromAccount = useMemo(
-    () => allAccounts.find(acc => acc.id === formData.fromAccountId),
+    () => allAccounts.find(acc => typeof acc === 'object' && acc.id === formData.fromAccountId) as AccountInfo | undefined,
     [allAccounts, formData.fromAccountId]
   )
 
   const toAccount = useMemo(
-    () => allAccounts.find(acc => acc.id === formData.toAccountId),
+    () => allAccounts.find(acc => typeof acc === 'object' && acc.id === formData.toAccountId) as AccountInfo | undefined,
     [allAccounts, formData.toAccountId]
   )
 
@@ -214,7 +215,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
    * تحويل الحسابات إلى خيارات Combobox مع التصفية الاختيارية
    */
   const createComboboxOptions = useCallback((
-    accounts: TransferAccount[],
+    accounts: AccountInfo[],
     excludeId?: string
   ): ComboboxOption[] => {
     return accounts
@@ -222,7 +223,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
       .map(acc => ({
         value: acc.id,
         label: `${acc.name} (${getTypeLabel(acc.type)})`,
-        subtitle: `${formatCurrency(acc.balance)}${acc.accountNumber ? ` • ${acc.accountNumber}` : ''}`,
+        subtitle: `${formatCurrency(acc.balance ?? 0)}${acc.accountNumber ? ` • ${acc.accountNumber}` : ''}`,
         icon: getAccountTypeIcon(acc.type),
         searchText: `${acc.name} ${acc.accountNumber || ''} ${getTypeLabel(acc.type)}`,
       }))
@@ -230,13 +231,13 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
 
   // خيارات الحساب المصدر (جميع الحسابات)
   const fromAccountOptions = useMemo(
-    () => createComboboxOptions(allAccounts),
+    () => createComboboxOptions(allAccounts as AccountInfo[]),
     [allAccounts, createComboboxOptions]
   )
 
   // خيارات الحساب المستهدف (استبعاد الحساب المصدر)
   const toAccountOptions = useMemo(
-    () => createComboboxOptions(allAccounts, formData.fromAccountId),
+    () => createComboboxOptions(allAccounts as AccountInfo[], formData.fromAccountId),
     [allAccounts, formData.fromAccountId, createComboboxOptions]
   )
 
@@ -253,7 +254,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
     switch (type) {
       case 'bank-account': {
         const bankId = accountId.replace('bank-', '')
-        updateBankBalance(bankId, newBalance, change)
+        updateBankBalance(bankId, newBalance)
         break
       }
 
@@ -265,13 +266,13 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
 
       case 'e-wallet': {
         const walletId = accountId.replace('wallet-', '')
-        updateWalletBalance(walletId, newBalance, change)
+        updateWalletBalance(walletId, newBalance)
         break
       }
 
       case 'prepaid-card': {
         const cardId = accountId.replace('card-', '')
-        updateCardBalance(cardId, newBalance, change)
+        updateCardBalance(cardId, newBalance)
         break
       }
 
@@ -343,21 +344,21 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
     }
 
     // التحقق من كفاية الرصيد بعد احتساب الرسوم
-    if (fromAccount.balance < finalAmountFrom) {
+    if ((fromAccount?.balance ?? 0) < finalAmountFrom) {
       setError('الرصيد غير كافٍ في الحساب المصدر (بعد احتساب الرسوم)')
       return
     }
 
     // التحقق من الحدود اليومية والشهرية (فقط إذا كانت الحالة مكتملة)
     if (formData.status === 'completed') {
-      if (fromAccount.dailyLimit && fromAccount.dailyUsed !== undefined) {
+      if (fromAccount?.dailyLimit && fromAccount?.dailyUsed !== undefined) {
         if (fromAccount.dailyUsed + finalAmountFrom > fromAccount.dailyLimit) {
           setError('تجاوز الحد اليومي للحساب المصدر')
           return
         }
       }
 
-      if (fromAccount.monthlyLimit && fromAccount.monthlyUsed !== undefined) {
+      if (fromAccount?.monthlyLimit && fromAccount?.monthlyUsed !== undefined) {
         if (fromAccount.monthlyUsed + finalAmountFrom > fromAccount.monthlyLimit) {
           setError('تجاوز الحد الشهري للحساب المصدر')
           return
@@ -368,17 +369,20 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
     // تنفيذ التحويل
     try {
       // تحديث الأرصدة فقط إذا كانت الحالة مكتملة
-      if (formData.status === 'completed') {
-        updateBalance(fromAccount.type, formData.fromAccountId, fromAccount.balance - finalAmountFrom, -finalAmountFrom)
-        updateBalance(toAccount.type, formData.toAccountId, toAccount.balance + finalAmountTo, finalAmountTo)
+      if (formData.status === 'completed' && fromAccount && toAccount) {
+        updateBalance(fromAccount.type, formData.fromAccountId, (fromAccount.balance ?? 0) - finalAmountFrom, -finalAmountFrom)
+        updateBalance(toAccount.type, formData.toAccountId, (toAccount.balance ?? 0) + finalAmountTo, finalAmountTo)
       }
 
       // إنشاء سجل التحويل
       const transfer: CentralTransfer = {
         id: `ct-${Date.now()}`,
-        fromAccount: { ...fromAccount },
-        toAccount: { ...toAccount },
+        from_account: formData.fromAccountId,
+        to_account: formData.toAccountId,
+        fromAccount: fromAccount ? { ...fromAccount } : undefined,
+        toAccount: toAccount ? { ...toAccount } : undefined,
         amount,
+        transfer_date: new Date().toISOString().split('T')[0],
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
         status: formData.status,
@@ -477,18 +481,18 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
               <div className="mt-4 p-4 bg-white/95 dark:bg-gray-900/90 rounded-lg border-2 border-white/50 dark:border-gray-700 space-y-2 text-base shadow-md">
                 <div className="flex items-center justify-between py-1">
                   <span className="text-rose-900 dark:text-rose-200 font-semibold">الرصيد المتاح:</span>
-                  <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.balance)}</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.balance ?? 0)}</span>
                 </div>
                 {fromAccount.dailyLimit && (
                   <div className="flex items-center justify-between py-1">
                     <span className="text-rose-900 dark:text-rose-200 font-semibold">الحد اليومي:</span>
-                    <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.dailyLimit)}</span>
+                    <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.dailyLimit ?? 0)}</span>
                   </div>
                 )}
                 {fromAccount.monthlyLimit && (
                   <div className="flex items-center justify-between py-1">
                     <span className="text-rose-900 dark:text-rose-200 font-semibold">الحد الشهري:</span>
-                    <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.monthlyLimit)}</span>
+                    <span className="font-bold text-rose-700 dark:text-rose-300">{formatCurrency(fromAccount.monthlyLimit ?? 0)}</span>
                   </div>
                 )}
               </div>
@@ -526,7 +530,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
               <div className="mt-4 p-4 bg-white/95 dark:bg-gray-900/90 rounded-lg border-2 border-white/50 dark:border-gray-700 space-y-2 text-base shadow-md">
                 <div className="flex items-center justify-between py-1">
                   <span className="text-emerald-900 dark:text-emerald-200 font-semibold">الرصيد الحالي:</span>
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(toAccount.balance)}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(toAccount.balance ?? 0)}</span>
                 </div>
               </div>
             )}
@@ -742,7 +746,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                     <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{fromAccount.name}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">({getTypeLabel(fromAccount.type)})</p>
                     <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 mt-3">
-                      <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(fromAccount.balance)}</span></p>
+                      <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(fromAccount.balance ?? 0)}</span></p>
                       <p>المبلغ المحول: <span className="font-semibold text-rose-600 dark:text-rose-400">-{formatCurrency(amount)}</span></p>
                       {fee > 0 && formData.feeBearer === 'sender' && (
                         <p>الرسوم: <span className="font-semibold text-rose-600 dark:text-rose-400">-{formatCurrency(fee)}</span></p>
@@ -752,7 +756,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                       </p>
                       {formData.status === 'completed' && (
                         <p className="text-emerald-700 dark:text-emerald-300 pt-1">
-                          الرصيد بعد التحويل: <span className="font-bold">{formatCurrency(fromAccount.balance - finalAmountFrom)}</span>
+                          الرصيد بعد التحويل: <span className="font-bold">{formatCurrency((fromAccount.balance ?? 0) - finalAmountFrom)}</span>
                         </p>
                       )}
                     </div>
@@ -767,7 +771,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                     <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{toAccount.name}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">({getTypeLabel(toAccount.type)})</p>
                     <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 mt-3">
-                      <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(toAccount.balance)}</span></p>
+                      <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(toAccount.balance ?? 0)}</span></p>
                       <p>المبلغ المستلم: <span className="font-semibold text-emerald-600 dark:text-emerald-400">+{formatCurrency(amount)}</span></p>
                       {fee > 0 && formData.feeBearer === 'receiver' && (
                         <p>الرسوم: <span className="font-semibold text-rose-600 dark:text-rose-400">-{formatCurrency(fee)}</span></p>
@@ -777,7 +781,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                       </p>
                       {formData.status === 'completed' && (
                         <p className="text-green-700 dark:text-green-300">
-                          الرصيد بعد التحويل: <span className="font-bold">{formatCurrency(toAccount.balance + finalAmountTo)}</span>
+                          الرصيد بعد التحويل: <span className="font-bold">{formatCurrency((toAccount.balance ?? 0) + finalAmountTo)}</span>
                         </p>
                       )}
                     </div>

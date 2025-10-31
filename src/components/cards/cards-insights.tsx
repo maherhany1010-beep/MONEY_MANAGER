@@ -61,8 +61,8 @@ export function CardsInsights() {
     const today = new Date()
     const currentDay = today.getDate()
     const upcomingPayments = cards.filter(card => {
-      const daysUntilDue = card.dueDate - currentDay
-      return card.isActive && card.currentBalance > 0 && daysUntilDue >= 0 && daysUntilDue <= 7
+      const daysUntilDue = (card.dueDate ?? 0) - currentDay
+      return card.isActive && (card.currentBalance ?? 0) > 0 && daysUntilDue >= 0 && daysUntilDue <= 7
     })
 
     if (upcomingPayments.length > 0) {
@@ -75,8 +75,8 @@ export function CardsInsights() {
     }
 
     // رؤية: تحسين الكاش باك
-    const lowCashbackCards = cards.filter(c => c.isActive && c.cashbackRate < 2.0)
-    const highCashbackCards = cards.filter(c => c.isActive && c.cashbackRate >= 3.0)
+    const lowCashbackCards = cards.filter(c => c.isActive && (c.cashbackRate ?? 0) < 2.0)
+    const highCashbackCards = cards.filter(c => c.isActive && (c.cashbackRate ?? 0) >= 3.0)
     
     if (lowCashbackCards.length > 0 && highCashbackCards.length > 0) {
       generatedInsights.push({
@@ -100,7 +100,7 @@ export function CardsInsights() {
 
     // رؤية: توزيع الرصيد
     const cardsWithHighBalance = cards.filter(c => {
-      const utilization = calculateCreditUtilization(c.currentBalance, c.creditLimit)
+      const utilization = calculateCreditUtilization(c.currentBalance ?? 0, c.creditLimit ?? 0)
       return c.isActive && utilization >= 70
     })
 

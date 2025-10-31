@@ -27,7 +27,7 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
       // Search filter
       const matchesSearch =
         searchQuery === '' ||
-        transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (transaction.description ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.merchantName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         transaction.sourceName?.toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -72,7 +72,7 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
         } else if (t.type === 'withdrawal' || t.type === 'purchase' || t.type === 'transfer_out') {
           acc.withdrawals += t.amount
         }
-        acc.fees += t.fee
+        acc.fees += (t.fee ?? 0)
         return acc
       },
       { deposits: 0, withdrawals: 0, fees: 0 }
@@ -131,11 +131,11 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
     const rows = filteredTransactions.map(t => [
       new Date(t.date).toLocaleString('ar-EG'),
       getTransactionLabel(t.type),
-      t.description,
+      t.description ?? '',
       t.amount.toFixed(2),
-      t.fee.toFixed(2),
-      t.totalAmount.toFixed(2),
-      t.balanceAfter.toFixed(2),
+      (t.fee ?? 0).toFixed(2),
+      (t.totalAmount ?? 0).toFixed(2),
+      (t.balanceAfter ?? 0).toFixed(2),
     ])
 
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -294,9 +294,9 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
                       <p className="text-sm text-muted-foreground">
                         {new Date(transaction.date).toLocaleString('ar-EG')}
                       </p>
-                      {transaction.fee > 0 && (
+                      {(transaction.fee ?? 0) > 0 && (
                         <p className="text-xs text-orange-600">
-                          رسوم: {formatCurrency(transaction.fee)}
+                          رسوم: {formatCurrency(transaction.fee ?? 0)}
                         </p>
                       )}
                     </div>
@@ -307,7 +307,7 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
                       {formatCurrency(transaction.amount)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      الرصيد: {formatCurrency(transaction.balanceAfter)}
+                      الرصيد: {formatCurrency(transaction.balanceAfter ?? 0)}
                     </p>
                   </div>
                 </div>

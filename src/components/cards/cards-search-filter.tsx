@@ -45,9 +45,9 @@ export function CardsSearchFilter({ cards, onFilteredCardsChange }: CardsSearchF
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       result = result.filter(card =>
-        card.name.toLowerCase().includes(query) ||
-        card.bankName.toLowerCase().includes(query) ||
-        card.cardNumberLastFour.includes(query)
+        (card.name ?? '').toLowerCase().includes(query) ||
+        (card.bankName ?? '').toLowerCase().includes(query) ||
+        (card.cardNumberLastFour ?? '').includes(query)
       )
     }
 
@@ -74,21 +74,21 @@ export function CardsSearchFilter({ cards, onFilteredCardsChange }: CardsSearchF
 
       switch (sortBy) {
         case 'name':
-          comparison = a.name.localeCompare(b.name, 'ar')
+          comparison = (a.name ?? '').localeCompare(b.name ?? '', 'ar')
           break
         case 'balance':
-          comparison = a.currentBalance - b.currentBalance
+          comparison = (a.currentBalance ?? 0) - (b.currentBalance ?? 0)
           break
         case 'limit':
-          comparison = a.creditLimit - b.creditLimit
+          comparison = (a.creditLimit ?? 0) - (b.creditLimit ?? 0)
           break
         case 'utilization':
-          const utilizationA = (a.currentBalance / a.creditLimit) * 100
-          const utilizationB = (b.currentBalance / b.creditLimit) * 100
+          const utilizationA = ((a.currentBalance ?? 0) / (a.creditLimit ?? 1)) * 100
+          const utilizationB = ((b.currentBalance ?? 0) / (b.creditLimit ?? 1)) * 100
           comparison = utilizationA - utilizationB
           break
         case 'cashback':
-          comparison = a.cashbackRate - b.cashbackRate
+          comparison = (a.cashbackRate ?? 0) - (b.cashbackRate ?? 0)
           break
       }
 
@@ -200,7 +200,7 @@ export function CardsSearchFilter({ cards, onFilteredCardsChange }: CardsSearchF
           </SelectTrigger>
           <SelectContent dir="rtl">
             <SelectItem value="all">جميع البنوك</SelectItem>
-            {banks.map(bank => (
+            {banks.filter((b): b is string => b !== undefined).map(bank => (
               <SelectItem key={bank} value={bank}>{bank}</SelectItem>
             ))}
           </SelectContent>
