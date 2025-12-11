@@ -1,9 +1,15 @@
 /**
- * Prepaid Cards Helpers
- * 
- * دوال مساعدة للبطاقات المدفوعة مسبقاً
- * 
+ * @fileoverview Prepaid Cards Helper Functions
+ *
+ * دوال مساعدة للبطاقات المدفوعة مسبقاً.
+ * تتضمن دوال تحويل البيانات، حساب الإحصائيات، والتحقق من الصلاحية.
+ *
+ * Helper functions for prepaid cards including data transformation,
+ * statistics calculation, and validation.
+ *
  * @module contexts/prepaid-cards/helpers
+ * @author Money Manager Team
+ * @version 1.0.0
  */
 
 import type { PrepaidCard, PrepaidTransaction, PrepaidCardStats } from './types'
@@ -13,7 +19,21 @@ import type { PrepaidCard, PrepaidTransaction, PrepaidCardStats } from './types'
 // ===================================
 
 /**
- * تحويل بيانات البطاقة من قاعدة البيانات للواجهة
+ * تحويل بيانات البطاقة من قاعدة البيانات إلى صيغة الواجهة
+ * Transform prepaid card from database format to frontend format
+ *
+ * يحافظ على التوافق مع الكود القديم عبر إضافة aliases بـ camelCase.
+ *
+ * @param dbData - بيانات البطاقة من Supabase
+ * @returns كائن PrepaidCard بكلتا الصيغتين (snake_case و camelCase)
+ *
+ * @example
+ * ```typescript
+ * const { data } = await supabase.from('prepaid_cards').select('*')
+ * const cards = data.map(transformPrepaidCardFromDB)
+ * console.log(cards[0].card_name) // 'بطاقة فودافون كاش'
+ * console.log(cards[0].cardName)  // 'بطاقة فودافون كاش' (alias)
+ * ```
  */
 export function transformPrepaidCardFromDB(dbData: Record<string, unknown>): PrepaidCard {
   return {
@@ -63,7 +83,20 @@ export function transformPrepaidCardFromDB(dbData: Record<string, unknown>): Pre
 }
 
 /**
- * تحويل بيانات البطاقة للحفظ في قاعدة البيانات
+ * تحويل بيانات البطاقة من صيغة الواجهة إلى صيغة قاعدة البيانات
+ * Transform prepaid card from frontend format to database format
+ *
+ * يقبل كلتا الصيغتين (snake_case و camelCase) ويحولها لـ snake_case.
+ *
+ * @param card - بيانات البطاقة من الواجهة
+ * @returns كائن بصيغة snake_case للحفظ في Supabase
+ *
+ * @example
+ * ```typescript
+ * const cardData = { cardName: 'بطاقتي', balance: 500 }
+ * const dbData = transformPrepaidCardToDB(cardData)
+ * await supabase.from('prepaid_cards').insert(dbData)
+ * ```
  */
 export function transformPrepaidCardToDB(
   card: Partial<PrepaidCard>
@@ -93,7 +126,22 @@ export function transformPrepaidCardToDB(
 // ===================================
 
 /**
- * حساب إحصائيات البطاقات
+ * حساب إحصائيات البطاقات المدفوعة مسبقاً
+ * Calculate prepaid cards statistics
+ *
+ * يحسب إجمالي الأرصدة، عدد البطاقات النشطة/المنتهية/المحظورة،
+ * وإجمالي المصروفات والإيداعات.
+ *
+ * @param cards - قائمة البطاقات
+ * @param transactions - قائمة المعاملات
+ * @returns كائن PrepaidCardStats بالإحصائيات
+ *
+ * @example
+ * ```typescript
+ * const stats = calculatePrepaidCardStats(cards, transactions)
+ * console.log(`إجمالي الرصيد: ${stats.totalBalance} ج.م`)
+ * console.log(`البطاقات النشطة: ${stats.activeCards}`)
+ * ```
  */
 export function calculatePrepaidCardStats(
   cards: PrepaidCard[],
@@ -130,7 +178,29 @@ export function calculatePrepaidCardStats(
 // ===================================
 
 /**
- * التحقق من صلاحية البطاقة للعمليات
+ * التحقق من صلاحية البطاقة لإجراء عملية مالية
+ * Validate if a prepaid card can perform a transaction
+ *
+ * يتحقق من:
+ * - حالة البطاقة (يجب أن تكون نشطة)
+ * - كفاية الرصيد
+ * - الحدود اليومية والشهرية
+ * - حد العملية الواحدة
+ *
+ * @param card - البطاقة المراد التحقق منها
+ * @param amount - مبلغ العملية
+ * @param type - نوع العملية (شراء، سحب، تحويل)
+ * @returns كائن بنتيجة التحقق ورسالة الخطأ إن وجدت
+ *
+ * @example
+ * ```typescript
+ * const validation = validateCardForTransaction(card, 500, 'purchase')
+ * if (!validation.valid) {
+ *   showErrorToast(validation.error!)
+ *   return
+ * }
+ * // إجراء العملية...
+ * ```
  */
 export function validateCardForTransaction(
   card: PrepaidCard,

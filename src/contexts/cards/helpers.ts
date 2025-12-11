@@ -1,8 +1,15 @@
 /**
- * Cards Context Helpers
- * 
- * دوال مساعدة لتحويل البيانات وحساب الإحصائيات
+ * @fileoverview Credit Cards Helper Functions
+ *
+ * دوال مساعدة للبطاقات الائتمانية.
+ * تتضمن دوال تحويل البيانات، حساب الإحصائيات، والتحقق من الصلاحية.
+ *
+ * Helper functions for credit cards including data transformation,
+ * statistics calculation, balance computation, and validation.
+ *
  * @module contexts/cards/helpers
+ * @author Money Manager Team
+ * @version 1.0.0
  */
 
 import type { CreditCard, Purchase, CardStats } from './types'
@@ -12,7 +19,20 @@ import type { CreditCard, Purchase, CardStats } from './types'
 // ===================================
 
 /**
- * تحويل بيانات البطاقة من قاعدة البيانات
+ * تحويل بيانات البطاقة الائتمانية من قاعدة البيانات إلى صيغة الواجهة
+ * Transform credit card from database format to frontend format
+ *
+ * يحسب تلقائياً الائتمان المتاح (available_credit) من الحد والرصيد الحالي.
+ *
+ * @param dbData - بيانات البطاقة من Supabase
+ * @returns كائن CreditCard مع حسابات مُحدّثة
+ *
+ * @example
+ * ```typescript
+ * const { data } = await supabase.from('credit_cards').select('*')
+ * const cards = data.map(transformCardFromDB)
+ * console.log(cards[0].available_credit) // محسوب تلقائياً
+ * ```
  */
 export function transformCardFromDB(dbData: Record<string, unknown>): CreditCard {
   const creditLimit = Number(dbData.credit_limit) || 0
@@ -43,7 +63,20 @@ export function transformCardFromDB(dbData: Record<string, unknown>): CreditCard
 }
 
 /**
- * تحويل بيانات البطاقة لقاعدة البيانات
+ * تحويل بيانات البطاقة الائتمانية من صيغة الواجهة إلى صيغة قاعدة البيانات
+ * Transform credit card from frontend format to database format
+ *
+ * يتعامل مع الحقول القديمة (legacy) للتوافق العكسي.
+ *
+ * @param card - بيانات البطاقة من الواجهة
+ * @returns كائن بصيغة snake_case للحفظ في Supabase
+ *
+ * @example
+ * ```typescript
+ * const cardData = { card_name: 'بطاقتي', credit_limit: 10000 }
+ * const dbData = transformCardToDB(cardData)
+ * await supabase.from('credit_cards').update(dbData).eq('id', cardId)
+ * ```
  */
 export function transformCardToDB(card: Partial<CreditCard>): Record<string, unknown> {
   const dbData: Record<string, unknown> = {}
@@ -68,7 +101,22 @@ export function transformCardToDB(card: Partial<CreditCard>): Record<string, unk
 // ===================================
 
 /**
- * حساب إحصائيات البطاقات
+ * حساب إحصائيات البطاقات الائتمانية
+ * Calculate credit cards statistics
+ *
+ * يحسب إجمالي الحدود الائتمانية، الأرصدة، الائتمان المتاح،
+ * إجمالي الكاش باك، ونسبة الاستخدام.
+ *
+ * @param cards - قائمة البطاقات
+ * @param purchases - قائمة المشتريات (للكاش باك)
+ * @returns كائن CardStats بالإحصائيات
+ *
+ * @example
+ * ```typescript
+ * const stats = calculateCardStats(cards, purchases)
+ * console.log(`نسبة الاستخدام: ${stats.utilizationRate.toFixed(1)}%`)
+ * console.log(`إجمالي الكاش باك: ${stats.totalCashback} ج.م`)
+ * ```
  */
 export function calculateCardStats(cards: CreditCard[], purchases: Purchase[]): CardStats {
   const totalCreditLimit = cards.reduce((sum, card) => sum + (card.credit_limit || 0), 0)
@@ -90,6 +138,19 @@ export function calculateCardStats(cards: CreditCard[], purchases: Purchase[]): 
 
 /**
  * حساب الرصيد الجديد بعد عملية شراء
+ * Calculate new balance after a purchase
+ *
+ * عند الشراء يزيد الرصيد المستحق وينقص الائتمان المتاح.
+ *
+ * @param card - البطاقة الائتمانية
+ * @param amount - مبلغ الشراء
+ * @returns الرصيد الجديد والائتمان المتاح الجديد
+ *
+ * @example
+ * ```typescript
+ * const { newBalance, newAvailableCredit } = calculateBalanceAfterPurchase(card, 500)
+ * // تحديث البطاقة في الـ state
+ * ```
  */
 export function calculateBalanceAfterPurchase(
   card: CreditCard,
@@ -102,6 +163,20 @@ export function calculateBalanceAfterPurchase(
 
 /**
  * حساب الرصيد الجديد بعد عملية سداد
+ * Calculate new balance after a payment
+ *
+ * عند السداد ينقص الرصيد المستحق ويزيد الائتمان المتاح.
+ * الرصيد لا يمكن أن يكون سالباً.
+ *
+ * @param card - البطاقة الائتمانية
+ * @param amount - مبلغ السداد
+ * @returns الرصيد الجديد والائتمان المتاح الجديد
+ *
+ * @example
+ * ```typescript
+ * const { newBalance, newAvailableCredit } = calculateBalanceAfterPayment(card, 1000)
+ * // تحديث البطاقة في الـ state
+ * ```
  */
 export function calculateBalanceAfterPayment(
   card: CreditCard,
@@ -118,6 +193,25 @@ export function calculateBalanceAfterPayment(
 
 /**
  * التحقق من صلاحية عملية الشراء
+ * Validate if a purchase can be made on a credit card
+ *
+ * يتحقق من:
+ * - وجود البطاقة
+ * - حالة البطاقة (نشطة)
+ * - صحة المبلغ (> 0)
+ * - كفاية الائتمان المتاح
+ *
+ * @param card - البطاقة الائتمانية
+ * @param amount - مبلغ الشراء
+ * @returns نتيجة التحقق ورسالة الخطأ إن وجدت
+ *
+ * @example
+ * ```typescript
+ * const validation = validatePurchase(card, 500)
+ * if (!validation.valid) {
+ *   throw new Error(validation.error)
+ * }
+ * ```
  */
 export function validatePurchase(
   card: CreditCard,
@@ -144,6 +238,23 @@ export function validatePurchase(
 
 /**
  * التحقق من صلاحية عملية السداد
+ * Validate if a payment can be made on a credit card
+ *
+ * يتحقق من:
+ * - وجود البطاقة
+ * - صحة المبلغ (> 0)
+ *
+ * @param card - البطاقة الائتمانية
+ * @param amount - مبلغ السداد
+ * @returns نتيجة التحقق ورسالة الخطأ إن وجدت
+ *
+ * @example
+ * ```typescript
+ * const validation = validatePayment(card, 1000)
+ * if (!validation.valid) {
+ *   throw new Error(validation.error)
+ * }
+ * ```
  */
 export function validatePayment(
   card: CreditCard,

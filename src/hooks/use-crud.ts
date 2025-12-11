@@ -1,3 +1,35 @@
+/**
+ * @fileoverview Generic CRUD Hook for Supabase Operations
+ *
+ * Hook قابل لإعادة الاستخدام للعمليات CRUD مع Supabase.
+ * يدعم التحميل التلقائي، الاشتراكات في الوقت الحقيقي، وتحويل البيانات.
+ *
+ * A reusable hook for CRUD operations with Supabase.
+ * Supports auto-loading, real-time subscriptions, and data transformation.
+ *
+ * @module hooks/use-crud
+ * @author Money Manager Team
+ * @version 1.0.0
+ *
+ * @example
+ * // استخدام بسيط - Basic usage
+ * const { items, loading, create, update, remove } = useCrud<BankAccount>({
+ *   tableName: 'bank_accounts',
+ *   userId: user?.id,
+ *   enableRealtime: true,
+ * })
+ *
+ * @example
+ * // استخدام مع محولات مخصصة - With custom transformers
+ * const { items, create } = useCrud<CreditCard>({
+ *   tableName: 'credit_cards',
+ *   userId: user?.id,
+ *   transformFromDB: transformCreditCard,
+ *   transformToDB: transformCreditCardToDB,
+ *   orderBy: { column: 'created_at', ascending: false },
+ * })
+ */
+
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -9,56 +41,187 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 // 📋 Types
 // ===================================
 
+/**
+ * خيارات إعداد الـ CRUD Hook
+ * Configuration options for the CRUD hook
+ *
+ * @template T - نوع الكيان / Entity type
+ */
 export interface CrudOptions<T> {
-  /** اسم الجدول في Supabase */
+  /**
+   * اسم الجدول في Supabase
+   * Table name in Supabase database
+   * @example 'bank_accounts', 'credit_cards', 'prepaid_cards'
+   */
   tableName: string
-  /** معرف المستخدم */
+
+  /**
+   * معرف المستخدم - يُستخدم لفلترة البيانات وإضافة user_id تلقائياً
+   * User ID - used for filtering data and auto-adding user_id
+   */
   userId?: string
-  /** تفعيل real-time subscriptions */
+
+  /**
+   * تفعيل الاشتراكات في الوقت الحقيقي
+   * Enable real-time subscriptions for live updates
+   * @default false
+   */
   enableRealtime?: boolean
-  /** دالة تحويل من snake_case إلى camelCase */
+
+  /**
+   * دالة تحويل البيانات من صيغة قاعدة البيانات (snake_case) إلى صيغة الواجهة (camelCase)
+   * Transform function from database format to frontend format
+   */
   transformFromDB?: (data: Record<string, unknown>) => T
-  /** دالة تحويل من camelCase إلى snake_case */
+
+  /**
+   * دالة تحويل البيانات من صيغة الواجهة (camelCase) إلى صيغة قاعدة البيانات (snake_case)
+   * Transform function from frontend format to database format
+   */
   transformToDB?: (data: Partial<T>) => Record<string, unknown>
-  /** الترتيب الافتراضي */
+
+  /**
+   * إعدادات الترتيب الافتراضي
+   * Default ordering configuration
+   * @default { column: 'created_at', ascending: false }
+   */
   orderBy?: { column: string; ascending?: boolean }
-  /** الفلاتر الإضافية */
+
+  /**
+   * فلاتر إضافية تُطبق على جميع الاستعلامات
+   * Additional filters applied to all queries
+   * @example { status: 'active' }
+   */
   filters?: Record<string, unknown>
-  /** تحميل البيانات تلقائياً عند التهيئة */
+
+  /**
+   * تحميل البيانات تلقائياً عند تهيئة الـ hook
+   * Automatically load data when hook initializes
+   * @default true
+   */
   autoLoad?: boolean
 }
 
+/**
+ * حالة الـ CRUD hook
+ * State returned by the CRUD hook
+ * @template T - نوع الكيان / Entity type
+ */
 export interface CrudState<T> {
+  /** قائمة العناصر المحملة / List of loaded items */
   items: T[]
+  /** حالة التحميل / Loading state */
   isLoading: boolean
+  /** رسالة الخطأ إن وجدت / Error message if any */
   error: string | null
 }
 
+/**
+ * العمليات المتاحة من الـ CRUD hook
+ * Actions available from the CRUD hook
+ * @template T - نوع الكيان / Entity type
+ */
 export interface CrudActions<T> {
-  /** جلب جميع العناصر */
+  /**
+   * جلب جميع العناصر من قاعدة البيانات
+   * Fetch all items from database
+   * @returns وعد بمصفوفة العناصر
+   */
   fetchAll: () => Promise<T[]>
-  /** جلب عنصر واحد */
+
+  /**
+   * جلب عنصر واحد بمعرفه
+   * Fetch single item by ID
+   * @param id - معرف العنصر
+   */
   fetchOne: (id: string) => Promise<T | null>
-  /** إنشاء عنصر جديد */
+
+  /**
+   * إنشاء عنصر جديد في قاعدة البيانات
+   * Create new item in database
+   * @param data - بيانات العنصر الجديد
+   * @throws {Error} في حالة فشل الإنشاء
+   */
   create: (data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>) => Promise<T | null>
-  /** تحديث عنصر */
+
+  /**
+   * تحديث عنصر موجود
+   * Update existing item
+   * @param id - معرف العنصر
+   * @param data - البيانات المُحدّثة
+   * @throws {Error} في حالة فشل التحديث
+   */
   update: (id: string, data: Partial<T>) => Promise<T | null>
-  /** حذف عنصر */
+
+  /**
+   * حذف عنصر
+   * Delete an item
+   * @param id - معرف العنصر المراد حذفه
+   * @throws {Error} في حالة فشل الحذف
+   */
   remove: (id: string) => Promise<boolean>
-  /** تحديث الـ state المحلي */
+
+  /**
+   * تحديث قائمة العناصر في الحالة المحلية
+   * Update items list in local state
+   * @param items - القائمة الجديدة أو دالة تحديث
+   */
   setItems: (items: T[] | ((prev: T[]) => T[])) => void
-  /** تحديث عنصر في الـ state المحلي */
+
+  /**
+   * تحديث عنصر واحد في الحالة المحلية
+   * Update single item in local state
+   * @param id - معرف العنصر
+   * @param data - البيانات الجزئية للتحديث
+   */
   updateLocal: (id: string, data: Partial<T>) => void
-  /** إعادة تحميل البيانات */
+
+  /**
+   * إعادة تحميل البيانات من قاعدة البيانات
+   * Refresh data from database
+   */
   refresh: () => Promise<void>
 }
 
+/**
+ * النوع الكامل المُرجع من useCrud
+ * Full return type from useCrud hook
+ * @template T - نوع الكيان
+ */
 export type UseCrudReturn<T> = CrudState<T> & CrudActions<T>
 
 // ===================================
 // 🪝 Hook
 // ===================================
 
+/**
+ * Generic CRUD Hook for Supabase Operations
+ *
+ * Hook عام للعمليات CRUD مع Supabase. يوفر جميع العمليات الأساسية
+ * (إنشاء، قراءة، تحديث، حذف) مع دعم للتحديثات في الوقت الحقيقي.
+ *
+ * @template T - نوع الكيان الذي يجب أن يحتوي على خاصية id
+ * @param options - خيارات الإعداد
+ * @returns حالة وعمليات CRUD
+ *
+ * @example
+ * ```tsx
+ * const { items, isLoading, create, update, remove } = useCrud<BankAccount>({
+ *   tableName: 'bank_accounts',
+ *   userId: user?.id,
+ *   enableRealtime: true,
+ * })
+ *
+ * // إنشاء حساب جديد
+ * await create({ accountName: 'حسابي', bankName: 'البنك الأهلي', balance: 1000 })
+ *
+ * // تحديث حساب
+ * await update(accountId, { balance: 2000 })
+ *
+ * // حذف حساب
+ * await remove(accountId)
+ * ```
+ */
 export function useCrud<T extends { id: string }>(
   options: CrudOptions<T>
 ): UseCrudReturn<T> {

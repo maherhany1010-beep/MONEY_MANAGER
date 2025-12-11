@@ -1,10 +1,26 @@
 /**
- * Data Transformers
- * 
- * Utility functions to transform data between snake_case (database) 
+ * @fileoverview Data Transformers for Database-Frontend Data Conversion
+ *
+ * دوال تحويل البيانات بين صيغة قاعدة البيانات (snake_case) وصيغة الواجهة (camelCase).
+ *
+ * Utility functions to transform data between snake_case (database)
  * and camelCase (frontend) formats.
- * 
+ *
  * @module lib/data-transformers
+ * @author Money Manager Team
+ * @version 1.0.0
+ *
+ * @example
+ * // تحويل من snake_case إلى camelCase
+ * const frontendData = transformToCamelCase(dbRecord)
+ *
+ * @example
+ * // تحويل من camelCase إلى snake_case
+ * const dbData = transformToSnakeCase(frontendData)
+ *
+ * @example
+ * // استخدام محول محدد لنوع معين
+ * const account = transformBankAccount(dbRecord)
  */
 
 // ===================================
@@ -12,21 +28,58 @@
 // ===================================
 
 /**
+ * تحويل نص من snake_case إلى camelCase
  * Convert a string from snake_case to camelCase
+ *
+ * @param str - النص المراد تحويله
+ * @returns النص بصيغة camelCase
+ *
+ * @example
+ * ```typescript
+ * snakeToCamel('user_id')      // 'userId'
+ * snakeToCamel('created_at')   // 'createdAt'
+ * snakeToCamel('bank_name')    // 'bankName'
+ * ```
  */
 export function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
 }
 
 /**
+ * تحويل نص من camelCase إلى snake_case
  * Convert a string from camelCase to snake_case
+ *
+ * @param str - النص المراد تحويله
+ * @returns النص بصيغة snake_case
+ *
+ * @example
+ * ```typescript
+ * camelToSnake('userId')     // 'user_id'
+ * camelToSnake('createdAt')  // 'created_at'
+ * camelToSnake('bankName')   // 'bank_name'
+ * ```
  */
 export function camelToSnake(str: string): string {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
 }
 
 /**
+ * تحويل مفاتيح الكائن من snake_case إلى camelCase
  * Transform object keys from snake_case to camelCase
+ *
+ * يدعم الكائنات المتداخلة والمصفوفات.
+ * Supports nested objects and arrays.
+ *
+ * @template T - نوع الكائن المُدخل
+ * @param obj - الكائن المراد تحويل مفاتيحه
+ * @returns كائن جديد بمفاتيح camelCase
+ *
+ * @example
+ * ```typescript
+ * const dbData = { user_id: '123', bank_name: 'البنك الأهلي', created_at: '2024-01-01' }
+ * const result = transformToCamelCase(dbData)
+ * // { userId: '123', bankName: 'البنك الأهلي', createdAt: '2024-01-01' }
+ * ```
  */
 export function transformToCamelCase<T extends Record<string, unknown>>(
   obj: T
@@ -52,7 +105,22 @@ export function transformToCamelCase<T extends Record<string, unknown>>(
 }
 
 /**
+ * تحويل مفاتيح الكائن من camelCase إلى snake_case
  * Transform object keys from camelCase to snake_case
+ *
+ * يدعم الكائنات المتداخلة والمصفوفات.
+ * Supports nested objects and arrays.
+ *
+ * @template T - نوع الكائن المُدخل
+ * @param obj - الكائن المراد تحويل مفاتيحه
+ * @returns كائن جديد بمفاتيح snake_case
+ *
+ * @example
+ * ```typescript
+ * const frontendData = { userId: '123', bankName: 'البنك الأهلي', createdAt: '2024-01-01' }
+ * const result = transformToSnakeCase(frontendData)
+ * // { user_id: '123', bank_name: 'البنك الأهلي', created_at: '2024-01-01' }
+ * ```
  */
 export function transformToSnakeCase<T extends Record<string, unknown>>(
   obj: T
@@ -68,11 +136,11 @@ export function transformToSnakeCase<T extends Record<string, unknown>>(
   return Object.keys(obj).reduce((acc, key) => {
     const snakeKey = camelToSnake(key)
     const value = obj[key]
-    
+
     acc[snakeKey] = value !== null && typeof value === 'object'
       ? transformToSnakeCase(value as Record<string, unknown>)
       : value
-    
+
     return acc
   }, {} as Record<string, unknown>)
 }
@@ -82,7 +150,17 @@ export function transformToSnakeCase<T extends Record<string, unknown>>(
 // ===================================
 
 /**
+ * تحويل حساب بنكي من صيغة قاعدة البيانات إلى صيغة الواجهة
  * Transform bank account from DB format to frontend format
+ *
+ * @param dbData - بيانات الحساب من قاعدة البيانات
+ * @returns كائن الحساب البنكي بصيغة الواجهة
+ *
+ * @example
+ * ```typescript
+ * const { data } = await supabase.from('bank_accounts').select('*')
+ * const accounts = data.map(transformBankAccount)
+ * ```
  */
 export function transformBankAccount(dbData: Record<string, unknown>) {
   return {
