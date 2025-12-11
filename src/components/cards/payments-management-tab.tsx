@@ -6,16 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { 
-  DollarSign, 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
+import {
+  DollarSign,
+  Calendar,
+  Clock,
   CheckCircle2,
   AlertCircle,
-  CreditCard,
-  Wallet
+  CreditCard
 } from 'lucide-react'
 
 interface PaymentsManagementTabProps {

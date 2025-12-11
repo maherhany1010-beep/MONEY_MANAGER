@@ -8,17 +8,10 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
-  CreditCard,
-  Landmark,
-  Vault,
-  ArrowUpDown,
   FileText,
-  DollarSign,
-  Gift,
   Settings,
   LogOut,
   User,
-  Wallet,
   ArrowRightLeft,
   Users,
   Sun,

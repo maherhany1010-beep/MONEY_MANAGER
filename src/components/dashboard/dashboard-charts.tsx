@@ -4,14 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
-import { 
-  BarChart3, 
-  PieChart, 
+import {
+  BarChart3,
+  PieChart,
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Gift,
-  Calendar
+  Gift
 } from 'lucide-react'
 
 interface MonthlySpending {

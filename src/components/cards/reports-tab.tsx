@@ -16,8 +16,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,14 +23,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import {
-  FileText,
-  TrendingUp,
-  DollarSign,
-  AlertCircle,
-  Download,
-  Calendar,
-} from 'lucide-react'
+import { Download } from 'lucide-react'
 
 interface ReportsTabProps {
   cards: CreditCardType[]

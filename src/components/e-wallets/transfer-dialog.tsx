@@ -159,7 +159,7 @@ export function TransferDialog({ open, onOpenChange, wallet }: TransferDialogPro
   const fee = calculateFee(amount, formData.feeType, formData.feeValue)
   const commission = parseFloat(formData.commission) || 0
 
-  let sourceDeduction = formData.feeBearerType === 'source' ? amount + fee : amount
+  const sourceDeduction = formData.feeBearerType === 'source' ? amount + fee : amount
   let destinationAddition = formData.feeBearerType === 'source' ? amount : amount - fee
   destinationAddition += commission
 

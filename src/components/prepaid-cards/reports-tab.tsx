@@ -7,11 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { PrepaidCard, PrepaidTransaction } from '@/contexts/prepaid-cards-context'
 import { formatCurrency } from '@/lib/utils'
-import { 
-  BarChart3, 
-  PieChart as PieChartIcon, 
-  TrendingUp, 
-  Download, 
+import {
+  BarChart3,
+  TrendingUp,
+  Download,
   Calendar,
   DollarSign,
   ShoppingCart,

@@ -10,7 +10,6 @@ import {
   CreditCard,
   Calendar,
   DollarSign,
-  TrendingUp,
   CheckCircle2,
   Clock,
   AlertCircle,
