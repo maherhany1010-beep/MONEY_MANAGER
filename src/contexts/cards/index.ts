@@ -1,13 +1,10 @@
 /**
- * Cards Context
- *
- * هذا الملف يُصدّر الـ types و context من الملفات المقسّمة
- * للحفاظ على التوافق مع الكود القديم
- *
- * @see src/contexts/cards/ للملفات المقسّمة
+ * Cards Module
+ * 
+ * @module contexts/cards
  */
 
-// Re-export everything from the new modular structure
+// Types
 export type {
   CardTier,
   CardType,
@@ -20,8 +17,9 @@ export type {
   Merchant,
   CardStats,
   CardsContextType,
-} from './cards/types'
+} from './types'
 
+// Helpers
 export {
   transformCardFromDB,
   transformCardToDB,
@@ -30,9 +28,11 @@ export {
   calculateBalanceAfterPayment,
   validatePurchase,
   validatePayment,
-} from './cards/helpers'
+} from './helpers'
 
+// Context & Provider
 export {
   CardsProvider,
   useCards,
-} from './cards/context'
+} from './context'
+
