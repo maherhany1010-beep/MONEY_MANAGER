@@ -181,8 +181,8 @@ export function CashbackRedemption({ currentBalance, onRedeem }: CashbackRedempt
                 <div
                   key={option.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors relative ${
-                    isSelected ? 'border-primary bg-primary/5' : 
-                    isDisabled ? 'border-gray-200 bg-gray-50 cursor-not-allowed' :
+                    isSelected ? 'border-primary bg-primary/5' :
+                    isDisabled ? 'border-muted bg-muted/50 cursor-not-allowed' :
                     'border-border hover:bg-accent/50'
                   }`}
                   onClick={() => !isDisabled && setSelectedOption(option.id)}
@@ -201,16 +201,16 @@ export function CashbackRedemption({ currentBalance, onRedeem }: CashbackRedempt
 
                   <div className="flex items-center gap-3 mb-3">
                     <Icon className={`h-6 w-6 ${
-                      isDisabled ? 'text-gray-400' : 'text-primary'
+                      isDisabled ? 'text-muted-foreground/50' : 'text-primary'
                     }`} />
                     <div>
                       <h3 className={`font-semibold ${
-                        isDisabled ? 'text-gray-400' : ''
+                        isDisabled ? 'text-muted-foreground/50' : ''
                       }`}>
                         {option.title}
                       </h3>
                       <p className={`text-sm ${
-                        isDisabled ? 'text-gray-400' : 'text-muted-foreground'
+                        isDisabled ? 'text-muted-foreground/50' : 'text-muted-foreground'
                       }`}>
                         {option.description}
                       </p>
@@ -222,27 +222,27 @@ export function CashbackRedemption({ currentBalance, onRedeem }: CashbackRedempt
 
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className={isDisabled ? 'text-gray-400' : 'text-muted-foreground'}>
+                      <span className={isDisabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}>
                         الحد الأدنى:
                       </span>
-                      <span className={isDisabled ? 'text-gray-400' : ''}>
+                      <span className={isDisabled ? 'text-muted-foreground/50' : ''}>
                         {formatCurrency(option.minAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={isDisabled ? 'text-gray-400' : 'text-muted-foreground'}>
+                      <span className={isDisabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}>
                         وقت المعالجة:
                       </span>
-                      <span className={isDisabled ? 'text-gray-400' : ''}>
+                      <span className={isDisabled ? 'text-muted-foreground/50' : ''}>
                         {option.processingTime}
                       </span>
                     </div>
                     {option.fee > 0 && (
                       <div className="flex justify-between">
-                        <span className={isDisabled ? 'text-gray-400' : 'text-muted-foreground'}>
+                        <span className={isDisabled ? 'text-muted-foreground/50' : 'text-muted-foreground'}>
                           الرسوم:
                         </span>
-                        <span className={isDisabled ? 'text-gray-400' : ''}>
+                        <span className={isDisabled ? 'text-muted-foreground/50' : ''}>
                           {formatCurrency(option.fee)}
                         </span>
                       </div>

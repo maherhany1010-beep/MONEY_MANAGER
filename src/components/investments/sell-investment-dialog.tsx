@@ -48,7 +48,7 @@ export function SellInvestmentDialog({ open, onOpenChange, investment }: SellInv
     avgPurchasePrice = investment.purchasePrice ?? 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
@@ -69,24 +69,34 @@ export function SellInvestmentDialog({ open, onOpenChange, investment }: SellInv
     }
 
     const commissionValue = commission ? parseFloat(commission) : 0
+    // حساب العمولة الفعلية
+    const grossProceeds = parseFloat(quantity) * parseFloat(sellPrice)
+    const actualCommission = commissionType === 'percentage'
+      ? (grossProceeds * commissionValue) / 100
+      : commissionValue
 
-    sellInvestment(
-      investment.id,
-      parseFloat(quantity),
-      parseFloat(sellPrice),
-      commissionValue
-    )
-    
-    setSuccess(true)
-    
-    setTimeout(() => {
-      onOpenChange(false)
-      setSuccess(false)
-      setError('')
-      setQuantity('')
-      setSellPrice('')
-      setCommission('')
-    }, 2000)
+    try {
+      await sellInvestment(
+        investment.id,
+        parseFloat(quantity),
+        parseFloat(sellPrice),
+        actualCommission
+      )
+
+      setSuccess(true)
+
+      setTimeout(() => {
+        onOpenChange(false)
+        setSuccess(false)
+        setError('')
+        setQuantity('')
+        setSellPrice('')
+        setCommission('')
+      }, 2000)
+    } catch (err) {
+      console.error('Error selling investment:', err)
+      setError('فشل في البيع')
+    }
   }
 
   // Calculate sale details

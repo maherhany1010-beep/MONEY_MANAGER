@@ -99,8 +99,8 @@ interface CardsContextType {
   addCard: (card: Omit<CreditCard, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<CreditCard | null>
   updateCard: (id: string, updates: Partial<CreditCard>) => Promise<void>
   deleteCard: (id: string) => Promise<void>
-  addPurchase: (purchase: Omit<Purchase, 'id'>) => void
-  addPayment: (payment: Omit<Payment, 'id'>) => void
+  addPurchase: (purchase: Omit<Purchase, 'id'>) => Promise<void>
+  addPayment: (payment: Omit<Payment, 'id'>) => Promise<void>
   getTotalCreditLimit: () => number
   getTotalBalance: () => number
   getTotalAvailableCredit: () => number
@@ -147,7 +147,29 @@ export function CardsProvider({ children }: { children: ReactNode }) {
         console.error('Error loading credit cards:', fetchError)
         setError(fetchError.message)
       } else {
-        setCards(data || [])
+        // تحويل البيانات من قاعدة البيانات إلى الصيغة المتوقعة
+        const transformedCards = (data || []).map(card => {
+          const creditLimit = Number(card.credit_limit) || 0
+          const currentBalance = Number(card.current_balance) || 0
+
+          return {
+            ...card,
+            // Map database fields to expected fields
+            card_name: card.name || card.card_name,
+            name: card.name,
+            credit_limit: creditLimit,
+            current_balance: currentBalance,
+            available_credit: creditLimit - currentBalance,
+            minimum_payment: 0,
+            interest_rate: 0,
+            status: card.status || 'active' as const,
+            // Legacy compatibility
+            creditLimit: creditLimit,
+            currentBalance: currentBalance,
+            isActive: (card.status || 'active') === 'active',
+          }
+        })
+        setCards(transformedCards)
       }
     } catch (err) {
       console.error('Unexpected error loading credit cards:', err)
@@ -181,18 +203,52 @@ export function CardsProvider({ children }: { children: ReactNode }) {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setCards((prev) => [payload.new as CreditCard, ...prev])
+            const newCard = payload.new as any
+            const creditLimit = Number(newCard.credit_limit) || 0
+            const currentBalance = Number(newCard.current_balance) || 0
+
+            const transformedCard = {
+              ...newCard,
+              card_name: newCard.name || newCard.card_name,
+              name: newCard.name,
+              credit_limit: creditLimit,
+              current_balance: currentBalance,
+              available_credit: creditLimit - currentBalance,
+              minimum_payment: 0,
+              interest_rate: 0,
+              status: newCard.status || 'active' as const,
+              creditLimit: creditLimit,
+              currentBalance: currentBalance,
+              isActive: (newCard.status || 'active') === 'active',
+            }
+            setCards((prev) => [transformedCard, ...prev])
           } else if (payload.eventType === 'UPDATE') {
+            const updatedCard = payload.new as any
+            const creditLimit = Number(updatedCard.credit_limit) || 0
+            const currentBalance = Number(updatedCard.current_balance) || 0
+
+            const transformedCard = {
+              ...updatedCard,
+              card_name: updatedCard.name || updatedCard.card_name,
+              name: updatedCard.name,
+              credit_limit: creditLimit,
+              current_balance: currentBalance,
+              available_credit: creditLimit - currentBalance,
+              minimum_payment: 0,
+              interest_rate: 0,
+              status: updatedCard.status || 'active' as const,
+              creditLimit: creditLimit,
+              currentBalance: currentBalance,
+              isActive: (updatedCard.status || 'active') === 'active',
+            }
             setCards((prev) =>
               prev.map((card) =>
-                card.id === (payload.new as CreditCard).id
-                  ? (payload.new as CreditCard)
-                  : card
+                card.id === transformedCard.id ? transformedCard : card
               )
             )
           } else if (payload.eventType === 'DELETE') {
             setCards((prev) =>
-              prev.filter((card) => card.id !== (payload.old as CreditCard).id)
+              prev.filter((card) => card.id !== (payload.old as any).id)
             )
           }
         }
@@ -221,17 +277,14 @@ export function CardsProvider({ children }: { children: ReactNode }) {
         .insert([
           {
             user_id: user.id,
-            card_name: card.card_name,
+            name: card.card_name,
             bank_name: card.bank_name,
             card_number_last_four: card.card_number_last_four,
             card_type: card.card_type,
             credit_limit: card.credit_limit,
-            current_balance: card.current_balance,
-            available_credit: card.available_credit,
+            current_balance: card.current_balance || 0,
+            cashback_rate: 0,
             due_date: card.due_date,
-            minimum_payment: card.minimum_payment,
-            interest_rate: card.interest_rate,
-            status: card.status || 'active',
           },
         ])
         .select()
@@ -243,7 +296,24 @@ export function CardsProvider({ children }: { children: ReactNode }) {
         return null
       }
 
-      return data
+      if (data) {
+        // تحويل البيانات من قاعدة البيانات إلى الصيغة المتوقعة
+        const transformedCard = {
+          ...data,
+          card_name: data.name,
+          available_credit: data.credit_limit - data.current_balance,
+          minimum_payment: 0,
+          interest_rate: 0,
+          status: 'active' as const,
+        }
+
+        // تحديث قائمة البطاقات
+        setCards(prevCards => [...prevCards, transformedCard])
+
+        return transformedCard
+      }
+
+      return null
     } catch (err) {
       console.error('Unexpected error adding card:', err)
       setError('حدث خطأ غير متوقع')
@@ -261,16 +331,39 @@ export function CardsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // تحويل الحقول من card_name إلى name
+      const dbUpdates: any = { ...updates }
+      if (dbUpdates.card_name) {
+        dbUpdates.name = dbUpdates.card_name
+        delete dbUpdates.card_name
+      }
+      // تحويل currentBalance إلى current_balance
+      if (dbUpdates.currentBalance !== undefined) {
+        dbUpdates.current_balance = dbUpdates.currentBalance
+        delete dbUpdates.currentBalance
+      }
+      // إزالة الحقول المحسوبة والحقول غير الموجودة في قاعدة البيانات
+      delete dbUpdates.available_credit
+      delete dbUpdates.minimum_payment
+      delete dbUpdates.interest_rate
+      delete dbUpdates.isActive
+
       const { error: updateError } = await supabase
         .from('credit_cards')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .eq('user_id', user.id)
 
       if (updateError) {
         console.error('Error updating card:', updateError)
         setError(updateError.message)
+        return
       }
+
+      // تحديث الـ state المحلي فوراً بعد نجاح التحديث في قاعدة البيانات
+      setCards(prev => prev.map(card =>
+        card.id === id ? { ...card, ...updates } : card
+      ))
     } catch (err) {
       console.error('Unexpected error updating card:', err)
       setError('حدث خطأ غير متوقع')
@@ -304,19 +397,105 @@ export function CardsProvider({ children }: { children: ReactNode }) {
   }
 
   // ===================================
-  // 🛒 Add purchase (legacy - kept for compatibility)
+  // 🛒 Add purchase - updates card balance in DB
   // ===================================
-  const addPurchase = (purchase: Omit<Purchase, 'id'>): void => {
-    const newPurchase = { ...purchase, id: Date.now().toString() }
-    setPurchases((prev) => [newPurchase, ...prev])
+  const addPurchase = async (purchase: Omit<Purchase, 'id'>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const card = cards.find(c => c.id === purchase.cardId)
+    if (!card) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    // حساب الرصيد الجديد (زيادة المديونية)
+    const newBalance = (card.current_balance || 0) + purchase.amount
+    const newAvailableCredit = (card.credit_limit || 0) - newBalance
+
+    try {
+      const { error: updateError } = await supabase
+        .from('credit_cards')
+        .update({
+          current_balance: newBalance,
+          available_credit: newAvailableCredit
+        })
+        .eq('id', purchase.cardId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card balance for purchase:', updateError)
+        setError(updateError.message)
+        return
+      }
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(c =>
+        c.id === purchase.cardId
+          ? { ...c, current_balance: newBalance, available_credit: newAvailableCredit }
+          : c
+      ))
+
+      // إضافة العملية للسجل المحلي
+      const newPurchase = { ...purchase, id: Date.now().toString() }
+      setPurchases((prev) => [newPurchase, ...prev])
+    } catch (err) {
+      console.error('Unexpected error during purchase:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   // ===================================
-  // 💳 Add payment (legacy - kept for compatibility)
+  // 💳 Add payment - reduces card balance in DB
   // ===================================
-  const addPayment = (payment: Omit<Payment, 'id'>): void => {
-    const newPayment = { ...payment, id: Date.now().toString() }
-    setPayments((prev) => [newPayment, ...prev])
+  const addPayment = async (payment: Omit<Payment, 'id'>): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const card = cards.find(c => c.id === payment.cardId)
+    if (!card) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    // حساب الرصيد الجديد (تقليل المديونية)
+    const newBalance = Math.max(0, (card.current_balance || 0) - payment.amount)
+    const newAvailableCredit = (card.credit_limit || 0) - newBalance
+
+    try {
+      const { error: updateError } = await supabase
+        .from('credit_cards')
+        .update({
+          current_balance: newBalance,
+          available_credit: newAvailableCredit
+        })
+        .eq('id', payment.cardId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card balance for payment:', updateError)
+        setError(updateError.message)
+        return
+      }
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(c =>
+        c.id === payment.cardId
+          ? { ...c, current_balance: newBalance, available_credit: newAvailableCredit }
+          : c
+      ))
+
+      // إضافة العملية للسجل المحلي
+      const newPayment = { ...payment, id: Date.now().toString() }
+      setPayments((prev) => [newPayment, ...prev])
+    } catch (err) {
+      console.error('Unexpected error during payment:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   // ===================================

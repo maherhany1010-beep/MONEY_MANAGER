@@ -38,13 +38,13 @@ export function StatementSummary({ statement }: StatementSummaryProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'current':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
       case 'paid':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
       case 'overdue':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground'
     }
   }
 
@@ -220,10 +220,10 @@ export function StatementSummary({ statement }: StatementSummaryProps) {
           {statement.fees > 0 && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-gray-500" />
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">رسوم أخرى</span>
               </div>
-              <span className="font-bold text-gray-600 dark:text-gray-400">
+              <span className="font-bold text-muted-foreground">
                 {formatCurrency(statement.fees)}
               </span>
             </div>

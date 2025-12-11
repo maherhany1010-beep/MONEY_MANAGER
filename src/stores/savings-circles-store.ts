@@ -33,6 +33,25 @@ export interface SavingsCircle {
   notes?: string
   amountPaid?: number
   remainingAmount?: number
+
+  // Additional fields from types/savings-circles.ts
+  name?: string
+  monthlyAmount?: number
+  totalMembers?: number
+  duration?: number
+  current_round?: number
+  my_turn_number?: number
+  myTurnNumber?: number
+  type?: 'app-based' | 'personal'
+  role?: 'manager' | 'member'
+  hasFees?: boolean
+  managementFee?: number
+  feeType?: 'monthly' | 'one-time' | 'percentage'
+  appName?: string
+  hasWithdrawn?: boolean
+  totalPaid?: number
+  totalWithdrawn?: number
+  withdrawnAmount?: number
 }
 
 interface SavingsCirclesState {

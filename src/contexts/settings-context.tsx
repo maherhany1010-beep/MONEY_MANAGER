@@ -127,21 +127,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // حفظ الإعدادات في localStorage عند التغيير
+  // ملاحظة: تطبيق الثيم يتم عبر ThemeContext فقط لتجنب التعارض
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     localStorage.setItem('appSettings', JSON.stringify(settings))
-
-    // تطبيق الثيم
-    if (settings.theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else if (settings.theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light')
-    } else {
-      // system theme
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
-    }
   }, [settings])
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {

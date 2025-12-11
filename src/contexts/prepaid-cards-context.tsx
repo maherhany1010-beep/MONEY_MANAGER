@@ -86,11 +86,11 @@ interface PrepaidCardsContextType {
   getTotalBalance: () => number
   updateCards: (cards: PrepaidCard[]) => void
   getAllTransactions: () => any[]
-  addPurchase: (cardId: string, amount: number, merchant: string, category?: string) => void
-  addPrepaidPurchase: (cardId: string, amount: number, merchant: string, category?: string, notes?: string) => void
-  addWithdrawal: (cardId: string, amount: number, location: string) => void
+  addPurchase: (cardId: string, amount: number, merchant: string, category?: string) => Promise<void>
+  addPrepaidPurchase: (cardId: string, amount: number, merchant: string, category?: string, notes?: string) => Promise<void>
+  addWithdrawal: (cardId: string, amount: number, location: string) => Promise<void>
   updateCardBalance: (cardId: string, newBalance: number) => void
-  addTransfer: (cardId: string, amount: number, destination: string) => void
+  addTransfer: (fromCardId: string, amount: number, toCardId: string) => Promise<void>
   transactions: any[]
   getCardTransactions: (cardId: string) => any[]
   addDeposit: (cardId: string, amount: number, source: string, notes?: string) => void
@@ -209,7 +209,7 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
             card_name: card.card_name,
             card_number: card.card_number,
             balance: card.balance,
-            currency: card.currency || 'SAR',
+            currency: card.currency || 'EGP', // العملة الافتراضية: الجنيه المصري
             expiry_date: card.expiry_date,
             status: card.status || 'active',
           },
@@ -302,7 +302,13 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
       if (updateError) {
         console.error('Error updating balance:', updateError)
         setError(updateError.message)
+        return
       }
+
+      // تحديث الـ state المحلي فوراً بعد نجاح التحديث في قاعدة البيانات
+      setCards(prev => prev.map(card =>
+        card.id === id ? { ...card, balance: newBalance } : card
+      ))
     } catch (err) {
       console.error('Unexpected error updating balance:', err)
       setError('حدث خطأ غير متوقع')
@@ -341,35 +347,97 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
   // ===================================
   // 🛒 Add purchase
   // ===================================
-  const addPurchase = (cardId: string, amount: number, merchant: string, category?: string): void => {
-    setCards(prev => prev.map(card => {
-      if (card.id === cardId) {
-        return {
-          ...card,
-          balance: card.balance - amount,
-          dailyUsed: (card.dailyUsed ?? 0) + amount,
-          monthlyUsed: (card.monthlyUsed ?? 0) + amount,
-        }
+  const addPurchase = async (cardId: string, amount: number, merchant: string, category?: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const card = cards.find(c => c.id === cardId)
+    if (!card) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    const newBalance = card.balance - amount
+
+    try {
+      const { error: updateError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newBalance })
+        .eq('id', cardId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card balance for purchase:', updateError)
+        setError(updateError.message)
+        return
       }
-      return card
-    }))
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(c => {
+        if (c.id === cardId) {
+          return {
+            ...c,
+            balance: newBalance,
+            dailyUsed: (c.dailyUsed ?? 0) + amount,
+            monthlyUsed: (c.monthlyUsed ?? 0) + amount,
+          }
+        }
+        return c
+      }))
+    } catch (err) {
+      console.error('Unexpected error during purchase:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   // ===================================
   // 💰 Add withdrawal
   // ===================================
-  const addWithdrawal = (cardId: string, amount: number, location: string): void => {
-    setCards(prev => prev.map(card => {
-      if (card.id === cardId) {
-        return {
-          ...card,
-          balance: card.balance - amount,
-          dailyUsed: (card.dailyUsed ?? 0) + amount,
-          monthlyUsed: (card.monthlyUsed ?? 0) + amount,
-        }
+  const addWithdrawal = async (cardId: string, amount: number, location: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const card = cards.find(c => c.id === cardId)
+    if (!card) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    const newBalance = card.balance - amount
+
+    try {
+      const { error: updateError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newBalance })
+        .eq('id', cardId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card balance for withdrawal:', updateError)
+        setError(updateError.message)
+        return
       }
-      return card
-    }))
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(c => {
+        if (c.id === cardId) {
+          return {
+            ...c,
+            balance: newBalance,
+            dailyUsed: (c.dailyUsed ?? 0) + amount,
+            monthlyUsed: (c.monthlyUsed ?? 0) + amount,
+          }
+        }
+        return c
+      }))
+    } catch (err) {
+      console.error('Unexpected error during withdrawal:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   // ===================================
@@ -380,18 +448,83 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
   }
 
   // ===================================
-  // 🔄 Add transfer
+  // 🔄 Add transfer between prepaid cards
   // ===================================
-  const addTransfer = (cardId: string, amount: number, destination: string): void => {
-    // Placeholder - in real implementation, this would save to database
-    console.log('Add transfer:', cardId, amount, destination)
+  const addTransfer = async (fromCardId: string, amount: number, toCardId: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const fromCard = cards.find(c => c.id === fromCardId)
+    const toCard = cards.find(c => c.id === toCardId)
+
+    if (!fromCard || !toCard) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    if (fromCard.balance < amount) {
+      setError('الرصيد غير كافٍ')
+      return
+    }
+
+    try {
+      // خصم من البطاقة المصدر
+      const newFromBalance = fromCard.balance - amount
+      const { error: fromError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newFromBalance })
+        .eq('id', fromCardId)
+        .eq('user_id', user.id)
+
+      if (fromError) {
+        console.error('Error updating source card:', fromError)
+        setError(fromError.message)
+        return
+      }
+
+      // إضافة للبطاقة المستلمة
+      const newToBalance = toCard.balance + amount
+      const { error: toError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newToBalance })
+        .eq('id', toCardId)
+        .eq('user_id', user.id)
+
+      if (toError) {
+        console.error('Error updating destination card:', toError)
+        setError(toError.message)
+        // محاولة استرجاع الرصيد الأصلي
+        await supabase
+          .from('prepaid_cards')
+          .update({ balance: fromCard.balance })
+          .eq('id', fromCardId)
+          .eq('user_id', user.id)
+        return
+      }
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(card => {
+        if (card.id === fromCardId) {
+          return { ...card, balance: newFromBalance }
+        }
+        if (card.id === toCardId) {
+          return { ...card, balance: newToBalance }
+        }
+        return card
+      }))
+    } catch (err) {
+      console.error('Unexpected error during transfer:', err)
+      setError('حدث خطأ غير متوقع أثناء التحويل')
+    }
   }
 
   // ===================================
   // 🛒 Add prepaid purchase (alias for addPurchase with notes)
   // ===================================
-  const addPrepaidPurchase = (cardId: string, amount: number, merchant: string, category?: string, notes?: string): void => {
-    addPurchase(cardId, amount, merchant, category)
+  const addPrepaidPurchase = async (cardId: string, amount: number, merchant: string, category?: string, notes?: string): Promise<void> => {
+    await addPurchase(cardId, amount, merchant, category)
   }
 
   // ===================================
@@ -401,9 +534,44 @@ export function PrepaidCardsProvider({ children }: { children: ReactNode }) {
     return []
   }
 
-  const addDeposit = (cardId: string, amount: number, source: string, notes?: string): void => {
-    // Placeholder implementation
-    console.log('addDeposit called', { cardId, amount, source, notes })
+  // ===================================
+  // 💰 Add deposit to card
+  // ===================================
+  const addDeposit = async (cardId: string, amount: number, source: string, notes?: string): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    const card = cards.find(c => c.id === cardId)
+    if (!card) {
+      setError('البطاقة غير موجودة')
+      return
+    }
+
+    const newBalance = card.balance + amount
+
+    try {
+      const { error: updateError } = await supabase
+        .from('prepaid_cards')
+        .update({ balance: newBalance })
+        .eq('id', cardId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating card balance for deposit:', updateError)
+        setError(updateError.message)
+        return
+      }
+
+      // تحديث الـ state المحلي فوراً
+      setCards(prev => prev.map(c =>
+        c.id === cardId ? { ...c, balance: newBalance } : c
+      ))
+    } catch (err) {
+      console.error('Unexpected error during deposit:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   return (

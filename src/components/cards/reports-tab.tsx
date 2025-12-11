@@ -80,8 +80,8 @@ export function ReportsTab({ cards, payments }: ReportsTabProps) {
       ? cards 
       : cards.filter(c => c.id === selectedCardId)
 
-    const totalCreditLimit = selectedCards.reduce((sum, c) => sum + (c.creditLimit ?? 0), 0)
-    const totalCurrentBalance = selectedCards.reduce((sum, c) => sum + (c.currentBalance ?? 0), 0)
+    const totalCreditLimit = selectedCards.reduce((sum, c) => sum + (c.credit_limit ?? c.creditLimit ?? 0), 0)
+    const totalCurrentBalance = selectedCards.reduce((sum, c) => sum + (c.current_balance ?? c.currentBalance ?? 0), 0)
     const totalAvailable = totalCreditLimit - totalCurrentBalance
     const utilizationRate = totalCreditLimit > 0 ? (totalCurrentBalance / totalCreditLimit) * 100 : 0
 

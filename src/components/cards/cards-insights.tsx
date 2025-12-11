@@ -88,7 +88,7 @@ export function CardsInsights() {
     }
 
     // رؤية: بطاقات بدون استخدام
-    const unusedCards = cards.filter(c => c.isActive && c.currentBalance === 0)
+    const unusedCards = cards.filter(c => (c.isActive || c.status === 'active') && (c.current_balance ?? c.currentBalance ?? 0) === 0)
     if (unusedCards.length >= 2) {
       generatedInsights.push({
         id: 'unused-cards',
@@ -100,8 +100,10 @@ export function CardsInsights() {
 
     // رؤية: توزيع الرصيد
     const cardsWithHighBalance = cards.filter(c => {
-      const utilization = calculateCreditUtilization(c.currentBalance ?? 0, c.creditLimit ?? 0)
-      return c.isActive && utilization >= 70
+      const currentBalance = c.current_balance ?? c.currentBalance ?? 0
+      const creditLimit = c.credit_limit ?? c.creditLimit ?? 0
+      const utilization = calculateCreditUtilization(currentBalance, creditLimit)
+      return (c.isActive || c.status === 'active') && utilization >= 70
     })
 
     if (cardsWithHighBalance.length > 0) {

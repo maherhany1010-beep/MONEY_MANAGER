@@ -107,13 +107,13 @@ export function CashbackHistory({ history, onExport }: CashbackHistoryProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'earned':
-        return <Gift className="h-4 w-4 text-green-600" />
+        return <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
       case 'redeemed':
-        return <TrendingUp className="h-4 w-4 text-blue-600" />
+        return <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
       case 'pending':
-        return <Calendar className="h-4 w-4 text-orange-600" />
+        return <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
       default:
-        return <Gift className="h-4 w-4 text-gray-600" />
+        return <Gift className="h-4 w-4 text-muted-foreground" />
     }
   }
 
@@ -133,13 +133,13 @@ export function CashbackHistory({ history, onExport }: CashbackHistoryProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'earned':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
       case 'redeemed':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
       case 'pending':
-        return 'bg-orange-100 text-orange-800'
+        return 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground'
     }
   }
 

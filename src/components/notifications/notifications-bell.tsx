@@ -55,8 +55,20 @@ const getNotificationIcon = (type: NotificationType) => {
       return <Users className={`${iconClass} text-green-500`} />
     case 'savings_circle':
       return <CircleDollarSign className={`${iconClass} text-teal-500`} />
+    case 'customer_debt_threshold':
+      return <AlertTriangle className={`${iconClass} text-red-500`} />
+    case 'customer_invoice_due_soon':
+      return <Calendar className={`${iconClass} text-orange-500`} />
+    case 'customer_invoice_overdue':
+      return <AlertTriangle className={`${iconClass} text-red-600`} />
+    case 'customer_payment_received':
+      return <DollarSign className={`${iconClass} text-green-500 dark:text-green-400`} />
+    case 'customer_transfer_completed':
+      return <TrendingUp className={`${iconClass} text-blue-500 dark:text-blue-400`} />
+    case 'customer_data_modified':
+      return <Info className={`${iconClass} text-blue-400 dark:text-blue-300`} />
     default:
-      return <Info className={`${iconClass} text-gray-500`} />
+      return <Info className={`${iconClass} text-muted-foreground`} />
   }
 }
 

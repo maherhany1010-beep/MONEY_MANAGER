@@ -53,8 +53,20 @@ const getNotificationIcon = (type: NotificationType) => {
       return <Users className="h-5 w-5 text-green-500" />
     case 'savings_circle':
       return <CircleDollarSign className="h-5 w-5 text-teal-500" />
+    case 'customer_debt_threshold':
+      return <AlertTriangle className="h-5 w-5 text-red-500" />
+    case 'customer_invoice_due_soon':
+      return <Calendar className="h-5 w-5 text-orange-500" />
+    case 'customer_invoice_overdue':
+      return <AlertTriangle className="h-5 w-5 text-red-600" />
+    case 'customer_payment_received':
+      return <DollarSign className="h-5 w-5 text-green-500 dark:text-green-400" />
+    case 'customer_transfer_completed':
+      return <TrendingUp className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+    case 'customer_data_modified':
+      return <Info className="h-5 w-5 text-blue-400 dark:text-blue-300" />
     default:
-      return <Info className="h-5 w-5 text-gray-500" />
+      return <Info className="h-5 w-5 text-muted-foreground" />
   }
 }
 

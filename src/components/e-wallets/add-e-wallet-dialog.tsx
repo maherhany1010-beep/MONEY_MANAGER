@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Wallet, Plus } from 'lucide-react'
+import { Wallet, Plus, Phone, DollarSign, User, CreditCard, Mail, FileText, Info } from 'lucide-react'
 
 interface AddEWalletDialogProps {
   open: boolean
@@ -152,47 +152,61 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-4xl max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 border-violet-100 dark:border-violet-900/30"
+        className="max-w-4xl max-h-[85vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="border-b pb-4 border-violet-100 dark:border-violet-900/30">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
-              <Wallet className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+        <DialogHeader className="border-b pb-5">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="p-2.5 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg shadow-violet-500/30">
+              <Wallet className="h-6 w-6 text-white" />
             </div>
-            إضافة محفظة إلكترونية جديدة
+            <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 bg-clip-text text-transparent">
+              إضافة محفظة إلكترونية جديدة
+            </span>
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 mt-2 mr-12">
             أدخل معلومات المحفظة الإلكترونية الجديدة
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-2">
             {/* المعلومات الأساسية */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-sm">المعلومات الأساسية</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                  المعلومات الأساسية
+                </h3>
+              </div>
               
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">رقم المحفظة *</Label>
+                  <Label htmlFor="phoneNumber" className="font-medium flex items-center gap-2 text-foreground">
+                    <Phone className="h-4 w-4 text-violet-600" />
+                    رقم المحفظة *
+                  </Label>
                   <Input
                     id="phoneNumber"
                     placeholder="01012345678"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                     required
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="provider">مزود الخدمة</Label>
+                  <Label htmlFor="provider" className="font-medium flex items-center gap-2 text-foreground">
+                    <Wallet className="h-4 w-4 text-violet-600" />
+                    مزود الخدمة
+                  </Label>
                   <Select
                     value={formData.provider}
                     onValueChange={(value) => setFormData({ ...formData, provider: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -206,22 +220,29 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="walletName">اسم المحفظة</Label>
+                  <Label htmlFor="walletName" className="font-medium flex items-center gap-2 text-foreground">
+                    <Wallet className="h-4 w-4 text-violet-600" />
+                    اسم المحفظة
+                  </Label>
                   <Input
                     id="walletName"
                     placeholder="مثال: فودافون كاش الرئيسية"
                     value={formData.walletName}
                     onChange={(e) => setFormData({ ...formData, walletName: e.target.value })}
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="walletType">نوع المحفظة</Label>
+                  <Label htmlFor="walletType" className="font-medium flex items-center gap-2 text-foreground">
+                    <Wallet className="h-4 w-4 text-violet-600" />
+                    نوع المحفظة
+                  </Label>
                   <Select
                     value={formData.walletType}
                     onValueChange={(value) => setFormData({ ...formData, walletType: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -238,12 +259,20 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
             </div>
 
             {/* الرصيد والحدود الإجبارية */}
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="font-semibold text-sm">الرصيد والحدود *</h4>
+            <div className="space-y-5 pt-4 border-t">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
+                <h3 className="text-lg font-semibold text-foreground">
+                  الرصيد والحدود *
+                </h3>
+              </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="balance">الرصيد الأولي (جنيه) *</Label>
+                  <Label htmlFor="balance" className="font-medium flex items-center gap-2 text-foreground">
+                    <DollarSign className="h-4 w-4 text-violet-600" />
+                    الرصيد الأولي (جنيه) *
+                  </Label>
                   <Input
                     id="balance"
                     type="number"
@@ -252,11 +281,15 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                     value={formData.balance}
                     onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
                     required
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dailyLimit">الحد اليومي (جنيه) *</Label>
+                  <Label htmlFor="dailyLimit" className="font-medium flex items-center gap-2 text-foreground">
+                    <DollarSign className="h-4 w-4 text-violet-600" />
+                    الحد اليومي (جنيه) *
+                  </Label>
                   <Input
                     id="dailyLimit"
                     type="number"
@@ -265,11 +298,15 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                     value={formData.dailyLimit}
                     onChange={(e) => setFormData({ ...formData, dailyLimit: e.target.value })}
                     required
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="monthlyLimit">الحد الشهري (جنيه) *</Label>
+                  <Label htmlFor="monthlyLimit" className="font-medium flex items-center gap-2 text-foreground">
+                    <DollarSign className="h-4 w-4 text-violet-600" />
+                    الحد الشهري (جنيه) *
+                  </Label>
                   <Input
                     id="monthlyLimit"
                     type="number"
@@ -278,11 +315,15 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                     value={formData.monthlyLimit}
                     onChange={(e) => setFormData({ ...formData, monthlyLimit: e.target.value })}
                     required
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="transactionLimit">حد المعاملة الواحدة (جنيه) *</Label>
+                  <Label htmlFor="transactionLimit" className="font-medium flex items-center gap-2 text-foreground">
+                    <DollarSign className="h-4 w-4 text-violet-600" />
+                    حد المعاملة الواحدة (جنيه) *
+                  </Label>
                   <Input
                     id="transactionLimit"
                     type="number"
@@ -291,52 +332,75 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                     value={formData.transactionLimit}
                     onChange={(e) => setFormData({ ...formData, transactionLimit: e.target.value })}
                     required
+                    className="text-foreground"
                   />
                 </div>
               </div>
             </div>
 
             {/* بيانات صاحب المحفظة */}
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="font-semibold text-sm">بيانات صاحب المحفظة</h4>
+            <div className="space-y-5 pt-4 border-t">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
+                <h3 className="text-lg font-semibold text-foreground">
+                  بيانات صاحب المحفظة
+                </h3>
+              </div>
               
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="holderName">الاسم الكامل</Label>
+                  <Label htmlFor="holderName" className="font-medium flex items-center gap-2 text-foreground">
+                    <User className="h-4 w-4 text-violet-600" />
+                    الاسم الكامل
+                  </Label>
                   <Input
                     id="holderName"
                     placeholder="الاسم الكامل"
                     value={formData.holderName}
                     onChange={(e) => setFormData({ ...formData, holderName: e.target.value })}
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="holderNationalId">الرقم القومي</Label>
+                  <Label htmlFor="holderNationalId" className="font-medium flex items-center gap-2 text-foreground">
+                    <CreditCard className="h-4 w-4 text-violet-600" />
+                    الرقم القومي
+                  </Label>
                   <Input
                     id="holderNationalId"
                     placeholder="29012011234567"
                     value={formData.holderNationalId}
                     onChange={(e) => setFormData({ ...formData, holderNationalId: e.target.value })}
+                    className="text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="holderEmail">البريد الإلكتروني</Label>
+                  <Label htmlFor="holderEmail" className="font-medium flex items-center gap-2 text-foreground">
+                    <Mail className="h-4 w-4 text-violet-600" />
+                    البريد الإلكتروني
+                  </Label>
                   <Input
                     id="holderEmail"
                     type="email"
                     placeholder="email@example.com"
                     value={formData.holderEmail}
                     onChange={(e) => setFormData({ ...formData, holderEmail: e.target.value })}
+                    className="text-foreground"
                   />
                 </div>
               </div>
             </div>
 
             {/* مستوى التحقق والرسوم */}
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="font-semibold text-sm">مستوى التحقق والرسوم</h4>
+            <div className="space-y-5 pt-4 border-t">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full" />
+                <h3 className="text-lg font-semibold text-foreground">
+                  مستوى التحقق والرسوم
+                </h3>
+              </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -356,7 +420,7 @@ export function AddEWalletDialog({ open, onOpenChange, onAdd }: AddEWalletDialog
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     مستوى التحقق من هوية صاحب المحفظة
                   </p>
                 </div>

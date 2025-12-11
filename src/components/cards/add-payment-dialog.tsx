@@ -154,58 +154,63 @@ export function AddPaymentDialog({ open, onOpenChange, card, onAdd }: AddPayment
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 border-green-100 dark:border-green-900/30"
+        className="max-w-3xl max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="border-b pb-4 border-green-100 dark:border-green-900/30">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Wallet className="h-6 w-6 text-green-600 dark:text-green-400" />
+        <DialogHeader className="border-b pb-5">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/30">
+              <Wallet className="h-6 w-6 text-white" />
             </div>
-            سداد البطاقة
+            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 bg-clip-text text-transparent">
+              سداد البطاقة
+            </span>
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
-            سداد رصيد البطاقة <span className="font-semibold text-green-600 dark:text-green-400">{card.name}</span>
+          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 mt-2 mr-12">
+            سداد رصيد البطاقة <span className="font-semibold text-emerald-600 dark:text-emerald-400">{card.name}</span>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-2">
             {/* معلومات الرصيد الحالي */}
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-red-700">الرصيد المستحق:</span>
-                <span className="text-2xl font-bold text-red-900">{formatCurrency(currentBalance)}</span>
+                <span className="text-sm text-red-700 dark:text-red-300">الرصيد المستحق:</span>
+                <span className="text-2xl font-bold text-red-900 dark:text-red-100">{formatCurrency(currentBalance)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-red-600">الحد الأدنى للسداد:</span>
-                <span className="font-medium text-red-800">{formatCurrency(minimumPayment)}</span>
+                <span className="text-red-600 dark:text-red-400">الحد الأدنى للسداد:</span>
+                <span className="font-medium text-red-800 dark:text-red-200">{formatCurrency(minimumPayment)}</span>
               </div>
             </div>
 
             {/* نوع السداد */}
             <div className="space-y-2">
-              <Label htmlFor="paymentType">نوع السداد *</Label>
+              <Label htmlFor="paymentType" className="text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                نوع السداد *
+              </Label>
               <Select
                 value={formData.paymentType}
                 onValueChange={(value) => setFormData({ ...formData, paymentType: value })}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20">
                   <SelectValue placeholder="اختر نوع السداد" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="full">
                     <div className="flex flex-col items-start">
                       <span className="font-medium">سداد كامل</span>
-                      <span className="text-xs text-muted-foreground">{formatCurrency(currentBalance)}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{formatCurrency(currentBalance)}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="minimum">
                     <div className="flex flex-col items-start">
                       <span className="font-medium">الحد الأدنى</span>
-                      <span className="text-xs text-muted-foreground">{formatCurrency(minimumPayment)}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{formatCurrency(minimumPayment)}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="custom">
@@ -218,7 +223,10 @@ export function AddPaymentDialog({ open, onOpenChange, card, onAdd }: AddPayment
             {/* المبلغ المخصص */}
             {formData.paymentType === 'custom' && (
               <div className="space-y-2">
-                <Label htmlFor="amount">المبلغ *</Label>
+                <Label htmlFor="amount" className="text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  المبلغ *
+                </Label>
                 <Input
                   id="amount"
                   type="number"
@@ -226,10 +234,11 @@ export function AddPaymentDialog({ open, onOpenChange, card, onAdd }: AddPayment
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  className="border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
                   required
                   max={currentBalance}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   الحد الأقصى: {formatCurrency(currentBalance)}
                 </p>
               </div>
@@ -312,34 +321,46 @@ export function AddPaymentDialog({ open, onOpenChange, card, onAdd }: AddPayment
 
             {/* الوصف */}
             <div className="space-y-2">
-              <Label htmlFor="description">الوصف (اختياري)</Label>
+              <Label htmlFor="description" className="text-slate-700 dark:text-slate-300 font-medium">
+                الوصف (اختياري)
+              </Label>
               <Input
                 id="description"
                 placeholder="أضف ملاحظات..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
               />
             </div>
 
             {/* التاريخ */}
             <div className="space-y-2">
-              <Label htmlFor="date">تاريخ السداد</Label>
+              <Label htmlFor="date" className="text-slate-700 dark:text-slate-300 font-medium">
+                تاريخ السداد
+              </Label>
               <Input
                 id="date"
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all"
               />
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 border-t border-slate-200 dark:border-slate-800 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="min-w-[100px] border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            >
               إلغاء
             </Button>
             <Button
               type="submit"
               disabled={amount <= 0 || !formData.sourceId || (sourceDetails ? sourceDetails.balance < totalAmount : false)}
+              className="min-w-[140px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all"
             >
               <CheckCircle className="h-4 w-4 ml-2" />
               تأكيد السداد

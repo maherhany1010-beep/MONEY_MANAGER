@@ -120,15 +120,15 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
             </div>
             إضافة كاش باك جديد
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             سجل كاش باك جديد تم الحصول عليه من عملية شراء
           </DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
-            <CheckCircle className="h-16 w-16 dark:text-green-400" style={{ color: '#16a34a' }} />
-            <p className="text-lg font-semibold dark:text-green-400" style={{ color: '#15803d' }}>
+            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+            <p className="text-lg font-semibold text-green-700 dark:text-green-400">
               تم إضافة الكاش باك بنجاح!
             </p>
           </div>
@@ -202,10 +202,10 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
             <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-700">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-bold dark:text-blue-100" style={{ color: '#1d4ed8' }}>
+                  <h3 className="text-sm font-bold text-blue-700 dark:text-blue-100">
                     الاسترداد التلقائي
                   </h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     استرداد الكاش باك تلقائياً بعد عدد أيام محدد
                   </p>
                 </div>
@@ -218,7 +218,7 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
               {formData.autoRedeemEnabled && (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="autoRedeemDays" className="dark:text-blue-100 font-medium mb-2 block" style={{ color: '#1d4ed8' }}>
+                    <Label htmlFor="autoRedeemDays" className="text-blue-700 dark:text-blue-100 font-medium mb-2 block">
                       عدد الأيام للاسترداد التلقائي *
                     </Label>
                     <Input
@@ -229,7 +229,7 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
                       onChange={(e) => setFormData({ ...formData, autoRedeemDays: e.target.value })}
                       required={formData.autoRedeemEnabled}
                     />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       اختيارات سريعة:
                     </p>
                     <div className="grid grid-cols-3 gap-2 mt-2">
@@ -292,10 +292,10 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
 
                   {autoRedeemDate && (
                     <div className="flex items-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 rounded border border-blue-300 dark:border-blue-600">
-                      <Calendar className="h-4 w-4 dark:text-blue-400" style={{ color: '#2563eb' }} />
+                      <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <div className="text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">تاريخ الاسترداد التلقائي المتوقع: </span>
-                        <span className="font-bold dark:text-blue-400" style={{ color: '#1d4ed8' }}>
+                        <span className="text-muted-foreground">تاريخ الاسترداد التلقائي المتوقع: </span>
+                        <span className="font-bold text-blue-700 dark:text-blue-400">
                           {autoRedeemDate}
                         </span>
                       </div>
@@ -307,25 +307,25 @@ export function AddCashbackDialog({ open, onOpenChange, cardId }: AddCashbackDia
 
             {/* ملخص */}
             {formData.amount && parseFloat(formData.amount) > 0 && (
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+              <div className="p-4 bg-muted rounded-lg border">
                 <h3 className="text-sm font-bold mb-3">ملخص الكاش باك</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">المبلغ:</span>
-                    <span className="font-bold dark:text-purple-400" style={{ color: '#9333ea' }}>
+                    <span className="text-muted-foreground">المبلغ:</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-400">
                       {formatCurrency(parseFloat(formData.amount))}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">المصدر:</span>
+                    <span className="text-muted-foreground">المصدر:</span>
                     <span className="font-medium">{formData.source || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">تاريخ الحصول:</span>
+                    <span className="text-muted-foreground">تاريخ الحصول:</span>
                     <span className="font-medium">{formData.earnedDate}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">الاسترداد التلقائي:</span>
+                    <span className="text-muted-foreground">الاسترداد التلقائي:</span>
                     <span className="font-medium">
                       {formData.autoRedeemEnabled ? `✅ بعد ${formData.autoRedeemDays} يوم` : '❌ معطل'}
                     </span>

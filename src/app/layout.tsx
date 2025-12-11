@@ -19,6 +19,8 @@ import { MerchantsProvider } from "@/contexts/merchants-context";
 import { CentralTransfersProvider } from "@/contexts/central-transfers-context";
 import { CashbackProvider } from "@/contexts/cashback-context";
 import { ReconciliationProvider } from "@/contexts/reconciliation-context";
+import { BalanceVisibilityProvider } from "@/contexts/balance-visibility-context";
+import { LayoutProvider } from "@/components/layout/layout-provider";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -29,9 +31,44 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "الإدارة المالية الشاملة",
-  description: "لإدارة أموالك بشكل أكثر احترافية ودقة - نظام متكامل لإدارة جميع جوانب حياتك المالية",
+  title: "CFM - الإدارة المالية الشاملة",
+  description: "Comprehensive Financial Management - لإدارة أموالك بشكل أكثر احترافية ودقة - نظام متكامل لإدارة جميع جوانب حياتك المالية",
+  icons: {
+    icon: [
+      { url: '/logos/LOGO MONEY MANGER.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logos/LOGO MONEY MANGER.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/logos/LOGO MONEY MANGER.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/logos/LOGO MONEY MANGER.png',
+  },
+  applicationName: 'CFM',
+  manifest: '/manifest.json',
 };
+
+// سكريبت لتطبيق الثيم قبل تحميل React
+const themeScript = `
+  (function() {
+    try {
+      var savedTheme = localStorage.getItem('theme');
+      var resolvedTheme;
+
+      // حساب الثيم الفعلي
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        resolvedTheme = savedTheme;
+      } else {
+        // إذا كان 'system' أو غير محدد، نستخدم تفضيل النظام
+        resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      document.documentElement.classList.add(resolvedTheme);
+      document.documentElement.setAttribute('data-theme', resolvedTheme);
+      document.documentElement.style.colorScheme = resolvedTheme;
+      document.documentElement.style.backgroundColor = resolvedTheme === 'dark' ? '#0f172a' : '#f8fafc';
+    } catch (e) {}
+  })();
+`;
 
 export default function RootLayout({
   children,
@@ -39,15 +76,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
-        className={`${notoSansArabic.variable} antialiased`}
+        className={`${notoSansArabic.variable} antialiased bg-background text-foreground`}
       >
         <SettingsProvider>
           <ThemeProvider>
             <NotificationsProvider>
               <AuthProvider>
-                <MerchantsProvider>
+                <BalanceVisibilityProvider>
+                  <MerchantsProvider>
                   <CardsProvider>
                     <BankAccountsProvider>
                       <CashVaultsProvider>
@@ -62,7 +103,9 @@ export default function RootLayout({
                                         <CentralTransfersProvider>
                                           <CashbackProvider>
                                             <ReconciliationProvider>
-                                              {children}
+                                              <LayoutProvider>
+                                                {children}
+                                              </LayoutProvider>
                                               <Toaster />
                                             </ReconciliationProvider>
                                           </CashbackProvider>
@@ -79,6 +122,7 @@ export default function RootLayout({
                     </BankAccountsProvider>
                   </CardsProvider>
                 </MerchantsProvider>
+                </BalanceVisibilityProvider>
               </AuthProvider>
             </NotificationsProvider>
           </ThemeProvider>

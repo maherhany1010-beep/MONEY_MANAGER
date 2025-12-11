@@ -168,7 +168,7 @@ export function CashVaultsProvider({ children }: { children: ReactNode }) {
             vault_name: vault.vault_name,
             location: vault.location,
             balance: vault.balance,
-            currency: vault.currency || 'SAR',
+            currency: vault.currency || 'EGP',
           },
         ])
         .select()
@@ -240,7 +240,13 @@ export function CashVaultsProvider({ children }: { children: ReactNode }) {
       if (updateError) {
         console.error('Error updating vault balance:', updateError)
         setError(updateError.message)
+        return
       }
+
+      // تحديث الـ state المحلي فوراً بعد نجاح التحديث في قاعدة البيانات
+      setVaults(prev => prev.map(vault =>
+        vault.id === id ? { ...vault, balance: newBalance } : vault
+      ))
     } catch (err) {
       console.error('Unexpected error updating vault balance:', err)
       setError('حدث خطأ غير متوقع')

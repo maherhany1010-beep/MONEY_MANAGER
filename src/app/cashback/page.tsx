@@ -1,20 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CashbackOverview } from '@/components/cashback/cashback-overview'
 import { CashbackHistory } from '@/components/cashback/cashback-history'
 import { CashbackCategories } from '@/components/cashback/cashback-categories'
 import { CashbackRedemption } from '@/components/cashback/cashback-redemption'
-import { 
-  formatCurrency, 
-  formatDate,
-} from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { Gift, TrendingUp, Calendar, Download, Star } from 'lucide-react'
 
 // Mock data - will be replaced with real data from Supabase
@@ -123,7 +118,7 @@ export default function CashbackPage() {
   }
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="الكاش باك"
         description="تتبع وإدارة مكافآت الكاش باك من البطاقات الائتمانية"
@@ -267,6 +262,6 @@ export default function CashbackPage() {
           />
         </TabsContent>
       </Tabs>
-    </AppLayout>
+    </>
   )
 }

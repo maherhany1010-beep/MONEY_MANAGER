@@ -110,13 +110,13 @@ export function EWalletTransactions({ wallet }: EWalletTransactionsProps) {
   const getTransactionColor = (type: string) => {
     switch (type) {
       case 'deposit':
-        return 'text-green-600'
+        return 'text-green-600 dark:text-green-400'
       case 'withdrawal':
-        return 'text-red-600'
+        return 'text-red-600 dark:text-red-400'
       case 'transfer':
-        return 'text-blue-600'
+        return 'text-blue-600 dark:text-blue-400'
       default:
-        return 'text-gray-600'
+        return 'text-muted-foreground'
     }
   }
 
@@ -277,13 +277,13 @@ export function EWalletTransactions({ wallet }: EWalletTransactionsProps) {
         {filteredTransactions.length > 0 && (
           <div className="mt-6 pt-6 border-t">
             <div className="grid gap-4 md:grid-cols-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">إجمالي المعاملات</p>
-                <p className="text-2xl font-bold text-gray-900">{filteredTransactions.length}</p>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">إجمالي المعاملات</p>
+                <p className="text-2xl font-bold text-foreground">{filteredTransactions.length}</p>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-600 mb-1">إجمالي الإيداعات</p>
-                <p className="text-2xl font-bold text-green-900">
+              <div className="p-4 bg-green-50 dark:bg-green-950/50 rounded-lg">
+                <p className="text-sm text-green-600 dark:text-green-400 mb-1">إجمالي الإيداعات</p>
+                <p className="text-2xl font-bold text-green-900 dark:text-green-200">
                   {formatCurrency(
                     filteredTransactions
                       .filter(t => t.type === 'deposit')
@@ -291,9 +291,9 @@ export function EWalletTransactions({ wallet }: EWalletTransactionsProps) {
                   )}
                 </p>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg">
-                <p className="text-sm text-red-600 mb-1">إجمالي السحوبات</p>
-                <p className="text-2xl font-bold text-red-900">
+              <div className="p-4 bg-red-50 dark:bg-red-950/50 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400 mb-1">إجمالي السحوبات</p>
+                <p className="text-2xl font-bold text-red-900 dark:text-red-200">
                   {formatCurrency(
                     filteredTransactions
                       .filter(t => t.type === 'withdrawal')
@@ -301,9 +301,9 @@ export function EWalletTransactions({ wallet }: EWalletTransactionsProps) {
                   )}
                 </p>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-600 mb-1">إجمالي التحويلات</p>
-                <p className="text-2xl font-bold text-blue-900">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg">
+                <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">إجمالي التحويلات</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
                   {formatCurrency(
                     filteredTransactions
                       .filter(t => t.type === 'transfer')

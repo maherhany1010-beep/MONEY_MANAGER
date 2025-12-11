@@ -37,7 +37,7 @@ export interface SavingsCircle {
   amountPaid?: number
   remainingAmount?: number
   name?: string
-  type?: string
+  type?: 'personal' | 'app-based'
   role?: 'manager' | 'member'
   monthlyAmount?: number
   nextPaymentDate?: string
@@ -46,6 +46,8 @@ export interface SavingsCircle {
   totalMembers?: number
   duration?: number
   hasFees?: boolean
+  managementFee?: number
+  feeType?: 'monthly' | 'one-time' | 'percentage'
   paymentMethod?: string
   totalCollected?: number
   totalDistributed?: number
@@ -55,8 +57,17 @@ export interface SavingsCircle {
   lastPaymentDate?: string
   totalFees?: number
   currentBalance?: number
+  myTurnNumber?: number
+  my_turn_number?: number
+  appName?: string
+  appAccountId?: string
   createdAt?: string
   updatedAt?: string
+  current_round?: number
+  hasWithdrawn?: boolean
+  withdrawnAmount?: number
+  totalWithdrawn?: number
+  totalPaid?: number
 }
 
 interface SavingsCirclesContextType {
@@ -77,6 +88,9 @@ interface SavingsCirclesContextType {
     totalMonthlyCommitment?: number
     totalInCircles?: number
     totalFeesEarned?: number
+    totalPayments?: number
+    totalWithdrawals?: number
+    balance?: number
   }
   filter?: string
   setFilter?: (filter: string) => void
@@ -118,7 +132,70 @@ export function SavingsCirclesProvider({ children }: { children: ReactNode }) {
         console.error('Error loading savings circles:', fetchError)
         setError(fetchError.message)
       } else {
-        setCircles(data || [])
+        // قراءة البيانات الإضافية من localStorage
+        let savedExtras: Record<string, any> = {}
+        try {
+          savedExtras = JSON.parse(localStorage.getItem('circles_extra_data') || '{}')
+        } catch (e) {
+          // تجاهل الخطأ
+        }
+
+        // معالجة الجمعيات ودمج البيانات الإضافية من localStorage
+        const processedCircles = (data || []).map(circle => {
+          // البيانات الإضافية من localStorage (باستخدام ID الجمعية)
+          const extraData = savedExtras[circle.id] || {}
+
+          // دمج البيانات الأساسية مع الإضافية
+          const enrichedCircle = {
+            ...circle,
+            role: extraData.role || 'manager',
+            type: extraData.type,
+            myTurnNumber: extraData.myTurnNumber,
+            duration: extraData.duration || 12,
+            totalMembers: extraData.totalMembers,
+            hasFees: extraData.hasFees,
+            managementFee: extraData.managementFee,
+            feeType: extraData.feeType,
+            paymentMethod: extraData.paymentMethod,
+            appName: extraData.appName,
+            appAccountId: extraData.appAccountId,
+            description: extraData.description,
+            currentRound: extraData.currentRound || 1,
+            totalPaid: extraData.totalPaid || 0,
+            totalWithdrawn: extraData.totalWithdrawn || 0,
+            monthlyAmount: circle.monthly_payment,
+            name: circle.circle_name,
+          }
+
+          const startDate = enrichedCircle.start_date
+          const duration = enrichedCircle.duration
+
+          if (startDate && enrichedCircle.status === 'active') {
+            const start = new Date(startDate)
+            const endDate = new Date(start)
+            endDate.setMonth(endDate.getMonth() + duration)
+
+            // حساب عدد الدورات التي يجب أن تكون مسددة
+            const now = new Date()
+            const monthsDiff = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30))
+            const expectedRound = Math.min(Math.max(monthsDiff + 1, 1), duration)
+
+            // تحديث الحالة إذا انتهت الجمعية
+            if (now > endDate) {
+              return { ...enrichedCircle, status: 'completed', currentRound: duration, current_round: duration }
+            }
+
+            // تحديث الدورة الحالية إذا كانت أقل من المتوقع
+            const currentRound = enrichedCircle.currentRound || enrichedCircle.current_round || 1
+            if (currentRound < expectedRound) {
+              return { ...enrichedCircle, currentRound: expectedRound, current_round: expectedRound }
+            }
+          }
+
+          return enrichedCircle
+        })
+
+        setCircles(processedCircles)
       }
     } catch (err) {
       console.error('Unexpected error loading savings circles:', err)
@@ -187,29 +264,100 @@ export function SavingsCirclesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // حساب تاريخ الانتهاء بناءً على المدة
+      const startDate = new Date(circle.start_date)
+      const duration = circle.duration || circle.totalMembers || 12
+      const endDate = new Date(startDate)
+      endDate.setMonth(endDate.getMonth() + Number(duration))
+
+      // البيانات الأساسية للإدخال (الحقول الموجودة في قاعدة البيانات فقط)
+      const insertData = {
+        user_id: user.id,
+        circle_name: circle.circle_name || circle.name || 'جمعية جديدة',
+        total_amount: Number(circle.total_amount) || 0,
+        monthly_payment: Number(circle.monthly_payment || circle.monthlyAmount) || 0,
+        start_date: circle.start_date,
+        end_date: endDate.toISOString().split('T')[0],
+        status: circle.status || 'active',
+      }
+
+      console.log('Inserting circle with data:', insertData)
+
       const { data, error: insertError } = await supabase
         .from('savings_circles')
-        .insert([
-          {
-            user_id: user.id,
-            circle_name: circle.circle_name,
-            total_amount: circle.total_amount,
-            monthly_payment: circle.monthly_payment,
-            start_date: circle.start_date,
-            end_date: circle.end_date,
-            status: circle.status || 'active',
-          },
-        ])
+        .insert([insertData])
         .select()
         .single()
 
+      console.log('Insert result - data:', data, 'error:', insertError)
+
       if (insertError) {
-        console.error('Error adding savings circle:', insertError)
-        setError(insertError.message)
+        console.error('Error adding savings circle:', insertError.message)
+        setError(insertError.message || 'حدث خطأ أثناء إضافة الجمعية')
         return null
       }
 
-      return data
+      if (!data) {
+        console.error('No data returned from insert')
+        setError('لم يتم إرجاع بيانات من قاعدة البيانات')
+        return null
+      }
+
+      // إنشاء كائن الجمعية الكامل مع البيانات الإضافية (محلياً)
+      const fullCircle: SavingsCircle = {
+        ...data,
+        // البيانات الإضافية من النموذج (محفوظة محلياً فقط)
+        name: circle.name || circle.circle_name,
+        description: circle.description,
+        type: circle.type,
+        role: circle.role || 'manager',
+        monthlyAmount: circle.monthlyAmount || circle.monthly_payment,
+        totalMembers: circle.totalMembers,
+        duration: duration,
+        hasFees: circle.hasFees,
+        managementFee: circle.managementFee,
+        feeType: circle.feeType,
+        paymentMethod: circle.paymentMethod,
+        myTurnNumber: circle.myTurnNumber,
+        appName: circle.appName,
+        appAccountId: circle.appAccountId,
+        currentRound: 1,
+        current_round: 1,
+        totalFees: circle.totalFees || 0,
+        currentBalance: 0,
+        totalPaid: 0,
+        totalWithdrawn: 0,
+      }
+
+      // تحديث الـ state محلياً بالبيانات الكاملة
+      setCircles(prev => [fullCircle, ...prev])
+
+      // حفظ البيانات الإضافية في localStorage للاستمرارية
+      try {
+        const savedExtras = JSON.parse(localStorage.getItem('circles_extra_data') || '{}')
+        savedExtras[data.id] = {
+          role: circle.role || 'manager',
+          type: circle.type,
+          myTurnNumber: circle.myTurnNumber,
+          duration: duration,
+          totalMembers: circle.totalMembers,
+          hasFees: circle.hasFees,
+          managementFee: circle.managementFee,
+          feeType: circle.feeType,
+          paymentMethod: circle.paymentMethod,
+          appName: circle.appName,
+          appAccountId: circle.appAccountId,
+          description: circle.description,
+          currentRound: 1,
+          totalPaid: 0,
+          totalWithdrawn: 0,
+        }
+        localStorage.setItem('circles_extra_data', JSON.stringify(savedExtras))
+      } catch (e) {
+        console.warn('Could not save extra data to localStorage:', e)
+      }
+
+      return fullCircle
     } catch (err) {
       console.error('Unexpected error adding savings circle:', err)
       setError('حدث خطأ غير متوقع')
@@ -262,6 +410,9 @@ export function SavingsCirclesProvider({ children }: { children: ReactNode }) {
       if (deleteError) {
         console.error('Error deleting savings circle:', deleteError)
         setError(deleteError.message)
+      } else {
+        // حذف من الـ state المحلي أيضاً
+        setCircles(prev => prev.filter(c => c.id !== id))
       }
     } catch (err) {
       console.error('Unexpected error deleting savings circle:', err)
@@ -292,6 +443,57 @@ export function SavingsCirclesProvider({ children }: { children: ReactNode }) {
       .reduce((sum, c) => sum + (c.total_amount || 0), 0)
   }
 
+  // ===================================
+  // 📊 Calculate stats
+  // ===================================
+
+  // حساب إجمالي المدفوعات (المبلغ الشهري × عدد الدورات المدفوعة)
+  // نحسب فقط إذا كان هناك totalPaid مسجل (أي تم سداد فعلي)
+  const totalPayments = circles.length === 0 ? 0 : circles
+    .reduce((sum, c) => {
+      // استخدام totalPaid فقط إذا كان موجوداً ومسجل
+      if (c.totalPaid && c.totalPaid > 0) {
+        return sum + c.totalPaid
+      }
+      // لا نحسب من currentRound لأنه يبدأ من 1 افتراضياً
+      return sum
+    }, 0)
+
+  // حساب إجمالي المسحوبات (المبلغ الكلي إذا استلمت دورك)
+  const totalWithdrawals = circles.length === 0 ? 0 : circles
+    .reduce((sum, c) => {
+      // إذا تم تسجيل السحب
+      if (c.hasWithdrawn) {
+        const totalAmount = c.withdrawnAmount || c.total_amount ||
+          ((c.monthly_payment || c.monthlyAmount || 0) * (c.totalMembers || c.duration || 1))
+        return sum + totalAmount
+      }
+      return sum
+    }, 0)
+
+  // الرصيد = المدفوعات - المسحوبات
+  // موجب (+) = عليّ مبلغ (دفعت أكثر مما استلمت)
+  // سالب (-) = لي مبلغ (استلمت أكثر مما دفعت)
+  const balance = totalPayments - totalWithdrawals
+
+  const stats = {
+    totalCircles: circles.length,
+    activeCircles: circles.filter(c => c.status === 'active').length,
+    totalSavings: getTotalSavings(),
+    monthlyContribution: circles
+      .filter(c => c.status === 'active' && c.role === 'member')
+      .reduce((sum, c) => sum + (c.monthly_payment || c.monthlyAmount || 0), 0),
+    totalMonthlyCommitment: circles
+      .filter(c => c.status === 'active')
+      .reduce((sum, c) => sum + (c.monthly_payment || c.monthlyAmount || 0), 0),
+    totalInCircles: circles
+      .filter(c => c.status === 'active')
+      .reduce((sum, c) => sum + (c.total_amount || 0), 0),
+    totalPayments,
+    totalWithdrawals,
+    balance,
+  }
+
   return (
     <SavingsCirclesContext.Provider
       value={{
@@ -304,6 +506,7 @@ export function SavingsCirclesProvider({ children }: { children: ReactNode }) {
         getCircleById,
         getActiveCircles,
         getTotalSavings,
+        stats,
       }}
     >
       {children}

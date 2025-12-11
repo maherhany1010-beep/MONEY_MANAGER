@@ -1,7 +1,6 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -22,17 +21,15 @@ export default function EWalletDetailsPage() {
 
   if (!wallet) {
     return (
-      <AppLayout>
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <Wallet className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">المحفظة غير موجودة</h2>
-          <p className="text-muted-foreground mb-4">لم يتم العثور على المحفظة المطلوبة</p>
-          <Button onClick={() => router.push('/e-wallets')}>
-            <ArrowLeft className="h-4 w-4 ml-2" />
-            العودة للمحافظ
-          </Button>
-        </div>
-      </AppLayout>
+      <div className="flex flex-col items-center justify-center min-h-[400px] container mx-auto p-6">
+        <Wallet className="h-16 w-16 text-muted-foreground mb-4" />
+        <h2 className="text-2xl font-bold mb-2">المحفظة غير موجودة</h2>
+        <p className="text-muted-foreground mb-4">لم يتم العثور على المحفظة المطلوبة</p>
+        <Button onClick={() => router.push('/e-wallets')}>
+          <ArrowLeft className="h-4 w-4 ml-2" />
+          العودة للمحافظ
+        </Button>
+      </div>
     )
   }
 
@@ -44,11 +41,11 @@ export default function EWalletDetailsPage() {
   }
 
   const getProviderColor = (provider: string) => {
-    if (provider.toLowerCase().includes('vodafone')) return 'from-red-500 to-red-700'
-    if (provider.toLowerCase().includes('etisalat')) return 'from-green-500 to-green-700'
-    if (provider.toLowerCase().includes('orange')) return 'from-orange-500 to-orange-700'
-    if (provider.toLowerCase().includes('we')) return 'from-purple-500 to-purple-700'
-    return 'from-blue-500 to-blue-700'
+    if (provider.toLowerCase().includes('vodafone')) return 'from-red-100 to-red-200 dark:from-red-800 dark:to-red-900 text-red-900 dark:text-white'
+    if (provider.toLowerCase().includes('etisalat')) return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
+    if (provider.toLowerCase().includes('orange')) return 'from-orange-100 to-orange-200 dark:from-orange-800 dark:to-orange-900 text-orange-900 dark:text-white'
+    if (provider.toLowerCase().includes('we')) return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
+    return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
   }
 
   const getStatusLabel = (status: string) => {
@@ -62,16 +59,15 @@ export default function EWalletDetailsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-700 border-green-200'
-      case 'suspended': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      case 'blocked': return 'bg-red-100 text-red-700 border-red-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
+      case 'active': return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'
+      case 'suspended': return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
+      case 'blocked': return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
+      default: return 'bg-muted text-muted-foreground border-border'
     }
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-6">
         {/* رأس الصفحة */}
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => router.push('/e-wallets')}>
@@ -82,7 +78,7 @@ export default function EWalletDetailsPage() {
 
         {/* معلومات المحفظة */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? 'other')} p-8 text-white`}>
+          <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? 'other')} p-8`}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Wallet className="h-8 w-8" />
@@ -97,7 +93,7 @@ export default function EWalletDetailsPage() {
               </div>
               <div className="flex gap-2 flex-wrap justify-end">
                 {wallet.isDefault && (
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                  <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
                     افتراضية
                   </Badge>
                 )}
@@ -221,8 +217,7 @@ export default function EWalletDetailsPage() {
             <EWalletSettings wallet={wallet} onUpdate={handleUpdateWallet} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+    </div>
   )
 }
 

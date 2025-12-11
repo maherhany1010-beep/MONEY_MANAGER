@@ -22,7 +22,7 @@ export function CardsStatistics() {
       totalCashback,
       utilizationRate,
       availableCredit,
-      activeCards: cards.filter(c => c.isActive).length,
+      activeCards: cards.filter(c => c.isActive || c.status === 'active').length,
       totalCards: cards.length,
     }
   }, [cards, getTotalCreditLimit, getTotalBalance, getTotalCashback])

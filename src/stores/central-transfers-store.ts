@@ -3,169 +3,290 @@ import { createClientComponentClient } from '@/lib/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 // ===================================
-// 📦 Database Schema Interface
+// 📦 Types
 // ===================================
+export type TransferType = 'instant' | 'deferred'
+export type TransferStatus = 'successful' | 'pending' | 'failed'
+export type FeeBearer = 'sender' | 'receiver'
+export type FeeType = 'fixed' | 'percentage'
+
+export interface TransferFormData {
+  fromAccountId: string
+  toAccountId: string
+  baseAmount: number
+  fees: number
+  feeType: FeeType
+  feeBearer: FeeBearer
+  transferType: TransferType
+  actualPaidAmount?: number
+  receivingAccountForPayment?: string
+  notes?: string
+}
+
 export interface CentralTransfer {
   // Database fields (snake_case)
   id: string
   user_id?: string
-  from_account: string
-  to_account: string
-  amount: number
-  transfer_date: string
-  notes: string | null
+  from_account_id: string
+  to_account_id: string
+  base_amount: number
+  fees: number
+  fee_type: FeeType
+  fee_bearer: FeeBearer
+  transfer_type: TransferType
+  status: TransferStatus
+  actual_paid_amount?: number
+  receiving_account_for_payment?: string
+  net_profit?: number
+  pending_balance?: number
+  notes?: string
   created_at?: string
   updated_at?: string
 
-  // Legacy fields for backward compatibility (camelCase)
-  fromAccount?: string
-  toAccount?: string
-  transferAmount?: number
-  transferDate?: string
-  transferNotes?: string
-  fromAccountType?: 'bank' | 'wallet' | 'cash' | 'card' | 'prepaid'
-  toAccountType?: 'bank' | 'wallet' | 'cash' | 'card' | 'prepaid'
-  status?: 'completed' | 'pending' | 'failed'
-  reference?: string
-  fees?: number
-  exchangeRate?: number
-  fromCurrency?: string
-  toCurrency?: string
+  // Legacy fields for backward compatibility
+  from_account?: string
+  to_account?: string
+  amount?: number
+  transfer_date?: string
 }
 
 interface CentralTransfersState {
-  centraltransfers: CentralTransfer[]
+  // State
+  transfers: CentralTransfer[]
   loading: boolean
   error: string | null
   initialized: boolean
   channel: RealtimeChannel | null
-  
+
+  // Actions
   initialize: (userId: string) => Promise<void>
   cleanup: () => void
-  addCentralTransfer: (item: Omit<CentralTransfer, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<CentralTransfer | null>
-  updateCentralTransfer: (id: string, updates: Partial<CentralTransfer>) => Promise<void>
-  deleteCentralTransfer: (id: string) => Promise<void>
-  getCentralTransferById: (id: string) => CentralTransfer | undefined
+  createTransfer: (data: TransferFormData, executionStatus: TransferStatus) => Promise<CentralTransfer | null>
+  updateTransferStatus: (id: string, status: TransferStatus) => Promise<void>
+  markPendingAsSuccessful: (id: string) => Promise<void>
+  markPendingAsFailed: (id: string) => Promise<void>
+  deleteTransfer: (id: string) => Promise<void>
+
+  // Helpers
+  getTransferById: (id: string) => CentralTransfer | undefined
+  getTransfersByAccount: (accountId: string) => CentralTransfer[]
+  getTotalTransferred: (accountId: string) => number
+  getPendingTransfersCount: () => number
 }
 
 export const useCentralTransfersStore = create<CentralTransfersState>((set, get) => ({
-  centraltransfers: [],
+  transfers: [],
   loading: false,
   error: null,
   initialized: false,
   channel: null,
 
+  // ===================================
+  // 🚀 Initialize store
+  // ===================================
   initialize: async (userId: string) => {
-    const state = get()
-    if (state.initialized) return
-    
-    const supabase = createClientComponentClient()
-    
-    try {
-      set({ loading: true, error: null })
+    if (get().initialized) return
 
+    const supabase = createClientComponentClient()
+    set({ loading: true })
+
+    try {
       const { data, error: fetchError } = await supabase
         .from('central_transfers')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-      if (fetchError) {
-        set({ error: fetchError.message, loading: false })
-        return
-      }
+      if (fetchError) throw fetchError
 
-      set({ centraltransfers: data || [], loading: false, initialized: true })
+      set({
+        transfers: data || [],
+        initialized: true,
+        loading: false,
+      })
 
-      const channel: RealtimeChannel = supabase
-        .channel('central_transfers_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'central_transfers',
-          filter: `user_id=eq.${userId}`,
-        }, (payload) => {
-          const current = get().centraltransfers
-          if (payload.eventType === 'INSERT') {
-            set({ centraltransfers: [payload.new as CentralTransfer, ...current] })
-          } else if (payload.eventType === 'UPDATE') {
-            set({ centraltransfers: current.map((item) => item.id === (payload.new as CentralTransfer).id ? (payload.new as CentralTransfer) : item) })
-          } else if (payload.eventType === 'DELETE') {
-            set({ centraltransfers: current.filter((item) => item.id !== (payload.old as CentralTransfer).id) })
+      const channel = supabase
+        .channel(`central_transfers_${userId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'central_transfers',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              set((state) => ({
+                transfers: [payload.new as CentralTransfer, ...state.transfers],
+              }))
+            } else if (payload.eventType === 'UPDATE') {
+              set((state) => ({
+                transfers: state.transfers.map((t) =>
+                  t.id === (payload.new as CentralTransfer).id
+                    ? (payload.new as CentralTransfer)
+                    : t
+                ),
+              }))
+            } else if (payload.eventType === 'DELETE') {
+              set((state) => ({
+                transfers: state.transfers.filter(
+                  (t) => t.id !== (payload.old as CentralTransfer).id
+                ),
+              }))
+            }
           }
-        })
+        )
         .subscribe()
 
       set({ channel })
     } catch (err) {
-      set({ error: 'حدث خطأ غير متوقع', loading: false })
+      console.error('Error initializing central transfers store:', err)
+      set({ error: 'فشل تحميل البيانات', loading: false })
     }
   },
 
+  // ===================================
+  // 🧹 Cleanup
+  // ===================================
   cleanup: () => {
-    const { channel } = get()
-    if (channel) channel.unsubscribe()
-    set({ initialized: false, channel: null, centraltransfers: [] })
+    const channel = get().channel
+    if (channel) {
+      channel.unsubscribe()
+    }
+    set({
+      transfers: [],
+      initialized: false,
+      channel: null,
+    })
   },
 
-  addCentralTransfer: async (item) => {
+  // ===================================
+  // ➕ Create transfer
+  // ===================================
+  createTransfer: async (data: TransferFormData, executionStatus: TransferStatus) => {
     const supabase = createClientComponentClient()
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return null
+      if (!user) throw new Error('يجب تسجيل الدخول أولاً')
 
-      const { data, error } = await supabase
+      const newTransfer: Omit<CentralTransfer, 'id' | 'created_at' | 'updated_at'> = {
+        user_id: user.id,
+        from_account_id: data.fromAccountId,
+        to_account_id: data.toAccountId,
+        base_amount: data.baseAmount,
+        fees: data.fees,
+        fee_type: data.feeType,
+        fee_bearer: data.feeBearer,
+        transfer_type: data.transferType,
+        status: executionStatus,
+        actual_paid_amount: data.actualPaidAmount,
+        receiving_account_for_payment: data.receivingAccountForPayment,
+        net_profit: data.transferType === 'instant' && data.actualPaidAmount
+          ? data.actualPaidAmount - data.fees - data.baseAmount
+          : undefined,
+        pending_balance: executionStatus === 'pending' ? data.baseAmount : undefined,
+        notes: data.notes,
+      }
+
+      const { data: result, error } = await supabase
         .from('central_transfers')
-        .insert([{ user_id: user.id, ...item }])
+        .insert([newTransfer])
         .select()
         .single()
 
-      if (error) {
-        set({ error: error.message })
-        return null
-      }
-      return data
+      if (error) throw error
+
+      return result as CentralTransfer
     } catch (err) {
-      set({ error: 'حدث خطأ غير متوقع' })
+      console.error('Error creating transfer:', err)
+      set({ error: 'فشل إنشاء التحويل' })
       return null
     }
   },
 
-  updateCentralTransfer: async (id, updates) => {
+  // ===================================
+  // 🔄 Update transfer status
+  // ===================================
+  updateTransferStatus: async (id: string, status: TransferStatus) => {
     const supabase = createClientComponentClient()
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
 
+    try {
       const { error } = await supabase
         .from('central_transfers')
-        .update(updates)
+        .update({ status })
         .eq('id', id)
-        .eq('user_id', user.id)
 
-      if (error) set({ error: error.message })
+      if (error) throw error
     } catch (err) {
-      set({ error: 'حدث خطأ غير متوقع' })
+      console.error('Error updating transfer status:', err)
+      set({ error: 'فشل تحديث حالة التحويل' })
     }
   },
 
-  deleteCentralTransfer: async (id) => {
-    const supabase = createClientComponentClient()
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+  // ===================================
+  // ✅ Mark pending as successful
+  // ===================================
+  markPendingAsSuccessful: async (id: string) => {
+    await get().updateTransferStatus(id, 'successful')
+  },
 
+  // ===================================
+  // ❌ Mark pending as failed
+  // ===================================
+  markPendingAsFailed: async (id: string) => {
+    await get().updateTransferStatus(id, 'failed')
+  },
+
+  // ===================================
+  // 🗑️ Delete transfer
+  // ===================================
+  deleteTransfer: async (id: string) => {
+    const supabase = createClientComponentClient()
+
+    try {
       const { error } = await supabase
         .from('central_transfers')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id)
 
-      if (error) set({ error: error.message })
+      if (error) throw error
     } catch (err) {
-      set({ error: 'حدث خطأ غير متوقع' })
+      console.error('Error deleting transfer:', err)
+      set({ error: 'فشل حذف التحويل' })
     }
   },
 
-  getCentralTransferById: (id) => get().centraltransfers.find((item) => item.id === id),
+  // ===================================
+  // 🔍 Get transfer by ID
+  // ===================================
+  getTransferById: (id: string) => {
+    return get().transfers.find((t) => t.id === id)
+  },
+
+  // ===================================
+  // 📂 Get transfers by account
+  // ===================================
+  getTransfersByAccount: (accountId: string) => {
+    return get().transfers.filter(
+      (t) => t.from_account_id === accountId || t.to_account_id === accountId
+    )
+  },
+
+  // ===================================
+  // 💰 Get total transferred
+  // ===================================
+  getTotalTransferred: (accountId: string) => {
+    return get()
+      .transfers.filter((t) => t.from_account_id === accountId && t.status === 'successful')
+      .reduce((sum, t) => sum + t.base_amount, 0)
+  },
+
+  // ===================================
+  // 📊 Get pending transfers count
+  // ===================================
+  getPendingTransfersCount: () => {
+    return get().transfers.filter((t) => t.status === 'pending').length
+  },
 }))

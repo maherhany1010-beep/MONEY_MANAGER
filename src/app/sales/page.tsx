@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -310,8 +309,7 @@ export default function SalesPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir="rtl">
+          <div className="space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -323,14 +321,14 @@ export default function SalesPage() {
         </div>
 
         {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-green-100">مبيعات اليوم</CardTitle>
               <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-700 dark:text-green-300">
+            <CardContent className="px-4 sm:px-6">
+              <div className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-300">
                 {formatCurrency(todayTotal)}
               </div>
               <p className="text-xs text-green-600 dark:text-green-400 mt-2">
@@ -340,12 +338,12 @@ export default function SalesPage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
               <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">الفاتورة الحالية</CardTitle>
               <Receipt className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+            <CardContent className="px-4 sm:px-6">
+              <div className="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-300">
                 {formatCurrency(total)}
               </div>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
@@ -355,12 +353,12 @@ export default function SalesPage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 sm:px-6">
               <CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-100">الباقي</CardTitle>
               <ShoppingCart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+            <CardContent className="px-4 sm:px-6">
+              <div className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300">
                 {formatCurrency(Math.max(0, change))}
               </div>
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
@@ -372,21 +370,21 @@ export default function SalesPage() {
 
         {/* Messages */}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center gap-2 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="flex items-center gap-2 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             <p className="text-sm text-green-600 dark:text-green-400">{success}</p>
           </div>
         )}
 
         {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           {/* Products List */}
           <Card>
             <CardHeader>
@@ -711,7 +709,6 @@ export default function SalesPage() {
           </Card>
         </div>
       </div>
-    </AppLayout>
-  )
+      )
 }
 

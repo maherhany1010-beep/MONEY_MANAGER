@@ -1,9 +1,8 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useCashVaults } from '@/contexts/cash-vaults-context'
@@ -22,17 +21,15 @@ export default function CashVaultDetailsPage() {
 
   if (!vault) {
     return (
-      <AppLayout>
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <Vault className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">الخزينة غير موجودة</h2>
-          <p className="text-muted-foreground mb-4">لم يتم العثور على الخزينة المطلوبة</p>
-          <Button onClick={() => router.push('/cash-vaults')}>
-            <ArrowLeft className="h-4 w-4 ml-2" />
-            العودة للخزائن
-          </Button>
-        </div>
-      </AppLayout>
+      <div className="flex flex-col items-center justify-center min-h-[400px] container mx-auto p-6">
+        <Vault className="h-16 w-16 text-muted-foreground mb-4" />
+        <h2 className="text-2xl font-bold mb-2">الخزينة غير موجودة</h2>
+        <p className="text-muted-foreground mb-4">لم يتم العثور على الخزينة المطلوبة</p>
+        <Button onClick={() => router.push('/cash-vaults')}>
+          <ArrowLeft className="h-4 w-4 ml-2" />
+          العودة للخزائن
+        </Button>
+      </div>
     )
   }
 
@@ -55,11 +52,11 @@ export default function CashVaultDetailsPage() {
 
   const getVaultTypeColor = (type: string) => {
     switch (type) {
-      case 'main': return 'from-blue-500 to-blue-700'
-      case 'branch': return 'from-green-500 to-green-700'
-      case 'personal': return 'from-purple-500 to-purple-700'
-      case 'emergency': return 'from-red-500 to-red-700'
-      default: return 'from-gray-500 to-gray-700'
+      case 'main': return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
+      case 'branch': return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
+      case 'personal': return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
+      case 'emergency': return 'from-red-100 to-red-200 dark:from-red-800 dark:to-red-900 text-red-900 dark:text-white'
+      default: return 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white'
     }
   }
 
@@ -82,8 +79,7 @@ export default function CashVaultDetailsPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-6">
         {/* رأس الصفحة */}
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={() => router.push('/cash-vaults')}>
@@ -94,7 +90,7 @@ export default function CashVaultDetailsPage() {
 
         {/* معلومات الخزينة */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-8 text-white`}>
+          <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-8`}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Vault className="h-8 w-8" />
@@ -108,14 +104,14 @@ export default function CashVaultDetailsPage() {
               </div>
               <div className="flex gap-2">
                 {vault.isDefault && (
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                  <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
                     افتراضية
                   </Badge>
                 )}
-                <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
                   {getVaultTypeLabel(vault.vaultType ?? 'main')}
                 </Badge>
-                <Badge variant="secondary" className="bg-white/20 text-white border-white/30 flex items-center gap-1">
+                <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30 flex items-center gap-1">
                   {getAccessLevelIcon(vault.accessLevel ?? 'private')}
                   <span>{getAccessLevelLabel(vault.accessLevel ?? 'private')}</span>
                 </Badge>
@@ -223,8 +219,7 @@ export default function CashVaultDetailsPage() {
             <CashVaultSettings vault={vault} onUpdate={handleUpdateVault} />
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+    </div>
   )
 }
 

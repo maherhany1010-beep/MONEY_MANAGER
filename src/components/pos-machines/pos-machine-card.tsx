@@ -43,7 +43,7 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
       case 'active':
         return <Power className="h-4 w-4 text-green-600 dark:text-green-400" />
       case 'inactive':
-        return <Power className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+        return <Power className="h-4 w-4 text-muted-foreground" />
       case 'maintenance':
         return <Wrench className="h-4 w-4 text-orange-600 dark:text-orange-400" />
       default:
@@ -131,12 +131,12 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
 
         {/* الحساب الرئيسي */}
         {primaryAccount && (
-          <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="p-3 bg-muted/50 rounded-lg border border-border shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">الحساب الرئيسي</span>
+              <span className="text-xs font-medium text-muted-foreground">الحساب الرئيسي</span>
               <Badge variant="default" className="text-xs">رئيسي</Badge>
             </div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <p className="text-sm font-semibold text-foreground">
               {primaryAccount.accountName}
             </p>
             <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300 mt-1">
@@ -146,7 +146,7 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
         )}
 
         {/* الإحصائيات */}
-        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
           <div>
             <p className="text-xs text-muted-foreground mb-1">المعاملات الشهرية</p>
             <p className="text-sm font-semibold text-foreground">
@@ -163,7 +163,7 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
 
         {/* الهدف الشهري والغرامات */}
         {machine.monthlyTarget && machine.monthlyTarget > 0 && (
-          <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="pt-3 border-t border-border space-y-3">
             {/* عنوان القسم مع أيقونة التحذير */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export function POSMachineCard({ machine, onClick, onToggleStatus }: POSMachineC
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-600 dark:text-gray-300">
+                <span className="text-muted-foreground">
                   {formatCurrency(machine.monthlyRevenue || 0)} / {formatCurrency(machine.monthlyTarget)}
                 </span>
                 <span className={`font-bold ${

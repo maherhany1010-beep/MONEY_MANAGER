@@ -139,7 +139,7 @@ export function ComparisonTool() {
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-600 dark:text-green-400'
     if (change < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-600 dark:text-gray-400'
+    return 'text-muted-foreground'
   }
 
   const getChangeIcon = (change: number) => {

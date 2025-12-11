@@ -1,356 +1,237 @@
 'use client'
 
-import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/components/auth/auth-provider'
 import { PageHeader } from '@/components/layout/page-header'
-import { CentralTransferDialog } from '@/components/transfers/central-transfer-dialog'
+import { TransferForm, type AccountOption } from '@/components/central-transfers/transfer-form'
+import { PendingTransfersDialog } from '@/components/central-transfers/pending-transfers-dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/ui/stat-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { useCentralTransfers, AccountType } from '@/contexts/central-transfers-context'
-import { formatCurrency, formatNumber } from '@/lib/design-system'
+import { useCentralTransfersStore, type TransferFormData, type TransferStatus } from '@/stores/central-transfers-store'
+import { useBankAccountsStore } from '@/stores/bank-accounts-store'
+import { useCards } from '@/contexts/cards-context'
+import { usePrepaidCards } from '@/contexts/prepaid-cards-context'
+import { useCashVaults } from '@/contexts/cash-vaults-context'
+import { useEWallets } from '@/contexts/e-wallets-context'
+import { useCustomers } from '@/contexts/customers-context'
+import { formatCurrency } from '@/lib/design-system'
 import { 
   ArrowRightLeft, 
-  Plus, 
-  TrendingUp, 
-  TrendingDown,
-  Activity,
-  Calendar,
-  Landmark,
-  Vault,
-  Wallet,
-  CreditCard,
-  Filter
+  Clock,
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
 } from 'lucide-react'
 
 export default function TransfersPage() {
-  const { transfers, addTransfer, getTodayTransfers, getMonthTransfers } = useCentralTransfers()
-  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false)
-  const [filterType, setFilterType] = useState<AccountType | 'all'>('all')
+  const { user } = useAuth()
+  const transferStore = useCentralTransfersStore()
+  const bankAccountsStore = useBankAccountsStore()
+  const { cards } = useCards()
+  const { cards: prepaidCards } = usePrepaidCards()
+  const { vaults } = useCashVaults()
+  const { wallets } = useEWallets()
+  const { customers } = useCustomers()
 
-  const todayTransfers = getTodayTransfers()
-  const monthTransfers = getMonthTransfers()
+  const [isPendingDialogOpen, setIsPendingDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // حساب الإحصائيات
-  const totalTransferred = transfers
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const todayTotal = todayTransfers
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const monthTotal = monthTransfers
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const completedCount = transfers.filter(t => t.status === 'completed').length
-
-  // تصفية التحويلات
-  const filteredTransfers = filterType === 'all'
-    ? transfers
-    : transfers.filter(t => {
-        const fromType = typeof t.fromAccount === 'object' ? t.fromAccount?.type : undefined
-        const toType = typeof t.toAccount === 'object' ? t.toAccount?.type : undefined
-        return fromType === filterType || toType === filterType
-      })
-
-  const getTypeIcon = (type: AccountType) => {
-    switch (type) {
-      case 'bank-account': return <Landmark className="h-4 w-4" />
-      case 'cash-vault': return <Vault className="h-4 w-4" />
-      case 'e-wallet': return <Wallet className="h-4 w-4" />
-      case 'prepaid-card': return <CreditCard className="h-4 w-4" />
-      case 'pos-machine': return <CreditCard className="h-4 w-4" />
+  // Initialize store
+  useEffect(() => {
+    if (user?.id) {
+      transferStore.initialize(user.id)
     }
-  }
-
-  const getTypeLabel = (type: AccountType) => {
-    switch (type) {
-      case 'bank-account': return 'حساب بنكي'
-      case 'cash-vault': return 'خزينة نقدية'
-      case 'e-wallet': return 'محفظة إلكترونية'
-      case 'prepaid-card': return 'بطاقة مسبقة'
-      case 'pos-machine': return 'ماكينة دفع'
+    return () => {
+      transferStore.cleanup()
     }
-  }
+  }, [user?.id])
 
-  const getTypeBadgeColor = (type: AccountType) => {
-    switch (type) {
-      case 'bank-account': return 'bg-blue-100 text-blue-800'
-      case 'cash-vault': return 'bg-green-100 text-green-800'
-      case 'e-wallet': return 'bg-purple-100 text-purple-800'
-      case 'prepaid-card': return 'bg-orange-100 text-orange-800'
-      case 'pos-machine': return 'bg-indigo-100 text-indigo-800'
+  // Aggregate all accounts
+  const allAccounts: AccountOption[] = [
+    ...(bankAccountsStore.accounts || []).map(acc => ({
+      id: `bank-${acc.id}`,
+      name: `${acc.account_name} (بنك)`,
+      balance: acc.balance || 0,
+      type: 'bank',
+      isActive: acc.status === 'active',
+    })),
+    ...(cards || []).map(card => ({
+      id: `card-${card.id}`,
+      name: `${card.card_name} (بطاقة ائتمان)`,
+      balance: card.available_credit || 0,
+      type: 'credit-card',
+      isActive: card.status === 'active',
+    })),
+    ...(prepaidCards || []).map(card => ({
+      id: `prepaid-${card.id}`,
+      name: `${card.card_name} (بطاقة مدفوعة)`,
+      balance: card.balance || 0,
+      type: 'prepaid-card',
+      isActive: card.status === 'active',
+    })),
+    ...(vaults || []).map(vault => ({
+      id: `vault-${vault.id}`,
+      name: `${vault.vault_name} (خزينة)`,
+      balance: vault.balance || 0,
+      type: 'cash-vault',
+      isActive: true,
+    })),
+    ...(wallets || []).map(wallet => ({
+      id: `wallet-${wallet.id}`,
+      name: `${wallet.wallet_name} (محفظة)`,
+      balance: wallet.balance || 0,
+      type: 'e-wallet',
+      isActive: true,
+    })),
+    ...(customers || []).map(customer => ({
+      id: `customer-${customer.id}`,
+      name: `${customer.name} (عميل)`,
+      balance: 0,
+      type: 'customer',
+      isActive: true,
+    })),
+  ]
+
+  // Get statistics
+  const successfulTransfers = transferStore.transfers.filter(t => t.status === 'successful')
+  const pendingTransfers = transferStore.transfers.filter(t => t.status === 'pending')
+  const failedTransfers = transferStore.transfers.filter(t => t.status === 'failed')
+
+  const totalTransferred = successfulTransfers.reduce((sum, t) => sum + t.base_amount, 0)
+  const totalPending = pendingTransfers.reduce((sum, t) => sum + t.base_amount, 0)
+  const totalFailed = failedTransfers.reduce((sum, t) => sum + t.base_amount, 0)
+
+  // Handle transfer submission
+  const handleTransferSubmit = async (data: TransferFormData, executionStatus: TransferStatus) => {
+    setIsSubmitting(true)
+    try {
+      await transferStore.createTransfer(data, executionStatus)
+    } catch (err) {
+      console.error('Error creating transfer:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <AppLayout>
+    <div className="space-y-6">
       <PageHeader
         title="التحويلات المركزية"
-        description="إدارة التحويلات بين جميع أنواع الحسابات (البنوك، الخزائن، المحافظ، البطاقات، الماكينات)"
+        description="إدارة التحويلات بين جميع أنواع الحسابات"
         action={{
-          label: 'تحويل جديد',
-          icon: Plus,
-          onClick: () => setIsTransferDialogOpen(true),
+          label: 'المعاملات المعلقة',
+          icon: Clock,
+          onClick: () => setIsPendingDialogOpen(true),
         }}
       />
 
-      {/* الإحصائيات */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      {/* Statistics Cards */}
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="التحويلات الناجحة"
+          value={formatCurrency(totalTransferred)}
+          subtitle={`${successfulTransfers.length} تحويل`}
+          icon={CheckCircle2}
+          variant="green"
+        />
+
+        <StatCard
+          title="المعاملات المعلقة"
+          value={formatCurrency(totalPending)}
+          subtitle={`${pendingTransfers.length} معاملة`}
+          icon={Clock}
+          variant="orange"
+        />
+
+        <StatCard
+          title="التحويلات الفاشلة"
+          value={formatCurrency(totalFailed)}
+          subtitle={`${failedTransfers.length} تحويل`}
+          icon={XCircle}
+          variant="red"
+        />
+
         <StatCard
           title="إجمالي التحويلات"
-          value={formatCurrency(totalTransferred)}
-          subtitle={`${completedCount} تحويل`}
+          value={transferStore.transfers.length.toString()}
+          subtitle="معاملة"
           icon={ArrowRightLeft}
           variant="blue"
         />
-        
-        <StatCard
-          title="تحويلات اليوم"
-          value={formatCurrency(todayTotal)}
-          subtitle={`${todayTransfers.length} تحويل`}
-          icon={Calendar}
-          variant="green"
-        />
-        
-        <StatCard
-          title="تحويلات الشهر"
-          value={formatCurrency(monthTotal)}
-          subtitle={`${monthTransfers.length} تحويل`}
-          icon={TrendingUp}
-          variant="purple"
-        />
-        
-        <StatCard
-          title="عدد التحويلات"
-          value={formatNumber(transfers.length)}
-          subtitle="إجمالي"
-          icon={Activity}
-          variant="orange"
-        />
       </div>
 
-      {/* التبويبات والتصفية */}
-      <Tabs defaultValue="all" className="space-y-6">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="all" onClick={() => setFilterType('all')}>
-              الكل ({transfers.length})
-            </TabsTrigger>
-            <TabsTrigger value="today" onClick={() => setFilterType('all')}>
-              اليوم ({todayTransfers.length})
-            </TabsTrigger>
-            <TabsTrigger value="month" onClick={() => setFilterType('all')}>
-              الشهر ({monthTransfers.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <select
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as AccountType | 'all')}
-            >
-              <option value="all">جميع الأنواع</option>
-              <option value="bank-account">حسابات بنكية</option>
-              <option value="cash-vault">خزائن نقدية</option>
-              <option value="e-wallet">محافظ إلكترونية</option>
-              <option value="prepaid-card">بطاقات مسبقة</option>
-              <option value="pos-machine">ماكينات دفع</option>
-            </select>
-          </div>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Transfer Form */}
+        <div className="lg:col-span-2">
+          <TransferForm
+            accounts={allAccounts}
+            onSubmit={handleTransferSubmit}
+            isLoading={isSubmitting}
+          />
         </div>
 
-        {/* جميع التحويلات */}
-        <TabsContent value="all" className="space-y-4">
-          {filteredTransfers.length === 0 ? (
-            <EmptyState
-              icon={ArrowRightLeft}
-              title="لا توجد تحويلات"
-              description="ابدأ بإجراء تحويل جديد بين حساباتك"
-              action={{
-                label: 'تحويل جديد',
-                onClick: () => setIsTransferDialogOpen(true),
-              }}
-            />
-          ) : (
-            <div className="space-y-3">
-              {filteredTransfers.map((transfer) => (
-                <Card key={transfer.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        {/* الحساب المصدر */}
-                        <div className="flex items-center gap-2 min-w-[200px]">
-                          <div className="p-2 bg-red-100 rounded-lg">
-                            {getTypeIcon(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount}</p>
-                            <Badge className={`text-xs ${getTypeBadgeColor(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}`}>
-                              {getTypeLabel(typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.type ?? 'bank' : 'bank')}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* السهم */}
-                        <div className="flex items-center gap-2">
-                          <ArrowRightLeft className="h-5 w-5 text-gray-400" />
-                        </div>
-
-                        {/* الحساب المستهدف */}
-                        <div className="flex items-center gap-2 min-w-[200px]">
-                          <div className="p-2 bg-green-100 rounded-lg">
-                            {getTypeIcon(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}</p>
-                            <Badge className={`text-xs ${getTypeBadgeColor(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}`}>
-                              {getTypeLabel(typeof transfer.toAccount === 'object' ? transfer.toAccount?.type ?? 'bank' : 'bank')}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* التفاصيل */}
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground">
-                            {transfer.date ?? transfer.transfer_date} - {transfer.time ?? ''}
-                          </p>
-                          {(transfer.fee ?? transfer.fees ?? 0) > 0 && (
-                            <p className="text-xs text-orange-600 mt-1">
-                              رسوم: {formatCurrency(transfer.fee ?? transfer.fees ?? 0)}
-                              {transfer.feeBearer && ` (${transfer.feeBearer === 'sender' ? 'المرسل' : transfer.feeBearer === 'receiver' ? 'المستقبل' : 'لا أحد'})`}
-                            </p>
-                          )}
-                          {transfer.notes && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {transfer.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* المبلغ */}
-                      <div className="text-left space-y-1">
-                        <p className="text-xl font-bold text-blue-600">
-                          {formatCurrency(transfer.amount)}
-                        </p>
-                        {(transfer.fee ?? transfer.fees ?? 0) > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            + {formatCurrency(transfer.fee ?? transfer.fees ?? 0)} رسوم
-                          </p>
-                        )}
+        {/* Recent Transfers */}
+        <div>
+          <Card className="border-2 border-slate-600/50 h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                آخر التحويلات
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {transferStore.transfers.length === 0 ? (
+                <EmptyState
+                  icon={ArrowRightLeft}
+                  title="لا توجد تحويلات"
+                  description="ابدأ بإنشاء تحويل جديد"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {transferStore.transfers.slice(0, 5).map((transfer) => (
+                    <div key={transfer.id} className="p-3 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold truncate">
+                          {transfer.from_account_id} → {transfer.to_account_id}
+                        </span>
                         <Badge
-                          variant={transfer.status === 'completed' ? 'secondary' : 'secondary'}
-                          className={`text-xs ${transfer.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}`}
+                          variant="outline"
+                          className={
+                            transfer.status === 'successful'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-500/30'
+                              : transfer.status === 'pending'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-500/30'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/30'
+                          }
                         >
-                          {transfer.status === 'completed' ? 'مكتمل' : transfer.status === 'pending' ? 'معلق' : 'فشل'}
+                          {transfer.status === 'successful' ? 'ناجحة' : transfer.status === 'pending' ? 'معلقة' : 'فاشلة'}
                         </Badge>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* تحويلات اليوم */}
-        <TabsContent value="today" className="space-y-4">
-          {todayTransfers.length === 0 ? (
-            <EmptyState
-              icon={Calendar}
-              title="لا توجد تحويلات اليوم"
-              description="لم يتم إجراء أي تحويلات اليوم"
-              action={{
-                label: 'تحويل جديد',
-                onClick: () => setIsTransferDialogOpen(true),
-              }}
-            />
-          ) : (
-            <div className="space-y-3">
-              {todayTransfers.map((transfer) => (
-                <Card key={transfer.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <ArrowRightLeft className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount} → {typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{transfer.time ?? ''}</p>
-                        </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatCurrency(transfer.base_amount)}
                       </div>
-                      <p className="text-lg font-bold text-blue-600">
-                        {formatCurrency(transfer.amount)}
-                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-        {/* تحويلات الشهر */}
-        <TabsContent value="month" className="space-y-4">
-          {monthTransfers.length === 0 ? (
-            <EmptyState
-              icon={TrendingUp}
-              title="لا توجد تحويلات هذا الشهر"
-              description="لم يتم إجراء أي تحويلات هذا الشهر"
-              action={{
-                label: 'تحويل جديد',
-                onClick: () => setIsTransferDialogOpen(true),
-              }}
-            />
-          ) : (
-            <div className="space-y-3">
-              {monthTransfers.map((transfer) => (
-                <Card key={transfer.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <ArrowRightLeft className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {typeof transfer.fromAccount === 'object' ? transfer.fromAccount?.name : transfer.fromAccount} → {typeof transfer.toAccount === 'object' ? transfer.toAccount?.name : transfer.toAccount}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {transfer.date ?? transfer.transfer_date} - {transfer.time ?? ''}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-lg font-bold text-purple-600">
-                        {formatCurrency(transfer.amount)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Dialog التحويل */}
-      <CentralTransferDialog
-        open={isTransferDialogOpen}
-        onOpenChange={setIsTransferDialogOpen}
-        onTransfer={addTransfer}
+      {/* Pending Transfers Dialog */}
+      <PendingTransfersDialog
+        open={isPendingDialogOpen}
+        onOpenChange={setIsPendingDialogOpen}
+        pendingTransfers={pendingTransfers}
+        onMarkSuccessful={transferStore.markPendingAsSuccessful}
+        onMarkFailed={transferStore.markPendingAsFailed}
+        isLoading={isSubmitting}
       />
-    </AppLayout>
+    </div>
   )
 }
 

@@ -181,7 +181,7 @@ export function EWalletsProvider({ children }: { children: ReactNode }) {
             wallet_type: wallet.wallet_type,
             phone_number: wallet.phone_number,
             balance: wallet.balance,
-            currency: wallet.currency || 'SAR',
+            currency: wallet.currency || 'EGP',
             status: wallet.status || 'active',
           },
         ])
@@ -260,7 +260,13 @@ export function EWalletsProvider({ children }: { children: ReactNode }) {
       if (updateError) {
         console.error('Error updating wallet balance:', updateError)
         setError(updateError.message)
+        return
       }
+
+      // تحديث الـ state المحلي فوراً بعد نجاح التحديث في قاعدة البيانات
+      setWallets(prev => prev.map(wallet =>
+        wallet.id === id ? { ...wallet, balance: newBalance } : wallet
+      ))
     } catch (err) {
       console.error('Unexpected error updating wallet balance:', err)
       setError('حدث خطأ غير متوقع')

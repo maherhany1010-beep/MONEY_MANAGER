@@ -160,7 +160,7 @@ export function ReconciliationDialog({
                     ) : difference < 0 ? (
                       <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
                     ) : (
-                      <Check className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                      <Check className="h-5 w-5 text-muted-foreground" />
                     )}
                     <span
                       className={`text-xl font-bold ${
@@ -168,7 +168,7 @@ export function ReconciliationDialog({
                           ? 'text-green-600 dark:text-green-400'
                           : difference < 0
                           ? 'text-red-600 dark:text-red-400'
-                          : 'text-gray-600 dark:text-gray-400'
+                          : 'text-muted-foreground'
                       }`}
                     >
                       {difference > 0 ? '+' : ''}{formatCurrency(difference)}
@@ -180,7 +180,7 @@ export function ReconciliationDialog({
                         ? 'text-green-700 dark:text-green-300'
                         : difference < 0
                         ? 'text-red-700 dark:text-red-300'
-                        : 'text-gray-700 dark:text-gray-300'
+                        : 'text-foreground'
                     }`}
                   >
                     {difference > 0 ? 'زيادة' : difference < 0 ? 'نقص' : 'متطابق'}

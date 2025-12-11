@@ -117,7 +117,7 @@ export function AddPOSMachineDialog({ open, onOpenChange, onAdd }: AddPOSMachine
             </div>
             إضافة ماكينة دفع جديدة
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             أدخل معلومات ماكينة الدفع الإلكتروني. سيتم إنشاء حساب رئيسي تلقائياً.
           </DialogDescription>
         </DialogHeader>

@@ -33,7 +33,7 @@ export function UpdatePriceDialog({ open, onOpenChange, investment }: UpdatePric
   const currentPrice = investment.currentPrice ?? 0
   const currency = investment.type === 'cryptocurrency' || investment.type === 'stock' ? 'USD' : 'EGP'
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
@@ -44,20 +44,25 @@ export function UpdatePriceDialog({ open, onOpenChange, investment }: UpdatePric
     }
 
     const price = parseFloat(newPrice)
-    
+
     if (price === currentPrice) {
       setError('السعر الجديد مطابق للسعر الحالي')
       return
     }
 
-    updatePrice(investment.id, price)
-    setSuccess(true)
-    
-    setTimeout(() => {
-      onOpenChange(false)
-      setSuccess(false)
-      setError('')
-    }, 1500)
+    try {
+      await updatePrice(investment.id, price)
+      setSuccess(true)
+
+      setTimeout(() => {
+        onOpenChange(false)
+        setSuccess(false)
+        setError('')
+      }, 1500)
+    } catch (err) {
+      console.error('Error updating price:', err)
+      setError('فشل في تحديث السعر')
+    }
   }
 
   const priceChange = newPrice ? parseFloat(newPrice) - currentPrice : 0

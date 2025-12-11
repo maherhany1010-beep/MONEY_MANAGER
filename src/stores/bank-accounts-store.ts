@@ -204,10 +204,10 @@ export const useBankAccountsStore = create<BankAccountsState>((set, get) => ({
   // ===================================
   updateAccount: async (id, updates) => {
     const supabase = createClientComponentClient()
-    
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         set({ error: 'يجب تسجيل الدخول أولاً' })
         return
@@ -222,7 +222,15 @@ export const useBankAccountsStore = create<BankAccountsState>((set, get) => ({
       if (updateError) {
         console.error('Error updating bank account:', updateError)
         set({ error: updateError.message })
+        return
       }
+
+      // تحديث الـ state المحلي فوراً بعد نجاح التحديث في قاعدة البيانات
+      set(state => ({
+        accounts: state.accounts.map(acc =>
+          acc.id === id ? { ...acc, ...updates } : acc
+        )
+      }))
     } catch (err) {
       console.error('Unexpected error updating bank account:', err)
       set({ error: 'حدث خطأ غير متوقع' })

@@ -196,15 +196,15 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
       {/* Header & Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100">إدارة السداد والمدفوعات</CardTitle>
-          <CardDescription className="dark:text-gray-400">
+          <CardTitle className="text-foreground">إدارة السداد والمدفوعات</CardTitle>
+          <CardDescription className="text-muted-foreground">
             متابعة وإدارة جميع عمليات السداد للبطاقات الائتمانية
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">البطاقة</label>
+              <label className="text-sm font-medium text-foreground">البطاقة</label>
               <Select value={selectedCard} onValueChange={setSelectedCard}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر البطاقة" />
@@ -221,7 +221,7 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">الحالة</label>
+              <label className="text-sm font-medium text-foreground">الحالة</label>
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الحالة" />
@@ -242,47 +242,47 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">إجمالي المدفوعات</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">إجمالي المدفوعات</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-gray-100">{totalPayments}</div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">عملية سداد</p>
+            <div className="text-2xl font-bold text-foreground">{totalPayments}</div>
+            <p className="text-xs text-muted-foreground">عملية سداد</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">المدفوعات المكتملة</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">المدفوعات المكتملة</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {completedPayments}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">{formatCurrency(totalPaid)}</p>
+            <p className="text-xs text-muted-foreground">{formatCurrency(totalPaid)}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">قيد الانتظار</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">قيد الانتظار</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {pendingPayments}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">{formatCurrency(totalPending)}</p>
+            <p className="text-xs text-muted-foreground">{formatCurrency(totalPending)}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">المدفوعات المجدولة</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">المدفوعات المجدولة</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {scheduledPayments.length}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">سداد تلقائي</p>
+            <p className="text-xs text-muted-foreground">سداد تلقائي</p>
           </CardContent>
         </Card>
       </div>
@@ -292,8 +292,8 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="dark:text-gray-100">المدفوعات المجدولة</CardTitle>
-              <CardDescription className="dark:text-gray-400">
+              <CardTitle className="text-foreground">المدفوعات المجدولة</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 عمليات السداد التلقائي المجدولة
               </CardDescription>
             </div>
@@ -308,37 +308,37 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
             {scheduledPayments.map((payment) => (
               <div
                 key={payment.id}
-                className="p-4 border rounded-lg dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
+                className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <CreditCard className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                      <span className="font-medium dark:text-gray-100">{payment.cardName}</span>
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium text-foreground">{payment.cardName}</span>
                       {payment.autoPayment && (
-                        <Badge className="bg-blue-100 dark:bg-blue-950/30 border-blue-200 dark:border-blue-700" style={{ color: '#2563eb' }}>
+                        <Badge className="bg-blue-100 dark:bg-blue-950/30 border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400">
                           تلقائي
                         </Badge>
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">المبلغ</p>
-                        <p className="font-medium dark:text-gray-200">{formatCurrency(payment.amount)}</p>
+                        <p className="text-muted-foreground">المبلغ</p>
+                        <p className="font-medium text-foreground">{formatCurrency(payment.amount)}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">التاريخ المجدول</p>
-                        <p className="font-medium dark:text-gray-200">{formatDate(payment.scheduledDate)}</p>
+                        <p className="text-muted-foreground">التاريخ المجدول</p>
+                        <p className="font-medium text-foreground">{formatDate(payment.scheduledDate)}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">نوع السداد</p>
-                        <p className="font-medium dark:text-gray-200">{getPaymentTypeLabel(payment.paymentType)}</p>
+                        <p className="text-muted-foreground">نوع السداد</p>
+                        <p className="font-medium text-foreground">{getPaymentTypeLabel(payment.paymentType)}</p>
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">تعديل</Button>
-                    <Button variant="outline" size="sm" style={{ color: '#dc2626' }}>إلغاء</Button>
+                    <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">إلغاء</Button>
                   </div>
                 </div>
               </div>
@@ -350,8 +350,8 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
       {/* Payment History */}
       <Card>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100">سجل المدفوعات</CardTitle>
-          <CardDescription className="dark:text-gray-400">
+          <CardTitle className="text-foreground">سجل المدفوعات</CardTitle>
+          <CardDescription className="text-muted-foreground">
             جميع عمليات السداد السابقة والحالية
           </CardDescription>
         </CardHeader>
@@ -359,49 +359,45 @@ export function PaymentsManagementTab({ cards }: PaymentsManagementTabProps) {
           <div className="space-y-3">
             {filteredPayments.length === 0 ? (
               <div className="py-12 text-center">
-                <DollarSign className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                <h3 className="text-xl font-semibold mb-2 dark:text-gray-100">لا توجد مدفوعات</h3>
-                <p className="text-gray-600 dark:text-gray-400">لم يتم العثور على مدفوعات بالمعايير المحددة</p>
+                <DollarSign className="h-16 w-16 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2 text-foreground">لا توجد مدفوعات</h3>
+                <p className="text-muted-foreground">لم يتم العثور على مدفوعات بالمعايير المحددة</p>
               </div>
             ) : (
               filteredPayments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="p-4 border rounded-lg dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
+                  className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusIcon(payment.status)}
-                        <span className="font-medium dark:text-gray-100">{payment.cardName}</span>
-                        <Badge className={getStatusColor((payment as any).status)} style={{
-                          color: (payment as any).status === 'completed' ? '#16a34a' :
-                                 (payment as any).status === 'pending' ? '#d97706' :
-                                 (payment as any).status === 'failed' ? '#dc2626' : '#2563eb'
-                        }}>
+                        <span className="font-medium text-foreground">{payment.cardName}</span>
+                        <Badge className={getStatusColor((payment as any).status)}>
                           {getStatusLabel(payment.status)}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400">المبلغ</p>
-                          <p className="font-medium dark:text-gray-200">{formatCurrency(payment.amount)}</p>
+                          <p className="text-muted-foreground">المبلغ</p>
+                          <p className="font-medium text-foreground">{formatCurrency(payment.amount)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400">تاريخ السداد</p>
-                          <p className="font-medium dark:text-gray-200">
+                          <p className="text-muted-foreground">تاريخ السداد</p>
+                          <p className="font-medium text-foreground">
                             {payment.paymentDate ? formatDate(payment.paymentDate) : '-'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400">طريقة الدفع</p>
-                          <p className="font-medium dark:text-gray-200">
+                          <p className="text-muted-foreground">طريقة الدفع</p>
+                          <p className="font-medium text-foreground">
                             {getPaymentMethodLabel(payment.paymentMethod)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400">رقم المرجع</p>
-                          <p className="font-medium dark:text-gray-200">
+                          <p className="text-muted-foreground">رقم المرجع</p>
+                          <p className="font-medium text-foreground">
                             {payment.referenceNumber || '-'}
                           </p>
                         </div>

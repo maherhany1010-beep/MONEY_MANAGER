@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useSettings } from '@/contexts/settings-context'
+import { useTheme } from '@/contexts/theme-context'
 import {
   Settings as SettingsIcon,
   Bell,
@@ -38,6 +38,7 @@ import {
 
 export default function SettingsPage() {
   const { settings, updateSettings, resetSettings, exportData, importData, clearAllData } = useSettings()
+  const { theme, setTheme } = useTheme()
   const [showSuccess, setShowSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -101,20 +102,20 @@ export default function SettingsPage() {
   }
 
   return (
-    <AppLayout>
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="الإعدادات"
         description="إدارة الإعدادات العامة للتطبيق"
       />
 
       {showSuccess && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2">
           <Save className="h-5 w-5 text-green-600 dark:text-green-400" />
-          <p className="text-green-800 dark:text-green-200">تم حفظ الإعدادات بنجاح ✅</p>
+          <p className="text-sm sm:text-base text-green-800 dark:text-green-200">تم حفظ الإعدادات بنجاح ✅</p>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* القسم 2: الإعدادات العامة */}
         <Card>
           <CardHeader>
@@ -177,8 +178,12 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label htmlFor="theme">المظهر</Label>
               <Select
-                value={settings.theme}
-                onValueChange={(value: 'light' | 'dark' | 'system') => updateSettings({ theme: value })}
+                value={theme}
+                onValueChange={(value: 'light' | 'dark' | 'system') => {
+                  setTheme(value)
+                  // مزامنة مع الإعدادات للحفاظ على التناسق
+                  updateSettings({ theme: value })
+                }}
               >
                 <SelectTrigger id="theme">
                   <SelectValue />
@@ -530,7 +535,7 @@ export default function SettingsPage() {
         <Card className="border-slate-200 dark:border-slate-800">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-slate-600" />
+              <Info className="h-5 w-5 text-slate-600 dark:text-slate-400" />
               <CardTitle>معلومات التطبيق</CardTitle>
             </div>
             <CardDescription>معلومات عن التطبيق والبيانات المخزنة</CardDescription>
@@ -598,6 +603,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
+    </div>
   )
 }

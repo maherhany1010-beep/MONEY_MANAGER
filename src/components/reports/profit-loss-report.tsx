@@ -36,20 +36,20 @@ export function ProfitLossReportComponent({ report }: ProfitLossReportProps) {
 
   // تفاصيل الإيرادات
   const revenueDetails = [
-    { label: 'كاش باك مكتسب', value: report.revenue.cashbackEarned, icon: Gift, color: 'text-green-600' },
-    { label: 'عوائد استثمارات', value: report.revenue.investmentReturns, icon: TrendingUp, color: 'text-blue-600' },
-    { label: 'إيرادات مبيعات', value: report.revenue.salesRevenue, icon: ShoppingCart, color: 'text-purple-600' },
-    { label: 'إيرادات أخرى', value: report.revenue.otherIncome, icon: DollarSign, color: 'text-gray-600' },
+    { label: 'كاش باك مكتسب', value: report.revenue.cashbackEarned, icon: Gift, color: 'text-green-600 dark:text-green-400' },
+    { label: 'عوائد استثمارات', value: report.revenue.investmentReturns, icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'إيرادات مبيعات', value: report.revenue.salesRevenue, icon: ShoppingCart, color: 'text-purple-600 dark:text-purple-400' },
+    { label: 'إيرادات أخرى', value: report.revenue.otherIncome, icon: DollarSign, color: 'text-muted-foreground' },
   ]
 
   // تفاصيل المصروفات
   const expenseDetails = [
-    { label: 'مدفوعات البطاقات', value: report.expenses.cardPayments, icon: CreditCard, color: 'text-red-600' },
-    { label: 'أقساط', value: report.expenses.installments, icon: CreditCard, color: 'text-orange-600' },
-    { label: 'رسوم', value: report.expenses.fees, icon: DollarSign, color: 'text-yellow-600' },
-    { label: 'مشتريات', value: report.expenses.purchases, icon: ShoppingCart, color: 'text-pink-600' },
-    { label: 'تحويلات', value: report.expenses.transfers, icon: TrendingDown, color: 'text-indigo-600' },
-    { label: 'مصروفات أخرى', value: report.expenses.otherExpenses, icon: DollarSign, color: 'text-gray-600' },
+    { label: 'مدفوعات البطاقات', value: report.expenses.cardPayments, icon: CreditCard, color: 'text-red-600 dark:text-red-400' },
+    { label: 'أقساط', value: report.expenses.installments, icon: CreditCard, color: 'text-orange-600 dark:text-orange-400' },
+    { label: 'رسوم', value: report.expenses.fees, icon: DollarSign, color: 'text-yellow-600 dark:text-yellow-400' },
+    { label: 'مشتريات', value: report.expenses.purchases, icon: ShoppingCart, color: 'text-pink-600 dark:text-pink-400' },
+    { label: 'تحويلات', value: report.expenses.transfers, icon: TrendingDown, color: 'text-indigo-600 dark:text-indigo-400' },
+    { label: 'مصروفات أخرى', value: report.expenses.otherExpenses, icon: DollarSign, color: 'text-muted-foreground' },
   ]
 
   return (

@@ -98,16 +98,18 @@ export function SourceSelector({
     // Credit Cards
     if (excludeType !== 'card') {
       creditCards
-        .filter(card => card.isActive && card.id !== excludeId)
+        .filter(card => (card.isActive ?? card.status === 'active') && card.id !== excludeId)
         .forEach(card => {
           // For credit cards, available balance = credit limit - current balance
-          const availableBalance = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
+          const creditLimit = card.creditLimit ?? card.credit_limit ?? 0
+          const currentBalance = card.currentBalance ?? card.current_balance ?? 0
+          const availableBalance = creditLimit - currentBalance
           sources.push({
             id: `card-${card.id}`,
             name: card.name ?? card.card_name ?? 'بطاقة ائتمان',
             balance: availableBalance,
             type: 'card',
-            isActive: card.isActive ?? true,
+            isActive: card.isActive ?? card.status === 'active',
           })
         })
     }
@@ -344,13 +346,15 @@ export function useSourceDetails(sourceId: string): SourceItem | null {
       case 'card': {
         const card = creditCards.find(c => c.id === id)
         if (!card) return null
-        const availableBalance = (card.creditLimit ?? 0) - (card.currentBalance ?? 0)
+        const creditLimit = card.creditLimit ?? card.credit_limit ?? 0
+        const currentBalance = card.currentBalance ?? card.current_balance ?? 0
+        const availableBalance = creditLimit - currentBalance
         return {
           id: sourceId,
-          name: card.name || 'بطاقة ائتمان',
+          name: card.name ?? card.card_name ?? 'بطاقة ائتمان',
           balance: availableBalance,
           type: 'card' as SourceType,
-          isActive: card.isActive,
+          isActive: card.isActive ?? card.status === 'active',
         }
       }
       case 'prepaid': {

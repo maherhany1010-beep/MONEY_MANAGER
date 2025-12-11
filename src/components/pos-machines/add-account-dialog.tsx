@@ -63,7 +63,7 @@ export function AddAccountDialog({ open, onOpenChange, onAdd, machineId, provide
             </div>
             إضافة حساب جديد
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             أدخل معلومات الحساب الجديد للماكينة
           </DialogDescription>
         </DialogHeader>

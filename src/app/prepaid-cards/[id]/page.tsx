@@ -2,20 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { usePrepaidCards } from '@/contexts/prepaid-cards-context'
 import { TransactionsTab } from '@/components/prepaid-cards/transactions-tab'
 import { formatCurrency } from '@/lib/utils'
-import { ArrowLeft, Wallet, BarChart3, Settings, Receipt, User, Phone, IdCard } from 'lucide-react'
+import { ArrowLeft, Wallet, BarChart3, Settings, Receipt } from 'lucide-react'
 
 export default function PrepaidCardDetailsPage() {
   const params = useParams()
   const router = useRouter()
-  const { getCardById, updateCards, cards, getCardTransactions } = usePrepaidCards()
+  const { getCardById, cards, getCardTransactions } = usePrepaidCards()
   const [card, setCard] = useState<any>(null)
 
   useEffect(() => {
@@ -31,21 +30,19 @@ export default function PrepaidCardDetailsPage() {
 
   if (!card) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center min-h-[400px] container mx-auto p-6">
+        <p className="text-muted-foreground">جاري التحميل...</p>
+      </div>
     )
   }
 
   const getProviderColor = (provider: string) => {
     const p = provider.toLowerCase()
-    if (p.includes('فوري')) return 'from-blue-500 to-blue-700'
-    if (p.includes('أمان')) return 'from-green-500 to-green-700'
-    if (p.includes('ممكن')) return 'from-purple-500 to-purple-700'
-    if (p.includes('مصاري')) return 'from-orange-500 to-orange-700'
-    return 'from-gray-500 to-gray-700'
+    if (p.includes('فوري')) return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
+    if (p.includes('أمان')) return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
+    if (p.includes('ممكن')) return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
+    if (p.includes('مصاري')) return 'from-orange-100 to-orange-200 dark:from-orange-800 dark:to-orange-900 text-orange-900 dark:text-white'
+    return 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white'
   }
 
   const getStatusBadge = (status: string) => {
@@ -64,8 +61,7 @@ export default function PrepaidCardDetailsPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-6">
         {/* زر العودة */}
         <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 ml-2" />
@@ -74,7 +70,7 @@ export default function PrepaidCardDetailsPage() {
 
         {/* معلومات البطاقة */}
         <Card className="overflow-hidden">
-          <div className={`bg-gradient-to-br ${getProviderColor(card.provider)} p-6 text-white`}>
+          <div className={`bg-gradient-to-br ${getProviderColor(card.provider)} p-6`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Wallet className="h-8 w-8" />
@@ -243,7 +239,6 @@ export default function PrepaidCardDetailsPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+    </div>
   )
 }

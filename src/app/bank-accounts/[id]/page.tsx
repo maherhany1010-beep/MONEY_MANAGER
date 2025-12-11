@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
-import { PageHeader } from '@/components/layout/page-header'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +10,7 @@ import { useBankAccounts } from '@/contexts/bank-accounts-context'
 import { BankAccountSettings } from '@/components/bank-accounts/bank-account-settings'
 import { BankAccountTransactions } from '@/components/bank-accounts/bank-account-transactions'
 import { BankAccountStats } from '@/components/bank-accounts/bank-account-stats'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { ArrowLeft, Landmark, TrendingUp, TrendingDown, Settings, Receipt, BarChart3 } from 'lucide-react'
 
 export default function BankAccountDetailsPage() {
@@ -42,11 +40,9 @@ export default function BankAccountDetailsPage() {
 
   if (!account) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">جاري التحميل...</p>
+      </div>
     )
   }
 
@@ -64,8 +60,7 @@ export default function BankAccountDetailsPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-6">
         {/* زر العودة */}
         <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 ml-2" />
@@ -74,7 +69,7 @@ export default function BankAccountDetailsPage() {
 
         {/* معلومات الحساب */}
         <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 text-white">
+          <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 p-6 text-blue-900 dark:text-white">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Landmark className="h-8 w-8" />
@@ -84,7 +79,7 @@ export default function BankAccountDetailsPage() {
                 </div>
               </div>
               {account.isDefault && (
-                <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                <Badge variant="secondary" className="bg-blue-200/50 dark:bg-white/20 text-blue-900 dark:text-white border-blue-300 dark:border-white/30">
                   افتراضي
                 </Badge>
               )}
@@ -180,8 +175,7 @@ export default function BankAccountDetailsPage() {
             />
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+    </div>
   )
 }
 

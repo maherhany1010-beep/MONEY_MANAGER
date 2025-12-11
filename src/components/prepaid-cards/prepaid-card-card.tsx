@@ -21,11 +21,11 @@ interface PrepaidCardCardProps {
 export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, onDeposit, onWithdrawal, onPurchase, onTransfer }: PrepaidCardCardProps) {
   const getProviderColor = (provider: string) => {
     const p = provider.toLowerCase()
-    if (p.includes('فوري')) return 'from-blue-500 to-blue-700'
-    if (p.includes('أمان')) return 'from-green-500 to-green-700'
-    if (p.includes('ممكن')) return 'from-purple-500 to-purple-700'
-    if (p.includes('مصاري')) return 'from-orange-500 to-orange-700'
-    return 'from-gray-500 to-gray-700'
+    if (p.includes('فوري')) return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
+    if (p.includes('أمان')) return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
+    if (p.includes('ممكن')) return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
+    if (p.includes('مصاري')) return 'from-orange-100 to-orange-200 dark:from-orange-800 dark:to-orange-900 text-orange-900 dark:text-white'
+    return 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white'
   }
 
   const getStatusBadge = (status: string) => {
@@ -33,11 +33,11 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
       case 'active':
         return <Badge className="bg-green-100 dark:bg-green-950/30 border-green-200 dark:border-green-700 dark:text-green-300" style={{ color: '#15803d' }}>نشطة</Badge>
       case 'suspended':
-        return <Badge className="bg-yellow-100 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-700 dark:text-yellow-300" style={{ color: '#a16207' }}>معلقة</Badge>
+        return <Badge className="bg-yellow-100 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300">معلقة</Badge>
       case 'blocked':
-        return <Badge className="bg-red-100 dark:bg-red-950/30 border-red-200 dark:border-red-700 dark:text-red-300" style={{ color: '#b91c1c' }}>محظورة</Badge>
+        return <Badge className="bg-red-100 dark:bg-red-950/30 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300">محظورة</Badge>
       case 'expired':
-        return <Badge className="bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-gray-300" style={{ color: '#374151' }}>منتهية</Badge>
+        return <Badge className="bg-muted border-border text-muted-foreground">منتهية</Badge>
       default:
         return null
     }
@@ -54,7 +54,7 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
       onClick={onClick}
     >
       {/* Header with gradient */}
-      <div className={`bg-gradient-to-br ${getProviderColor(card.provider ?? '')} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getProviderColor(card.provider ?? '')} p-6 relative`}>
         {card.status !== 'active' && (
           <div className="absolute top-2 left-2">
             <Badge variant="destructive" className="text-xs">
@@ -72,7 +72,7 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
             </div>
           </div>
           {card.isDefault && (
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
               افتراضية
             </Badge>
           )}
@@ -92,27 +92,27 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
       </div>
 
       {/* Holder Info */}
-      <div className="p-4 bg-gray-50 border-b">
+      <div className="p-4 bg-muted border-b">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
+            <User className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-gray-500">الاسم</p>
+              <p className="text-xs text-muted-foreground">الاسم</p>
               <p className="font-medium">{card.holderName ?? ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-gray-500" />
+            <Phone className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-gray-500">الهاتف</p>
+              <p className="text-xs text-muted-foreground">الهاتف</p>
               <p className="font-medium font-mono">{card.holderPhone ?? ''}</p>
             </div>
           </div>
         </div>
         <div className="mt-2 flex items-center gap-2">
-          <IdCard className="h-4 w-4 text-gray-500" />
+          <IdCard className="h-4 w-4 text-muted-foreground" />
           <div>
-            <p className="text-xs text-gray-500">الرقم القومي</p>
+            <p className="text-xs text-muted-foreground">الرقم القومي</p>
             <p className="font-medium font-mono text-sm">{card.holderNationalId ?? ''}</p>
           </div>
         </div>
@@ -124,13 +124,13 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
         {card.dailyLimit && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">الحد اليومي</span>
+              <span className="text-muted-foreground">الحد اليومي</span>
               <div className="text-left">
                 <p className="font-semibold">{formatCurrency(card.dailyLimit ?? 0)}</p>
-                <p className="text-xs text-gray-500">مستخدم: {formatCurrency(card.dailyUsed ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">مستخدم: {formatCurrency(card.dailyUsed ?? 0)}</p>
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
                   dailyPercentage > 80 ? 'bg-red-500' :
@@ -141,7 +141,7 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
               />
             </div>
             {dailyPercentage > 80 && (
-              <div className="flex items-center gap-1 text-xs dark:text-red-400" style={{ color: '#dc2626' }}>
+              <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
                 <AlertTriangle className="h-3 w-3" />
                 <span>اقتربت من تجاوز الحد اليومي</span>
               </div>
@@ -153,13 +153,13 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
         {card.monthlyLimit && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">الحد الشهري</span>
+              <span className="text-muted-foreground">الحد الشهري</span>
               <div className="text-left">
                 <p className="font-semibold">{formatCurrency(card.monthlyLimit ?? 0)}</p>
-                <p className="text-xs text-gray-500">مستخدم: {formatCurrency(card.monthlyUsed ?? 0)}</p>
+                <p className="text-xs text-muted-foreground">مستخدم: {formatCurrency(card.monthlyUsed ?? 0)}</p>
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
                   monthlyPercentage > 80 ? 'bg-red-500' :
@@ -190,19 +190,19 @@ export function PrepaidCardCard({ card, onClick, onToggleActive, onReconcile, on
       </div>
 
       {/* Stats */}
-      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t">
+      <div className="p-4 bg-muted/50 border-t">
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">إيداعات</p>
-            <p className="font-bold dark:text-green-400 text-sm" style={{ color: '#16a34a' }}>{formatCurrency(card.totalDeposits ?? 0)}</p>
+            <p className="text-xs text-muted-foreground mb-1">إيداعات</p>
+            <p className="font-bold text-green-600 dark:text-green-400 text-sm">{formatCurrency(card.totalDeposits ?? 0)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">سحوبات</p>
-            <p className="font-bold dark:text-red-400 text-sm" style={{ color: '#dc2626' }}>{formatCurrency(card.totalWithdrawals ?? 0)}</p>
+            <p className="text-xs text-muted-foreground mb-1">سحوبات</p>
+            <p className="font-bold text-red-600 dark:text-red-400 text-sm">{formatCurrency(card.totalWithdrawals ?? 0)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">مشتريات</p>
-            <p className="font-bold dark:text-blue-400 text-sm" style={{ color: '#2563eb' }}>{formatCurrency(card.totalPurchases ?? 0)}</p>
+            <p className="text-xs text-muted-foreground mb-1">مشتريات</p>
+            <p className="font-bold text-blue-600 dark:text-blue-400 text-sm">{formatCurrency(card.totalPurchases ?? 0)}</p>
           </div>
         </div>
       </div>

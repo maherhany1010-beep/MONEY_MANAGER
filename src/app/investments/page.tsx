@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +11,8 @@ import { AddInvestmentDialog } from '@/components/investments/add-investment-dia
 import { UpdatePriceDialog } from '@/components/investments/update-price-dialog'
 import { AddQuantityDialog } from '@/components/investments/add-quantity-dialog'
 import { SellInvestmentDialog } from '@/components/investments/sell-investment-dialog'
+import { CertificateMaturityDialog } from '@/components/investments/certificate-maturity-dialog'
+import { EditCertificateDialog } from '@/components/investments/edit-certificate-dialog'
 import {
   TrendingUp,
   TrendingDown,
@@ -27,9 +28,11 @@ import {
   FileText,
   BarChart3,
   RefreshCw,
-  ShoppingCart,
   Minus,
-  ArrowRight
+  ArrowRight,
+  AlertCircle,
+  Calendar,
+  Wallet
 } from 'lucide-react'
 
 export default function InvestmentsPage() {
@@ -47,6 +50,9 @@ export default function InvestmentsPage() {
   const [showUpdatePriceDialog, setShowUpdatePriceDialog] = useState(false)
   const [showAddQuantityDialog, setShowAddQuantityDialog] = useState(false)
   const [showSellDialog, setShowSellDialog] = useState(false)
+  const [showMaturityDialog, setShowMaturityDialog] = useState(false)
+  const [showEditCertificateDialog, setShowEditCertificateDialog] = useState(false)
+  const [maturityDialogAction, setMaturityDialogAction] = useState<'renew' | 'withdraw'>('renew')
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<InvestmentType | 'all'>('all')
@@ -68,40 +74,67 @@ export default function InvestmentsPage() {
     let currentValueInOriginalCurrency = 0
     let costInOriginalCurrency = 0
     let originalCurrency = investment.currency || 'EGP'
+    let fees = 0
 
-    // Get exchange rate from localStorage
+    // استخدام سعر الصرف المحفوظ مع الاستثمار أو من localStorage
     const savedExchangeRate = localStorage.getItem('currentExchangeRate')
-    const exchangeRate = savedExchangeRate ? parseFloat(savedExchangeRate) : 1
+    const currentExchangeRate = investment.currentExchangeRate || (savedExchangeRate ? parseFloat(savedExchangeRate) : 50)
+    const purchaseExchangeRate = investment.exchangeRateAtPurchase || currentExchangeRate
 
     switch (investment.type) {
       case 'precious_metals':
         currentValueInOriginalCurrency = (investment.quantity ?? 0) * (investment.currentPrice ?? 0)
-        costInOriginalCurrency = ((investment.quantity ?? 0) * (investment.purchasePrice ?? 0)) + (investment.purchaseFee ?? 0)
+        costInOriginalCurrency = (investment.quantity ?? 0) * (investment.purchasePrice ?? 0)
+        fees = investment.purchaseFee ?? 0
         break
       case 'cryptocurrency':
         currentValueInOriginalCurrency = (investment.quantity ?? 0) * (investment.currentPrice ?? 0)
-        costInOriginalCurrency = ((investment.quantity ?? 0) * (investment.purchasePrice ?? 0)) + (investment.cryptoPurchaseFee ?? 0)
+        costInOriginalCurrency = (investment.quantity ?? 0) * (investment.purchasePrice ?? 0)
+        fees = investment.cryptoPurchaseFee ?? 0
         originalCurrency = 'USD'
         break
       case 'certificate':
-        currentValueInOriginalCurrency = investment.amount ?? 0
-        costInOriginalCurrency = investment.amount ?? 0
+        // الشهادات بالجنيه المصري
+        const principal = investment.amount ?? 0
+        const interestRate = investment.interestRate ?? 0
+        const startDate = new Date(investment.startDate ?? investment.purchaseDate ?? new Date())
+        const maturityDate = investment.maturityDate ? new Date(investment.maturityDate) : startDate
+        const now = new Date()
+
+        // حساب الفائدة المستحقة حتى الآن
+        const totalDays = Math.max(1, (maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        const daysElapsed = Math.max(0, (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        const daysRatio = Math.min(1, daysElapsed / totalDays)
+
+        const totalInterest = principal * (interestRate / 100)
+        const accruedInterest = totalInterest * daysRatio
+
+        currentValueInOriginalCurrency = principal + accruedInterest
+        costInOriginalCurrency = principal
         originalCurrency = 'EGP'
         break
       case 'stock':
         currentValueInOriginalCurrency = (investment.shares ?? 0) * (investment.currentPrice ?? 0)
-        costInOriginalCurrency = ((investment.shares ?? 0) * (investment.purchasePrice ?? 0)) + (investment.commission ?? 0)
+        costInOriginalCurrency = (investment.shares ?? 0) * (investment.purchasePrice ?? 0)
+        fees = investment.commission ?? 0
         originalCurrency = 'USD'
         break
     }
 
-    // Convert to EGP if needed
+    // إضافة الرسوم للتكلفة
+    costInOriginalCurrency += fees
+
+    // التحويل للجنيه المصري
     let currentValueInEGP = currentValueInOriginalCurrency
     let costInEGP = costInOriginalCurrency
+    let feesInEGP = fees
 
     if (originalCurrency === 'USD') {
-      currentValueInEGP = currentValueInOriginalCurrency * exchangeRate
-      costInEGP = costInOriginalCurrency * exchangeRate
+      // القيمة الحالية بسعر الصرف الحالي
+      currentValueInEGP = currentValueInOriginalCurrency * currentExchangeRate
+      // التكلفة بسعر الصرف وقت الشراء
+      costInEGP = costInOriginalCurrency * purchaseExchangeRate
+      feesInEGP = fees * purchaseExchangeRate
     }
 
     const profitLoss = currentValueInEGP - costInEGP
@@ -112,10 +145,55 @@ export default function InvestmentsPage() {
       currentValueInOriginalCurrency,
       cost: costInEGP,
       costInOriginalCurrency,
+      fees: feesInEGP,
+      feesInOriginalCurrency: fees,
       profitLoss,
       returnPct,
       currency: 'EGP',
       originalCurrency,
+      currentExchangeRate,
+      purchaseExchangeRate,
+    }
+  }
+
+  // حساب بيانات الشهادة الخاصة
+  const calculateCertificateDetails = (investment: Investment) => {
+    const principal = investment.amount ?? 0
+    const interestRate = investment.interestRate ?? 0
+    const startDate = new Date(investment.startDate ?? investment.purchaseDate ?? new Date())
+    const maturityDate = investment.maturityDate ? new Date(investment.maturityDate) : new Date()
+    const now = new Date()
+
+    // حساب إجمالي المدة بالأيام
+    const totalDays = Math.max(1, (maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const daysElapsed = Math.max(0, (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const daysRemaining = Math.max(0, (maturityDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+    // حساب الفائدة السنوية الكاملة
+    const totalInterest = principal * (interestRate / 100)
+
+    // حساب العائد الشهري
+    const monthlyReturn = totalInterest / (totalDays / 30)
+
+    // حساب الأرباح حتى الآن (نسبة من إجمالي الفائدة بناءً على الأيام المنقضية)
+    const profitUntilNow = (daysElapsed / totalDays) * totalInterest
+
+    // التحقق من الاستحقاق
+    const isMatured = now >= maturityDate
+    const isNearMaturity = daysRemaining <= 30 && daysRemaining > 0
+
+    return {
+      principal,
+      interestRate,
+      totalInterest,
+      monthlyReturn,
+      profitUntilNow,
+      daysElapsed: Math.floor(daysElapsed),
+      daysRemaining: Math.floor(daysRemaining),
+      totalDays: Math.floor(totalDays),
+      isMatured,
+      isNearMaturity,
+      maturityDate,
     }
   }
 
@@ -147,44 +225,47 @@ export default function InvestmentsPage() {
   })
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir="rtl">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">إدارة الاستثمارات</h1>
-            <p className="text-muted-foreground">تتبع وإدارة محفظتك الاستثمارية</p>
-          </div>
-          <Button onClick={() => setShowAddDialog(true)} className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-5 w-5 ml-2" />
-            إضافة استثمار جديد
-          </Button>
+    <div className="space-y-4 sm:space-y-6" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">إدارة الاستثمارات</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">تتبع وإدارة محفظتك الاستثمارية</p>
         </div>
+        <Button onClick={() => setShowAddDialog(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+          <Plus className="h-5 w-5 ml-2" />
+          إضافة استثمار جديد
+        </Button>
+      </div>
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+      {/* Statistics Cards */}
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">إجمالي قيمة المحفظة</CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalValue)}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalValue)}</div>
               <p className="text-xs text-muted-foreground">القيمة الحالية للمحفظة</p>
             </CardContent>
           </Card>
 
-          <Card className={`bg-gradient-to-br ${totalProfitLoss >= 0 ? 'from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800' : 'from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800'}`}>
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">الأرباح/الخسائر</CardTitle>
-              {totalProfitLoss >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-              )}
+              <div className={`p-2 rounded-lg ${totalProfitLoss >= 0 ? 'bg-green-500' : 'bg-red-500'}`}>
+                {totalProfitLoss >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-white" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-white" />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${totalProfitLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {totalProfitLoss >= 0 ? '+' : ''}{formatCurrency(totalProfitLoss)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -193,26 +274,30 @@ export default function InvestmentsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">نسبة العائد</CardTitle>
-              <Percent className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-purple-500 rounded-lg">
+                <Percent className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${returnPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${returnPercentage >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {returnPercentage >= 0 ? '+' : ''}{returnPercentage.toFixed(2)}%
               </div>
               <p className="text-xs text-muted-foreground">العائد على الاستثمار</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">الاستثمارات النشطة</CardTitle>
-              <Activity className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-orange-500 rounded-lg">
+                <Activity className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activeInvestments}</div>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{activeInvestments}</div>
               <p className="text-xs text-muted-foreground">عدد الاستثمارات</p>
             </CardContent>
           </Card>
@@ -361,28 +446,117 @@ export default function InvestmentsPage() {
                         </div>
                       )}
 
-                      {investment.type === 'certificate' && (
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">البنك:</span>
-                            <span className="font-medium">{investment.bank ?? 'غير محدد'}</span>
+                      {investment.type === 'certificate' && (() => {
+                        const certDetails = calculateCertificateDetails(investment)
+                        return (
+                          <div className="space-y-2 text-sm">
+                            {/* تنبيه الاستحقاق */}
+                            {certDetails.isMatured && (
+                              <div className="bg-orange-100 dark:bg-orange-950/50 border border-orange-300 dark:border-orange-700 rounded-lg p-2 flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-orange-600" />
+                                <span className="text-orange-700 dark:text-orange-400 font-medium text-xs">
+                                  الشهادة مستحقة! اختر التجديد أو السحب
+                                </span>
+                              </div>
+                            )}
+                            {certDetails.isNearMaturity && !certDetails.isMatured && (
+                              <div className="bg-yellow-100 dark:bg-yellow-950/50 border border-yellow-300 dark:border-yellow-700 rounded-lg p-2 flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-yellow-600" />
+                                <span className="text-yellow-700 dark:text-yellow-400 font-medium text-xs">
+                                  متبقي {certDetails.daysRemaining} يوم للاستحقاق
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">البنك:</span>
+                              <span className="font-medium">{investment.bank ?? 'غير محدد'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">المبلغ الأساسي:</span>
+                              <span className="font-medium">{formatCurrency(certDetails.principal)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">معدل الفائدة:</span>
+                              <span className="font-medium">{certDetails.interestRate}%</span>
+                            </div>
+
+                            {/* العائد الشهري */}
+                            <div className="flex justify-between bg-green-50 dark:bg-green-950/30 p-2 rounded">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3 text-green-600" />
+                                العائد الشهري:
+                              </span>
+                              <span className="font-bold text-green-600">{formatCurrency(certDetails.monthlyReturn)}</span>
+                            </div>
+
+                            {/* الأرباح حتى الآن */}
+                            <div className="flex justify-between bg-blue-50 dark:bg-blue-950/30 p-2 rounded">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <DollarSign className="h-3 w-3 text-blue-600" />
+                                الأرباح حتى الآن:
+                              </span>
+                              <span className="font-bold text-blue-600">{formatCurrency(certDetails.profitUntilNow)}</span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">تاريخ الاستحقاق:</span>
+                              <span className={`font-medium ${certDetails.isMatured ? 'text-orange-600' : ''}`}>
+                                {certDetails.maturityDate.toLocaleDateString('ar-EG')}
+                              </span>
+                            </div>
+
+                            {/* أزرار التجديد والسحب والتعديل */}
+                            <div className="pt-2 grid grid-cols-3 gap-2">
+                              {/* زر التجديد - يظهر عند الاستحقاق أو قربه */}
+                              {(certDetails.isMatured || certDetails.isNearMaturity) && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
+                                  onClick={() => {
+                                    setSelectedInvestment(investment)
+                                    setMaturityDialogAction('renew')
+                                    setShowMaturityDialog(true)
+                                  }}
+                                >
+                                  <RefreshCw className="h-3 w-3 ml-1" />
+                                  تجديد
+                                </Button>
+                              )}
+
+                              {/* زر السحب - متواجد دائماً */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 border-orange-300"
+                                onClick={() => {
+                                  setSelectedInvestment(investment)
+                                  setMaturityDialogAction('withdraw')
+                                  setShowMaturityDialog(true)
+                                }}
+                              >
+                                <Wallet className="h-3 w-3 ml-1" />
+                                سحب
+                              </Button>
+
+                              {/* زر التعديل - متواجد دائماً */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300"
+                                onClick={() => {
+                                  setSelectedInvestment(investment)
+                                  setShowEditCertificateDialog(true)
+                                }}
+                              >
+                                <Edit className="h-3 w-3 ml-1" />
+                                تعديل
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">المبلغ:</span>
-                            <span className="font-medium">{formatCurrency(investment.amount ?? 0)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">معدل الفائدة:</span>
-                            <span className="font-medium">{investment.interestRate ?? 0}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">تاريخ الاستحقاق:</span>
-                            <span className="font-medium">
-                              {new Date(investment.maturityDate ?? '').toLocaleDateString('ar-EG')}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                        )
+                      })()}
 
                       {investment.type === 'stock' && (
                         <div className="space-y-2 text-sm">
@@ -411,6 +585,16 @@ export default function InvestmentsPage() {
 
                       {/* Profit/Loss Summary */}
                       <div className="pt-3 border-t space-y-2">
+                        {/* سعر الصرف للعملات الأجنبية */}
+                        {metrics.originalCurrency === 'USD' && (
+                          <div className="flex justify-between text-xs text-muted-foreground bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                            <span>سعر الصرف:</span>
+                            <span>
+                              الشراء: {metrics.purchaseExchangeRate.toFixed(2)} | الحالي: {metrics.currentExchangeRate.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">القيمة الحالية:</span>
                           <div className="text-left">
@@ -433,6 +617,20 @@ export default function InvestmentsPage() {
                             )}
                           </div>
                         </div>
+                        {/* عرض الرسوم إذا كانت موجودة */}
+                        {metrics.fees > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">الرسوم:</span>
+                            <div className="text-left">
+                              <div className="font-medium text-orange-600">{formatCurrency(metrics.fees, 'EGP')}</div>
+                              {metrics.originalCurrency === 'USD' && (
+                                <div className="text-xs text-muted-foreground">
+                                  ({formatCurrency(metrics.feesInOriginalCurrency, 'USD')})
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">الربح/الخسارة:</span>
                           <div className="text-left">
@@ -518,8 +716,18 @@ export default function InvestmentsPage() {
           onOpenChange={setShowSellDialog}
           investment={selectedInvestment}
         />
+        <CertificateMaturityDialog
+          open={showMaturityDialog}
+          onOpenChange={setShowMaturityDialog}
+          investment={selectedInvestment}
+          defaultAction={maturityDialogAction}
+        />
+        <EditCertificateDialog
+          open={showEditCertificateDialog}
+          onOpenChange={setShowEditCertificateDialog}
+          investment={selectedInvestment}
+        />
       </div>
-    </AppLayout>
-  )
+      )
 }
 

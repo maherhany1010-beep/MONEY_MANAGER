@@ -31,13 +31,13 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
   const getAccountTypeColor = (type: string) => {
     switch (type) {
       case 'checking':
-        return 'from-blue-500 to-blue-700'
+        return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
       case 'savings':
-        return 'from-green-500 to-green-700'
+        return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
       case 'current':
-        return 'from-purple-500 to-purple-700'
+        return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
       default:
-        return 'from-gray-500 to-gray-700'
+        return 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white'
     }
   }
 
@@ -55,7 +55,7 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getAccountTypeColor(account.accountType ?? account.account_type)} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getAccountTypeColor(account.accountType ?? account.account_type)} p-6 relative`}>
         {/* حالة الحساب */}
         {!account.isActive && (
           <div className="absolute top-2 left-2">
@@ -74,7 +74,7 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
             </div>
           </div>
           {account.isDefault && (
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
               افتراضي
             </Badge>
           )}
@@ -110,11 +110,11 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
               <span className="text-muted-foreground">الحد اليومي</span>
               <span className="font-medium">{formatCurrency(account.dailyLimit)}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
                 className={`h-2 rounded-full transition-all ${
-                  dailyUsagePercentage > 80 ? 'bg-red-500' : 
-                  dailyUsagePercentage > 50 ? 'bg-yellow-500' : 
+                  dailyUsagePercentage > 80 ? 'bg-red-500' :
+                  dailyUsagePercentage > 50 ? 'bg-yellow-500' :
                   'bg-green-500'
                 }`}
                 style={{ width: `${Math.min(dailyUsagePercentage, 100)}%` }}
@@ -129,11 +129,11 @@ export function BankAccountCard({ account, onClick, onToggleActive, onReconcile 
               <span className="text-muted-foreground">الحد الشهري</span>
               <span className="font-medium">{formatCurrency(account.monthlyLimit)}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
                 className={`h-2 rounded-full transition-all ${
-                  monthlyUsagePercentage > 80 ? 'bg-red-500' : 
-                  monthlyUsagePercentage > 50 ? 'bg-yellow-500' : 
+                  monthlyUsagePercentage > 80 ? 'bg-red-500' :
+                  monthlyUsagePercentage > 50 ? 'bg-yellow-500' :
                   'bg-green-500'
                 }`}
                 style={{ width: `${Math.min(monthlyUsagePercentage, 100)}%` }}

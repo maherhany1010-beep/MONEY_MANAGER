@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: 'noreply@moneymanager.com',
+            from: 'onboarding@resend.dev',
             to: email,
             subject: 'رمز التفعيل - الإدارة المالية الشاملة',
             html: generateEmailHTML(otp, userName, expiryMinutes),
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     // Try to send email using Supabase (if available)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
+
     if (supabaseUrl && supabaseServiceKey) {
       try {
         const response = await fetch(`${supabaseUrl}/rest/v1/rpc/send_email`, {
@@ -149,10 +149,10 @@ export async function POST(request: NextRequest) {
 
     // Fallback: Log the OTP for development
     console.warn(`⚠️ Email service not configured. OTP for ${email}: ${otp}`)
-    
+
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'تم توليد الرمز. يرجى التحقق من البريد الإلكتروني أو وحدة التحكم',
         warning: 'Email service not configured'
       },
@@ -320,4 +320,3 @@ function generateEmailHTML(otp: string, userName?: string, expiryMinutes: number
     </html>
   `
 }
-

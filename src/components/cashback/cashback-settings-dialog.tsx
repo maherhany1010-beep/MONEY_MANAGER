@@ -117,15 +117,15 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
             </div>
             إعدادات الكاش باك
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             تخصيص إعدادات الكاش باك والاسترداد التلقائي للبطاقة
           </DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
-            <CheckCircle className="h-16 w-16 dark:text-green-400" style={{ color: '#16a34a' }} />
-            <p className="text-lg font-semibold dark:text-green-400" style={{ color: '#15803d' }}>
+            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+            <p className="text-lg font-semibold text-green-700 dark:text-green-400">
               تم حفظ الإعدادات بنجاح!
             </p>
           </div>
@@ -133,14 +133,14 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* الإعدادات العامة */}
             <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-700">
-              <h3 className="text-sm font-bold dark:text-purple-100 mb-4" style={{ color: '#7e22ce' }}>
+              <h3 className="text-sm font-bold text-purple-700 dark:text-purple-100 mb-4">
                 الإعدادات العامة
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium">تفعيل الكاش باك</Label>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       تفعيل أو تعطيل نظام الكاش باك للبطاقة
                     </p>
                   </div>
@@ -151,7 +151,7 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
                 </div>
 
                 <div>
-                  <Label htmlFor="cashbackRate" className="dark:text-purple-100 font-medium" style={{ color: '#7e22ce' }}>
+                  <Label htmlFor="cashbackRate" className="text-purple-700 dark:text-purple-100 font-medium">
                     نسبة الكاش باك (%)
                   </Label>
                   <Input
@@ -164,7 +164,7 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
                     onChange={(e) => setFormData({ ...formData, cashbackRate: e.target.value })}
                     disabled={!formData.cashbackEnabled}
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     النسبة المئوية للكاش باك من كل عملية شراء
                   </p>
                 </div>
@@ -175,10 +175,10 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
             <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-700">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-sm font-bold dark:text-blue-100" style={{ color: '#1d4ed8' }}>
+                  <h3 className="text-sm font-bold text-blue-700 dark:text-blue-100">
                     الاسترداد التلقائي
                   </h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     استرداد الكاش باك تلقائياً بعد عدد أيام محدد
                   </p>
                 </div>
@@ -192,7 +192,7 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
               {formData.autoRedeemEnabled && (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="autoRedeemDays" className="dark:text-blue-100 font-medium mb-2 block" style={{ color: '#1d4ed8' }}>
+                    <Label htmlFor="autoRedeemDays" className="text-blue-700 dark:text-blue-100 font-medium mb-2 block">
                       عدد الأيام للاسترداد التلقائي
                     </Label>
                     <Input
@@ -202,7 +202,7 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
                       value={formData.autoRedeemDays}
                       onChange={(e) => setFormData({ ...formData, autoRedeemDays: e.target.value })}
                     />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       اختيارات سريعة:
                     </p>
                     <div className="grid grid-cols-3 gap-2 mt-2">
@@ -324,13 +324,13 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
                     onChange={(e) => setFormData({ ...formData, minRedemptionAmount: e.target.value })}
                     disabled={!formData.cashbackEnabled}
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     الحد الأدنى للمبلغ المطلوب لاسترداد الكاش باك
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="maxCashbackPerTransaction" className="dark:text-emerald-100 font-medium" style={{ color: '#047857' }}>
+                  <Label htmlFor="maxCashbackPerTransaction" className="text-emerald-700 dark:text-emerald-100 font-medium">
                     الحد الأقصى للكاش باك لكل عملية (جنيه)
                   </Label>
                   <Input
@@ -342,7 +342,7 @@ export function CashbackSettingsDialog({ open, onOpenChange, cardId }: CashbackS
                     onChange={(e) => setFormData({ ...formData, maxCashbackPerTransaction: e.target.value })}
                     disabled={!formData.cashbackEnabled}
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     الحد الأقصى للكاش باك الذي يمكن الحصول عليه من عملية واحدة
                   </p>
                 </div>

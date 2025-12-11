@@ -18,11 +18,11 @@ interface EWalletCardProps {
 
 export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDeposit, onTransfer }: EWalletCardProps) {
   const getProviderColor = (provider: string) => {
-    if (provider.toLowerCase().includes('vodafone')) return 'from-red-500 to-red-700'
-    if (provider.toLowerCase().includes('etisalat')) return 'from-green-500 to-green-700'
-    if (provider.toLowerCase().includes('orange')) return 'from-orange-500 to-orange-700'
-    if (provider.toLowerCase().includes('we')) return 'from-purple-500 to-purple-700'
-    return 'from-blue-500 to-blue-700'
+    if (provider.toLowerCase().includes('vodafone')) return 'from-red-100 to-red-200 dark:from-red-800 dark:to-red-900 text-red-900 dark:text-white'
+    if (provider.toLowerCase().includes('etisalat')) return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
+    if (provider.toLowerCase().includes('orange')) return 'from-orange-100 to-orange-200 dark:from-orange-800 dark:to-orange-900 text-orange-900 dark:text-white'
+    if (provider.toLowerCase().includes('we')) return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
+    return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
   }
 
   const getWalletTypeLabel = (type: string) => {
@@ -45,10 +45,10 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-700 border-green-200'
-      case 'suspended': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      case 'blocked': return 'bg-red-100 text-red-700 border-red-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
+      case 'active': return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'
+      case 'suspended': return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
+      case 'blocked': return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
+      default: return 'bg-muted text-muted-foreground border-border'
     }
   }
 
@@ -78,7 +78,7 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? '')} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getProviderColor(wallet.provider ?? '')} p-6 relative`}>
         {/* حالة المحفظة */}
         {wallet.status !== 'active' && (
           <div className="absolute top-2 left-2">
@@ -97,7 +97,7 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
             </div>
           </div>
           {wallet.isDefault && (
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
               افتراضية
             </Badge>
           )}
@@ -168,13 +168,13 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
         {wallet.dailyLimit && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">الحد اليومي</span>
+              <span className="text-muted-foreground">الحد اليومي</span>
               <div className="text-left">
-                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(wallet.dailyUsed || 0)}</span>
-                <span className="text-gray-600 dark:text-gray-400"> / {formatCurrency(wallet.dailyLimit)}</span>
+                <span className="font-medium text-foreground">{formatCurrency(wallet.dailyUsed || 0)}</span>
+                <span className="text-muted-foreground"> / {formatCurrency(wallet.dailyLimit)}</span>
               </div>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
                   dailyUsagePercentage > 80 ? 'bg-red-500' :
@@ -191,17 +191,17 @@ export function EWalletCard({ wallet, onClick, onToggleActive, onReconcile, onDe
         {wallet.monthlyLimit && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">الحد الشهري</span>
+              <span className="text-muted-foreground">الحد الشهري</span>
               <div className="text-left">
-                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(wallet.monthlyUsed || 0)}</span>
-                <span className="text-gray-600 dark:text-gray-400"> / {formatCurrency(wallet.monthlyLimit)}</span>
+                <span className="font-medium text-foreground">{formatCurrency(wallet.monthlyUsed || 0)}</span>
+                <span className="text-muted-foreground"> / {formatCurrency(wallet.monthlyLimit)}</span>
               </div>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
                 className={`h-2 rounded-full transition-all ${
-                  monthlyUsagePercentage > 80 ? 'bg-red-500' : 
-                  monthlyUsagePercentage > 50 ? 'bg-yellow-500' : 
+                  monthlyUsagePercentage > 80 ? 'bg-red-500' :
+                  monthlyUsagePercentage > 50 ? 'bg-yellow-500' :
                   'bg-green-500'
                 }`}
                 style={{ width: `${Math.min(monthlyUsagePercentage, 100)}%` }}

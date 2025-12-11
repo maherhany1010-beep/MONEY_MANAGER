@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { PrepaidCardCard } from '@/components/prepaid-cards/prepaid-card-card'
 import { AddPrepaidCardDialog } from '@/components/prepaid-cards/add-prepaid-card-dialog'
@@ -28,7 +27,7 @@ import { formatCurrency, formatNumber } from '@/lib/design-system'
 
 export default function PrepaidCardsPage() {
   const router = useRouter()
-  const { cards, updateCards, getAllTransactions } = usePrepaidCards()
+  const { cards, updateCards, getAllTransactions, addCard } = usePrepaidCards()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false)
   const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false)
@@ -52,25 +51,19 @@ export default function PrepaidCardsPage() {
   // تفعيل نظام التنبيهات الذكي
   usePrepaidAlerts()
 
-  // معالج إضافة بطاقة جديدة
-  const handleAddCard = (newCard: any) => {
-    const card = {
-      ...newCard,
-      id: Date.now().toString(),
+  // معالج إضافة بطاقة جديدة - يحفظ في قاعدة البيانات
+  const handleAddCard = async (newCard: any) => {
+    // تحويل أسماء الحقول من camelCase إلى snake_case للتوافق مع قاعدة البيانات
+    const cardData = {
+      card_name: newCard.cardName,
+      card_number: newCard.cardNumber || null,
+      balance: parseFloat(newCard.balance) || 0,
+      currency: 'EGP',
+      expiry_date: newCard.expiryDate || null,
       status: 'active',
-      dailyUsed: 0,
-      monthlyUsed: 0,
-      totalDeposits: 0,
-      totalWithdrawals: 0,
-      totalPurchases: 0,
-      transactionCount: 0,
-      depositFee: 0,
-      withdrawalFee: 0,
-      purchaseFee: 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      issueDate: new Date().toISOString().split('T')[0],
     }
-    updateCards([...cards, card])
+
+    await addCard(cardData)
   }
 
   // Filter and Sort Cards
@@ -167,7 +160,7 @@ export default function PrepaidCardsPage() {
   const totalTransactions = cards.reduce((sum, card) => sum + (card.transactionCount || 0), 0)
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="البطاقات المسبقة الدفع"
         description="إدارة البطاقات المسبقة الدفع ومتابعة الحدود والمعاملات (فوري، أمان، ممكن)"
@@ -277,11 +270,7 @@ export default function PrepaidCardsPage() {
         <EmptyState
           icon={Wallet}
           title="لا توجد بطاقات مسبقة الدفع"
-          description="ابدأ بإضافة بطاقاتك المسبقة الدفع (فوري، أمان، ممكن) لإدارة أموالك بشكل أفضل"
-          action={{
-            label: 'إضافة بطاقة جديدة',
-            onClick: () => setIsAddDialogOpen(true),
-          }}
+          description="ابدأ بإضافة بطاقاتك المسبقة الدفع (فوري، أمان، ممكن) لإدارة أموالك بشكل أفضل. استخدم زر 'إضافة بطاقة جديدة' في الأعلى."
         />
       ) : (
         <Tabs defaultValue="dashboard" className="space-y-6">
@@ -301,19 +290,19 @@ export default function PrepaidCardsPage() {
           </TabsList>
 
           {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6 mt-0">
             {/* Dashboard Stats */}
             <DashboardStats cards={cards} transactions={getAllTransactions()} />
 
             {/* Top Merchants and Balance Forecast */}
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               <TopMerchants transactions={getAllTransactions()} />
               <BalanceForecast cards={cards} transactions={getAllTransactions()} />
             </div>
           </TabsContent>
 
           {/* Cards Tab */}
-          <TabsContent value="cards" className="space-y-6">
+          <TabsContent value="cards" className="space-y-4 sm:space-y-6 mt-0">
             {/* Search and Filter */}
             <SearchFilter
               filters={filters}
@@ -331,11 +320,11 @@ export default function PrepaidCardsPage() {
 
             {/* Cards Grid */}
             {filteredAndSortedCards.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>لا توجد بطاقات تطابق معايير البحث</p>
+              <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                <p className="text-sm sm:text-base">لا توجد بطاقات تطابق معايير البحث</p>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredAndSortedCards.map((card) => (
                   <PrepaidCardCard
                     key={card.id}
@@ -416,6 +405,6 @@ export default function PrepaidCardsPage() {
           />
         </>
       )}
-    </AppLayout>
+    </>
   )
 }

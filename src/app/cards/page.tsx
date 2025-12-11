@@ -2,22 +2,17 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { CreditCardComponent } from '@/components/credit-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FormSkeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCards, CreditCard as CreditCardType } from '@/contexts/cards-context'
 import { CardSettingsDialog } from '@/components/cards/card-settings-dialog'
 import { usePaymentReminders } from '@/hooks/use-payment-reminders'
 import { useAutoFees } from '@/hooks/use-auto-fees'
-import { DashboardStats } from '@/components/cards/dashboard-stats'
-import { TopMerchants } from '@/components/cards/top-merchants'
-import { BalanceForecast } from '@/components/cards/balance-forecast'
 import { SearchFilter, SearchFilterState } from '@/components/cards/search-filter'
-import { ReportsTab } from '@/components/cards/reports-tab'
-import { CreditCard, Plus, LayoutDashboard, FileText } from 'lucide-react'
+import { CardsStatistics } from '@/components/cards/cards-statistics'
+import { CreditCard, Plus } from 'lucide-react'
 import { toast } from '@/lib/toast'
 
 // Dynamic imports للـ Dialogs - تحميل عند الحاجة فقط
@@ -70,7 +65,7 @@ export default function CardsPage() {
 
   // Get unique bank names for filter
   const uniqueBanks = useMemo(() => {
-    const banks = new Set(cards.map(card => card.bankName).filter((b): b is string => b !== undefined))
+    const banks = new Set(cards.map(card => card.bank_name ?? card.bankName).filter((b): b is string => b !== undefined))
     return Array.from(banks).sort()
   }, [cards])
 
@@ -82,52 +77,52 @@ export default function CardsPage() {
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
       filtered = filtered.filter(card =>
-        (card.name ?? '').toLowerCase().includes(query) ||
-        (card.cardNumberLastFour ?? '').toLowerCase().includes(query) ||
-        (card.bankName ?? '').toLowerCase().includes(query)
+        (card.name ?? card.card_name ?? '').toLowerCase().includes(query) ||
+        (card.card_number_last_four ?? card.cardNumberLastFour ?? '').toLowerCase().includes(query) ||
+        (card.bank_name ?? card.bankName ?? '').toLowerCase().includes(query)
       )
     }
 
     // Status filter
     if (filters.status !== 'all') {
       filtered = filtered.filter(card =>
-        filters.status === 'active' ? card.isActive : !card.isActive
+        filters.status === 'active' ? (card.isActive || card.status === 'active') : (!card.isActive && card.status !== 'active')
       )
     }
 
     // Card type filter
     if (filters.cardType !== 'all') {
-      filtered = filtered.filter(card => card.cardType === filters.cardType)
+      filtered = filtered.filter(card => (card.card_type ?? card.cardType) === filters.cardType)
     }
 
     // Bank filter
     if (filters.bankName !== 'all') {
-      filtered = filtered.filter(card => card.bankName === filters.bankName)
+      filtered = filtered.filter(card => (card.bank_name ?? card.bankName) === filters.bankName)
     }
 
     // Sort
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'name-asc':
-          return (a.name ?? '').localeCompare(b.name ?? '', 'ar')
+          return (a.name ?? a.card_name ?? '').localeCompare(b.name ?? b.card_name ?? '', 'ar')
         case 'name-desc':
-          return (b.name ?? '').localeCompare(a.name ?? '', 'ar')
+          return (b.name ?? b.card_name ?? '').localeCompare(a.name ?? a.card_name ?? '', 'ar')
         case 'limit-desc':
-          return (b.creditLimit ?? 0) - (a.creditLimit ?? 0)
+          return (b.credit_limit ?? b.creditLimit ?? 0) - (a.credit_limit ?? a.creditLimit ?? 0)
         case 'limit-asc':
-          return (a.creditLimit ?? 0) - (b.creditLimit ?? 0)
+          return (a.credit_limit ?? a.creditLimit ?? 0) - (b.credit_limit ?? b.creditLimit ?? 0)
         case 'balance-desc':
-          return (b.currentBalance ?? 0) - (a.currentBalance ?? 0)
+          return (b.current_balance ?? b.currentBalance ?? 0) - (a.current_balance ?? a.currentBalance ?? 0)
         case 'balance-asc':
-          return (a.currentBalance ?? 0) - (b.currentBalance ?? 0)
+          return (a.current_balance ?? a.currentBalance ?? 0) - (b.current_balance ?? b.currentBalance ?? 0)
         case 'available-desc':
-          return ((b.creditLimit ?? 0) - (b.currentBalance ?? 0)) - ((a.creditLimit ?? 0) - (a.currentBalance ?? 0))
+          return ((b.credit_limit ?? b.creditLimit ?? 0) - (b.current_balance ?? b.currentBalance ?? 0)) - ((a.credit_limit ?? a.creditLimit ?? 0) - (a.current_balance ?? a.currentBalance ?? 0))
         case 'available-asc':
-          return ((a.creditLimit ?? 0) - (a.currentBalance ?? 0)) - ((b.creditLimit ?? 0) - (b.currentBalance ?? 0))
+          return ((a.credit_limit ?? a.creditLimit ?? 0) - (a.current_balance ?? a.currentBalance ?? 0)) - ((b.credit_limit ?? b.creditLimit ?? 0) - (b.current_balance ?? b.currentBalance ?? 0))
         case 'utilization-desc':
-          return ((b.currentBalance ?? 0) / (b.creditLimit ?? 1)) - ((a.currentBalance ?? 0) / (a.creditLimit ?? 1))
+          return ((b.current_balance ?? b.currentBalance ?? 0) / (b.credit_limit ?? b.creditLimit ?? 1)) - ((a.current_balance ?? a.currentBalance ?? 0) / (a.credit_limit ?? a.creditLimit ?? 1))
         case 'utilization-asc':
-          return ((a.currentBalance ?? 0) / (a.creditLimit ?? 1)) - ((b.currentBalance ?? 0) / (b.creditLimit ?? 1))
+          return ((a.current_balance ?? a.currentBalance ?? 0) / (a.credit_limit ?? a.creditLimit ?? 1)) - ((b.current_balance ?? b.currentBalance ?? 0) / (b.credit_limit ?? b.creditLimit ?? 1))
         default:
           return 0
       }
@@ -148,7 +143,12 @@ export default function CardsPage() {
   const handleToggleActive = (cardId: string) => {
     const card = cards.find(c => c.id === cardId)
     if (card) {
-      updateCard(cardId, { isActive: !card.isActive })
+      // تبديل حالة البطاقة بين active و blocked
+      const newStatus = card.status === 'active' ? 'blocked' : 'active'
+      updateCard(cardId, { status: newStatus })
+      toast.success(
+        newStatus === 'active' ? 'تم تفعيل البطاقة' : 'تم تعطيل البطاقة'
+      )
     }
   }
 
@@ -205,7 +205,7 @@ export default function CardsPage() {
   }
 
   return (
-    <AppLayout>
+    <div className="space-y-6">
       <PageHeader
         title="البطاقات الائتمانية"
         description="إدارة شاملة لجميع بطاقاتك الائتمانية ومعاملاتها"
@@ -216,76 +216,40 @@ export default function CardsPage() {
         }}
       />
 
-      {/* Tabs - لوحة المعلومات، البطاقات، التقارير */}
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            <span>لوحة المعلومات</span>
-          </TabsTrigger>
-          <TabsTrigger value="cards" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span>البطاقات</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span>التقارير</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Cards Section */}
+      {cards.length === 0 ? (
+        <EmptyState
+          icon={CreditCard}
+          title="لا توجد بطاقات ائتمانية"
+          description="ابدأ بإضافة بطاقتك الائتمانية الأولى لتتمكن من تتبع مصروفاتك وإدارة أموالك بفعالية"
+        />
+      ) : (
+        <div className="space-y-4 sm:space-y-6">
+          {/* Statistics */}
+          <CardsStatistics />
 
-        {/* Dashboard Tab */}
-        <TabsContent value="dashboard" className="space-y-6">
-          <DashboardStats cards={cards} />
+          {/* Search and Filter */}
+          <SearchFilter
+            filters={filters}
+            onFiltersChange={setFilters}
+            banks={uniqueBanks}
+          />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <TopMerchants cards={cards} payments={payments} />
-            <BalanceForecast cards={cards} payments={payments} />
-          </div>
-        </TabsContent>
-
-        {/* Cards Tab */}
-        <TabsContent value="cards">
-          {cards.length === 0 ? (
-            <EmptyState
-              icon={CreditCard}
-              title="لا توجد بطاقات ائتمانية"
-              description="ابدأ بإضافة بطاقتك الائتمانية الأولى لتتمكن من تتبع مصروفاتك وإدارة أموالك بفعالية"
-              action={{
-                label: 'إضافة بطاقة جديدة',
-                onClick: handleAddCard,
-              }}
-            />
-          ) : (
-            <div className="space-y-6">
-              {/* Search and Filter */}
-              <SearchFilter
-                filters={filters}
-                onFiltersChange={setFilters}
-                banks={uniqueBanks}
+          {/* Cards Grid */}
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredAndSortedCards.map((card) => (
+              <CreditCardComponent
+                key={card.id}
+                {...card}
+                onToggleActive={() => handleToggleActive(card.id)}
+                onPurchase={card.status === 'active' ? () => handlePurchase(card) : undefined}
+                onPayment={card.status === 'active' ? () => handlePayment(card) : undefined}
+                onSettings={() => handleSettings(card)}
               />
-
-              {/* Cards Grid */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAndSortedCards.map((card) => (
-                  <CreditCardComponent
-                    key={card.id}
-                    {...card}
-                    onToggleActive={() => handleToggleActive(card.id)}
-                    onPurchase={card.isActive ? () => handlePurchase(card) : undefined}
-                    onPayment={card.isActive ? () => handlePayment(card) : undefined}
-                    onSettings={card.isActive ? () => handleSettings(card) : undefined}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Reports Tab */}
-        <TabsContent value="reports">
-          <ReportsTab cards={cards} payments={payments} />
-        </TabsContent>
-      </Tabs>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Dialogs */}
       <AddCardDialog
@@ -319,6 +283,6 @@ export default function CardsPage() {
           />
         </>
       )}
-    </AppLayout>
+    </div>
   )
 }

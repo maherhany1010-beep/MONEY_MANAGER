@@ -1,17 +1,23 @@
 // أنواع الإشعارات المختلفة في النظام
 
-export type NotificationType = 
-  | 'payment_due'           // تذكير بالمدفوعات المستحقة
-  | 'low_balance'           // تنبيه انخفاض الرصيد
-  | 'credit_limit'          // تنبيه الحد الائتماني
-  | 'large_transaction'     // تنبيه بمعاملة كبيرة
-  | 'cashback_earned'       // إشعار بكاش باك مكتسب
-  | 'installment_due'       // تذكير بقسط مستحق
-  | 'investment_change'     // تغيير في الاستثمارات
-  | 'inventory_low'         // مخزون منخفض
-  | 'customer_payment'      // دفعة من عميل
-  | 'savings_circle'        // إشعار جمعية
-  | 'general'               // إشعار عام
+export type NotificationType =
+  | 'payment_due'                    // تذكير بالمدفوعات المستحقة
+  | 'low_balance'                    // تنبيه انخفاض الرصيد
+  | 'credit_limit'                   // تنبيه الحد الائتماني
+  | 'large_transaction'              // تنبيه بمعاملة كبيرة
+  | 'cashback_earned'                // إشعار بكاش باك مكتسب
+  | 'installment_due'                // تذكير بقسط مستحق
+  | 'investment_change'              // تغيير في الاستثمارات
+  | 'inventory_low'                  // مخزون منخفض
+  | 'customer_payment'               // دفعة من عميل
+  | 'savings_circle'                 // إشعار جمعية
+  | 'customer_debt_threshold'        // تنبيه تجاوز حد المديونية
+  | 'customer_invoice_due_soon'      // تذكير بفاتورة مستحقة قريباً
+  | 'customer_invoice_overdue'       // تنبيه بفاتورة متأخرة
+  | 'customer_payment_received'      // إشعار باستقبال دفعة من عميل
+  | 'customer_transfer_completed'    // إشعار بإتمام تحويل
+  | 'customer_data_modified'         // إشعار بتعديل بيانات العميل
+  | 'general'                        // إشعار عام
 
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent'
 

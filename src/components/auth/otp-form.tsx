@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Loader2, Mail, CheckCircle2, AlertCircle, CreditCard } from 'lucide-react'
 import { verifyOTP, resendOTP, incrementOTPAttempts, OTP_CONFIG } from '@/lib/otp'
+import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatedBackground } from './animated-background'
 
 interface OTPFormProps {
   email: string
@@ -25,8 +27,7 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
   const [remainingAttempts, setRemainingAttempts] = useState(OTP_CONFIG.MAX_ATTEMPTS)
   const [canResend, setCanResend] = useState(false)
   const [resendCountdown, setResendCountdown] = useState(0)
-  const [displayOTP, setDisplayOTP] = useState<string | null>(null)
-  const [showOTPDisplay, setShowOTPDisplay] = useState(false)
+  const [isVerified, setIsVerified] = useState(false)
 
   // Resend countdown timer
   useEffect(() => {
@@ -54,9 +55,9 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
       if (result.success) {
         setSuccess('✅ تم التحقق من الرمز بنجاح!')
         setOTP('')
-        setDisplayOTP(null)
+        setIsVerified(true)
 
-        // Call success callback or redirect
+        // Call success callback or redirect with fade-out animation
         setTimeout(() => {
           if (onSuccess) {
             onSuccess()
@@ -64,7 +65,7 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
             router.push('/')
             router.refresh()
           }
-        }, 1500)
+        }, 2000)
       } else {
         // Increment attempts
         const attemptsResult = await incrementOTPAttempts(email, otp)
@@ -100,11 +101,6 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
         setCanResend(false)
         setResendCountdown(OTP_CONFIG.RESEND_COOLDOWN_SECONDS)
 
-        // Display OTP for development mode
-        if (result.otp) {
-          setDisplayOTP(result.otp)
-        }
-
         // Try to send email via API
         try {
           const emailResponse = await fetch('/api/send-otp-email', {
@@ -136,21 +132,74 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-slate-800/50 border-slate-700 shadow-2xl">
-      <CardContent className="pt-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-500/20 rounded-full">
-              <Mail className="h-8 w-8 text-blue-400" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">التحقق من البريد الإلكتروني</h2>
-          <p className="text-slate-400">
-            أدخل الرمز المكون من 6 أرقام الذي تم إرساله إلى:
-          </p>
-          <p className="text-blue-400 font-semibold mt-1">{email}</p>
-        </div>
+    <AnimatePresence mode="wait">
+      {isVerified ? (
+        <motion.div
+          key="success"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="w-full max-w-md mx-auto text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+            className="bg-green-500/20 rounded-full p-8 mx-auto w-32 h-32 flex items-center justify-center mb-6"
+          >
+            <CheckCircle2 className="w-16 h-16 text-green-400" />
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-3xl font-bold text-white mb-2"
+          >
+            تم التحقق بنجاح!
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-slate-400"
+          >
+            جاري تحويلك إلى التطبيق...
+          </motion.p>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="form"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
+          <Card className="w-full max-w-md mx-auto bg-slate-800/50 border-slate-700 shadow-2xl backdrop-blur-xl">
+            <CardContent className="pt-8">
+              {/* Header */}
+              <motion.div
+                className="text-center mb-8"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex justify-center mb-4">
+                  <motion.div
+                    className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                  >
+                    <CreditCard className="h-8 w-8 text-white" />
+                  </motion.div>
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-2">الإدارة المالية الشاملة</h1>
+                <p className="text-slate-400 text-sm mb-4">معاً نحقق الحرية المالية</p>
+                <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent mb-6"></div>
+                <h2 className="text-2xl font-bold text-white mb-2">التحقق من البريد الإلكتروني</h2>
+                <p className="text-slate-400">
+                  أدخل الرمز المكون من 6 أرقام الذي تم إرساله إلى:
+                </p>
+                <p className="text-blue-400 font-semibold mt-1">{email}</p>
+              </motion.div>
 
         {/* Error Alert */}
         {error && (
@@ -244,51 +293,37 @@ export function OTPForm({ email, onSuccess, onBack }: OTPFormProps) {
           )}
         </div>
 
-        {/* Back Button */}
-        {onBack && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-slate-400 hover:text-slate-300 hover:bg-slate-700/30 transition-all"
-            onClick={onBack}
-            disabled={isLoading}
-          >
-            العودة
-          </Button>
-        )}
+              {/* Back Button */}
+              {onBack && (
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-slate-400 hover:text-slate-300 hover:bg-slate-700/30 transition-all"
+                    onClick={onBack}
+                    disabled={isLoading}
+                  >
+                    العودة
+                  </Button>
+                </motion.div>
+              )}
 
-        {/* Development Mode - Show OTP */}
-        <div className="mt-6 p-4 bg-amber-500/10 rounded-lg border border-amber-500/50">
-          <button
-            type="button"
-            className="w-full text-xs text-amber-400 hover:text-amber-300 transition-colors"
-            onClick={() => setShowOTPDisplay(!showOTPDisplay)}
-          >
-            {showOTPDisplay ? '▼ إخفاء الرمز' : '▶ عرض الرمز (للاختبار)'}
-          </button>
-          {showOTPDisplay && (
-            <div className="mt-3 p-3 bg-slate-700/50 rounded border border-amber-500/30">
-              <p className="text-xs text-amber-400 mb-2">الرمز للاختبار (في بيئة التطوير):</p>
-              <div className="bg-slate-800 p-3 rounded text-center">
-                <p className="text-2xl font-bold text-amber-400 tracking-widest font-mono">
-                  {displayOTP || 'جاري التحميل...'}
+              {/* Info */}
+              <motion.div
+                className="mt-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="text-xs text-slate-400 text-center">
+                  لم تستقبل الرمز؟ تحقق من مجلد البريد العشوائي أو انتظر دقيقة واحدة قبل إعادة الإرسال
                 </p>
-              </div>
-              <p className="text-xs text-slate-400 mt-2">
-                ملاحظة: في الإنتاج، سيتم إرسال الرمز عبر البريد الإلكتروني فقط
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="mt-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-          <p className="text-xs text-slate-400 text-center">
-            لم تستقبل الرمز؟ تحقق من مجلد البريد العشوائي أو انتظر دقيقة واحدة قبل إعادة الإرسال
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

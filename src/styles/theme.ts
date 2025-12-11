@@ -261,35 +261,35 @@ export const theme = {
   },
 }
 
-// فئات CSS جاهزة للاستخدام
+// فئات CSS جاهزة للاستخدام - مع دعم كامل للوضع الداكن
 export const themeClasses = {
   // البطاقات
   card: {
-    base: 'bg-card rounded-xl border-2 border-border shadow-sm hover:shadow-md transition-all duration-300',
-    elevated: 'bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300',
+    base: 'bg-card rounded-xl border-2 border-border shadow-sm hover:shadow-md dark:shadow-black/20 transition-all duration-300',
+    elevated: 'bg-card rounded-xl shadow-lg hover:shadow-xl dark:shadow-black/30 transition-all duration-300',
     gradient: 'rounded-xl shadow-md hover:shadow-lg transition-all duration-300',
   },
 
   // بطاقات الإحصائيات - محسّنة للوضع الداكن
   statCard: {
-    primary: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm transition-all duration-300',
-    success: 'bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm transition-all duration-300',
-    danger: 'bg-gradient-to-br from-rose-50 to-red-50 border-2 border-rose-200 rounded-xl p-6 shadow-sm transition-all duration-300',
-    warning: 'bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6 shadow-sm transition-all duration-300',
-    purple: 'bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm transition-all duration-300',
-    neutral: 'bg-gradient-to-br from-slate-50 to-gray-50 border-2 border-gray-200 rounded-xl p-6 shadow-sm transition-all duration-300',
+    primary: 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 shadow-sm transition-all duration-300',
+    success: 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 border-2 border-emerald-200 dark:border-emerald-800 rounded-xl p-6 shadow-sm transition-all duration-300',
+    danger: 'bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/50 dark:to-red-950/50 border-2 border-rose-200 dark:border-rose-800 rounded-xl p-6 shadow-sm transition-all duration-300',
+    warning: 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-6 shadow-sm transition-all duration-300',
+    purple: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-6 shadow-sm transition-all duration-300',
+    neutral: 'bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm transition-all duration-300',
   },
 
-  // الأزرار
+  // الأزرار - تبقى كما هي لأن التدرجات تعمل في كلا الوضعين
   button: {
     primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-all duration-300',
     success: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-all duration-300',
     danger: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-all duration-300',
     warning: 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-all duration-300',
-    outline: 'border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-700 font-semibold rounded-lg px-4 py-2 transition-all duration-300',
+    outline: 'border-2 border-border hover:border-primary hover:bg-primary/10 text-foreground hover:text-primary font-semibold rounded-lg px-4 py-2 transition-all duration-300',
   },
 
-  // أيقونات الحاويات
+  // أيقونات الحاويات - تبقى كما هي لأن التدرجات تعمل في كلا الوضعين
   iconContainer: {
     primary: 'p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md',
     success: 'p-3 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg shadow-md',
@@ -300,31 +300,33 @@ export const themeClasses = {
 
   // الإدخالات - محسّنة للوضع الداكن
   input: {
-    base: 'w-full px-4 py-2 border-2 border-input rounded-lg focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all duration-300 bg-card text-foreground',
+    base: 'w-full px-4 py-2 border-2 border-input rounded-lg focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all duration-300 bg-card text-foreground placeholder:text-muted-foreground',
     error: 'w-full px-4 py-2 border-2 border-destructive/50 rounded-lg focus:border-destructive focus:ring-2 focus:ring-destructive/20 transition-all duration-300 bg-card text-foreground',
   },
 
-  // التنبيهات
+  // التنبيهات - مع دعم الوضع الداكن
   alert: {
-    success: 'bg-green-50 border-2 border-green-200 rounded-lg p-4 text-green-800',
-    danger: 'bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-800',
-    warning: 'bg-orange-50 border-2 border-orange-200 rounded-lg p-4 text-orange-800',
-    info: 'bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-blue-800',
+    success: 'bg-green-50 dark:bg-green-950/30 border-2 border-green-200 dark:border-green-800 rounded-lg p-4 text-green-800 dark:text-green-200',
+    danger: 'bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800 rounded-lg p-4 text-red-800 dark:text-red-200',
+    warning: 'bg-orange-50 dark:bg-orange-950/30 border-2 border-orange-200 dark:border-orange-800 rounded-lg p-4 text-orange-800 dark:text-orange-200',
+    info: 'bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 text-blue-800 dark:text-blue-200',
   },
 
-  // الشارات
+  // الشارات - مع دعم الوضع الداكن
   badge: {
-    primary: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800',
-    success: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800',
-    danger: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800',
-    warning: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800',
-    neutral: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800',
+    primary: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
+    success: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200',
+    danger: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200',
+    warning: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200',
+    neutral: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200',
   },
 
   // الجداول - محسّنة للوضع الداكن
   table: {
-    header: 'bg-gradient-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200 transition-colors duration-300',
-    row: 'border-b border-border hover:bg-accent/50 transition-colors duration-200',
+    wrapper: 'bg-card rounded-lg border border-border overflow-hidden',
+    header: 'bg-muted/50 dark:bg-muted/30 border-b border-border',
+    headerCell: 'px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide',
+    row: 'border-b border-border hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors duration-200',
     cell: 'px-6 py-4 text-sm text-foreground',
   },
 }

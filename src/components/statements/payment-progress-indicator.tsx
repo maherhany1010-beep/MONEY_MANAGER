@@ -106,17 +106,17 @@ export function PaymentProgressIndicator({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium dark:text-gray-200">نسبة السداد</span>
+          <span className="font-medium text-foreground">نسبة السداد</span>
           <span className={`font-bold ${config.color}`}>
             {formatPercentage(paymentPercentage)}
           </span>
         </div>
-        <Progress 
-          value={paymentPercentage} 
+        <Progress
+          value={paymentPercentage}
           className="h-2"
           indicatorClassName={config.progressColor}
         />
-        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>مدفوع: {formatCurrency(paidAmount)}</span>
           <span>متبقي: {formatCurrency(remainingAmount)}</span>
         </div>
@@ -131,15 +131,15 @@ export function PaymentProgressIndicator({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <StatusIcon className={`h-5 w-5 ${config.color}`} />
-            <CardTitle className="text-lg dark:text-gray-100">مؤشر السداد</CardTitle>
+            <CardTitle className="text-lg text-foreground">مؤشر السداد</CardTitle>
           </div>
           <Badge variant={config.badgeVariant} className={config.color}>
             {config.label}
           </Badge>
         </div>
         {daysRemaining !== null && (
-          <CardDescription className="dark:text-gray-400">
-            {daysRemaining > 0 
+          <CardDescription className="text-muted-foreground">
+            {daysRemaining > 0
               ? `متبقي ${daysRemaining} يوم على تاريخ الاستحقاق`
               : daysRemaining === 0
               ? 'تاريخ الاستحقاق اليوم'
@@ -152,7 +152,7 @@ export function PaymentProgressIndicator({
         {/* نسبة السداد */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium dark:text-gray-200">نسبة السداد</span>
+            <span className="text-sm font-medium text-foreground">نسبة السداد</span>
             <span className={`text-2xl font-bold ${config.color}`}>
               {formatPercentage(paymentPercentage)}
             </span>
@@ -180,7 +180,7 @@ export function PaymentProgressIndicator({
           
           {/* مؤشر الحد الأدنى */}
           {minimumPayment && (
-            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>الحد الأدنى: {formatCurrency(minimumPayment)}</span>
               <span>({formatPercentage(minimumPercentage)})</span>
             </div>
@@ -189,16 +189,16 @@ export function PaymentProgressIndicator({
 
         {/* التفاصيل */}
         {showDetails && (
-          <div className="space-y-3 pt-3 border-t dark:border-gray-700">
+          <div className="space-y-3 pt-3 border-t border-border">
             {/* إجمالي الكشف */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">إجمالي الكشف:</span>
-              <span className="font-semibold dark:text-gray-100">{formatCurrency(statementAmount)}</span>
+              <span className="text-sm text-muted-foreground">إجمالي الكشف:</span>
+              <span className="font-semibold text-foreground">{formatCurrency(statementAmount)}</span>
             </div>
 
             {/* المبلغ المدفوع */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">المبلغ المدفوع:</span>
+              <span className="text-sm text-muted-foreground">المبلغ المدفوع:</span>
               <span className="font-semibold text-green-600 dark:text-green-400">
                 {formatCurrency(paidAmount)}
               </span>
@@ -206,7 +206,7 @@ export function PaymentProgressIndicator({
 
             {/* المبلغ المتبقي */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">المبلغ المتبقي:</span>
+              <span className="text-sm text-muted-foreground">المبلغ المتبقي:</span>
               <span className={`font-semibold ${remainingAmount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                 {formatCurrency(remainingAmount)}
               </span>
@@ -214,9 +214,9 @@ export function PaymentProgressIndicator({
 
             {/* الحد الأدنى للسداد */}
             {minimumPayment && (
-              <div className="flex items-center justify-between pt-2 border-t dark:border-gray-700">
-                <span className="text-sm font-medium dark:text-gray-300">الحد الأدنى للسداد:</span>
-                <span className="font-semibold dark:text-gray-100">{formatCurrency(minimumPayment)}</span>
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="text-sm font-medium text-foreground">الحد الأدنى للسداد:</span>
+                <span className="font-semibold text-foreground">{formatCurrency(minimumPayment)}</span>
               </div>
             )}
           </div>

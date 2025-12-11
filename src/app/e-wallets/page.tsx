@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { EWalletCard } from '@/components/e-wallets/e-wallet-card'
 import { AddEWalletDialog } from '@/components/e-wallets/add-e-wallet-dialog'
@@ -21,7 +20,7 @@ import { Wallet, Plus, LayoutDashboard, Grid3x3, FileText } from 'lucide-react'
 
 export default function EWalletsPage() {
   const router = useRouter()
-  const { wallets, updateWallets } = useEWallets()
+  const { wallets, updateWallets, addWallet } = useEWallets()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isReconciliationDialogOpen, setIsReconciliationDialogOpen] = useState(false)
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false)
@@ -36,22 +35,19 @@ export default function EWalletsPage() {
     sortBy: 'name-asc',
   })
 
-  const handleAddWallet = (newWallet: any) => {
-    const wallet = {
-      ...newWallet,
-      id: Date.now().toString(),
-      isDefault: wallets.length === 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      dailyUsed: 0,
-      monthlyUsed: 0,
-      totalDeposits: 0,
-      totalWithdrawals: 0,
-      totalTransfers: 0,
-      monthlyDeposits: 0,
-      monthlyWithdrawals: 0,
-      transactionCount: 0,
+  // معالج إضافة محفظة جديدة - يحفظ في قاعدة البيانات
+  const handleAddWallet = async (newWallet: any) => {
+    // تحويل أسماء الحقول من camelCase إلى snake_case للتوافق مع قاعدة البيانات
+    const walletData = {
+      wallet_name: newWallet.walletName || newWallet.provider,
+      wallet_type: newWallet.provider?.toLowerCase().replace(/ /g, '_') || 'other',
+      phone_number: newWallet.phoneNumber || null,
+      balance: parseFloat(newWallet.balance) || 0,
+      currency: 'EGP',
+      status: 'active',
     }
-    updateWallets([...wallets, wallet])
+
+    await addWallet(walletData)
   }
 
   const handleToggleActive = (id: string) => {
@@ -150,7 +146,7 @@ export default function EWalletsPage() {
   }, [wallets, filters])
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="المحافظ الإلكترونية"
         description="إدارة المحافظ الإلكترونية ومتابعة الحدود والمعاملات"
@@ -172,41 +168,42 @@ export default function EWalletsPage() {
           }}
         />
       ) : (
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="dashboard" className="gap-2">
+            <TabsTrigger value="dashboard" className="gap-2 text-xs sm:text-sm">
               <LayoutDashboard className="h-4 w-4" />
-              لوحة المعلومات
+              <span className="hidden sm:inline">لوحة المعلومات</span>
+              <span className="sm:hidden">لوحة</span>
             </TabsTrigger>
-            <TabsTrigger value="wallets" className="gap-2">
+            <TabsTrigger value="wallets" className="gap-2 text-xs sm:text-sm">
               <Grid3x3 className="h-4 w-4" />
               المحافظ
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2">
+            <TabsTrigger value="reports" className="gap-2 text-xs sm:text-sm">
               <FileText className="h-4 w-4" />
               التقارير
             </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6 mt-0">
             <DashboardStats wallets={wallets} />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <TopTransactions wallets={wallets} />
               <BalanceForecast wallets={wallets} />
             </div>
           </TabsContent>
 
           {/* Wallets Tab */}
-          <TabsContent value="wallets" className="space-y-6">
+          <TabsContent value="wallets" className="space-y-4 sm:space-y-6 mt-0">
             <SearchFilter
               filters={filters}
               onFiltersChange={setFilters}
               providers={providers}
             />
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAndSortedWallets.map((wallet) => (
                 <EWalletCard
                   key={wallet.id}
@@ -221,15 +218,15 @@ export default function EWalletsPage() {
             </div>
 
             {filteredAndSortedWallets.length === 0 && (
-              <div className="text-center py-12">
-                <Wallet className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600 opacity-50" />
-                <p className="text-gray-600 dark:text-gray-400">لا توجد محافظ تطابق معايير البحث</p>
+              <div className="text-center py-8 sm:py-12">
+                <Wallet className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground opacity-50" />
+                <p className="text-sm sm:text-base text-muted-foreground">لا توجد محافظ تطابق معايير البحث</p>
               </div>
             )}
           </TabsContent>
 
           {/* Reports Tab */}
-          <TabsContent value="reports">
+          <TabsContent value="reports" className="mt-0">
             <ReportsTab wallets={wallets} />
           </TabsContent>
         </Tabs>
@@ -266,7 +263,7 @@ export default function EWalletsPage() {
           />
         </>
       )}
-    </AppLayout>
+    </>
   )
 }
 

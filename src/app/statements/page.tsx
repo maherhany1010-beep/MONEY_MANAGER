@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,68 +17,9 @@ import {
 import { FileText, Download, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 
 // Mock data - will be replaced with real data from Supabase
-const mockStatements = [
-  {
-    id: '1',
-    cardId: '1',
-    cardName: 'بطاقة الراجحي الذهبية',
-    month: 1,
-    year: 2024,
-    statementDate: '2024-01-31',
-    dueDate: '2024-02-15',
-    previousBalance: 8750.00,
-    currentBalance: 12500.00,
-    minimumPayment: 625.00,
-    totalSpent: 4250.00,
-    totalPayments: 500.00,
-    cashbackEarned: 85.50,
-    interestCharges: 0.00,
-    fees: 0.00,
-    status: 'current',
-  },
-  {
-    id: '2',
-    cardId: '1',
-    cardName: 'بطاقة الراجحي الذهبية',
-    month: 12,
-    year: 2023,
-    statementDate: '2023-12-31',
-    dueDate: '2024-01-15',
-    previousBalance: 5200.00,
-    currentBalance: 8750.00,
-    minimumPayment: 437.50,
-    totalSpent: 3850.00,
-    totalPayments: 300.00,
-    cashbackEarned: 77.00,
-    interestCharges: 0.00,
-    fees: 0.00,
-    status: 'paid',
-  },
-  {
-    id: '3',
-    cardId: '2',
-    cardName: 'بطاقة الأهلي البلاتينية',
-    month: 1,
-    year: 2024,
-    statementDate: '2024-01-25',
-    dueDate: '2024-02-25',
-    previousBalance: 6500.00,
-    currentBalance: 8750.00,
-    minimumPayment: 437.50,
-    totalSpent: 2750.00,
-    totalPayments: 500.00,
-    cashbackEarned: 82.50,
-    interestCharges: 0.00,
-    fees: 0.00,
-    status: 'current',
-  },
-]
+const mockStatements: any[] = []
 
-const mockCards = [
-  { id: '1', name: 'بطاقة الراجحي الذهبية' },
-  { id: '2', name: 'بطاقة الأهلي البلاتينية' },
-  { id: '3', name: 'بطاقة سامبا الكلاسيكية' },
-]
+const mockCards: any[] = []
 
 export default function StatementsPage() {
   const [statements] = useState(mockStatements)
@@ -100,13 +40,13 @@ export default function StatementsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'current':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
       case 'paid':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
       case 'overdue':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground'
     }
   }
 
@@ -124,7 +64,7 @@ export default function StatementsPage() {
   }
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="كشوفات الحساب"
         description="عرض وإدارة كشوفات حساب البطاقات الائتمانية"
@@ -249,6 +189,6 @@ export default function StatementsPage() {
           </Tabs>
         </div>
       </div>
-    </AppLayout>
+    </>
   )
 }

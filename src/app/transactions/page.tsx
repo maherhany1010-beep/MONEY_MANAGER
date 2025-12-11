@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -130,7 +129,7 @@ export default function TransactionsPage() {
     .reduce((sum, t) => sum + t.amount, 0)
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="العمليات المالية"
         description="تتبع جميع معاملاتك المالية على البطاقات الائتمانية"
@@ -292,6 +291,6 @@ export default function TransactionsPage() {
           setIsAddDialogOpen(false)
         }}
       />
-    </AppLayout>
+    </>
   )
 }

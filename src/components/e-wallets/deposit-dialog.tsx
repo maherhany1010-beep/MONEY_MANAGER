@@ -204,7 +204,7 @@ export function DepositDialog({ open, onOpenChange, wallet }: DepositDialogProps
               value={formData.commission}
               onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
             />
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               العمولة هي مبلغ إضافي يُضاف إلى المحفظة كربح (لا تُخصم من المصدر)
             </p>
           </div>

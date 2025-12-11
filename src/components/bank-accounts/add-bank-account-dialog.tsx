@@ -99,27 +99,34 @@ export function AddBankAccountDialog({ open, onOpenChange, onAdd }: AddBankAccou
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-4xl max-h-[85vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 border-cyan-100 dark:border-cyan-900/30"
+        className="max-w-4xl max-h-[85vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="border-b pb-4 border-cyan-100 dark:border-cyan-900/30">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-            <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-              <Landmark className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
+        <DialogHeader className="border-b pb-5">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="p-2.5 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/30">
+              <Landmark className="h-6 w-6 text-white" />
             </div>
-            إضافة حساب بنكي جديد
+            <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              إضافة حساب بنكي جديد
+            </span>
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 mt-2 mr-12">
             أدخل معلومات الحساب البنكي الجديد
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-2">
             {/* المعلومات الأساسية */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-sm">المعلومات الأساسية</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-1 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full" />
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                  المعلومات الأساسية
+                </h3>
+              </div>
               
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">

@@ -32,7 +32,7 @@ export function AddTransferDialog({ open, onOpenChange, card }: AddTransferDialo
     c => c.id !== card.id && c.status === 'active'
   )
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const amount = parseFloat(formData.amount)
@@ -82,8 +82,8 @@ export function AddTransferDialog({ open, onOpenChange, card }: AddTransferDialo
       return
     }
 
-    // Add transfer
-    addTransfer(card.id, amount, formData.targetCardId)
+    // Add transfer - await the async function
+    await addTransfer(card.id, totalAmount, formData.targetCardId)
 
     toast.success(
       `تم التحويل بنجاح`,
@@ -107,7 +107,7 @@ export function AddTransferDialog({ open, onOpenChange, card }: AddTransferDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5 text-purple-600" />

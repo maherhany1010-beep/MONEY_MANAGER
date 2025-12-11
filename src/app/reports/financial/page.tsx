@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -148,8 +147,7 @@ export default function FinancialReportsPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+          <div className="space-y-6">
         {/* زر العودة */}
         <div className="mb-4">
           <Button
@@ -291,7 +289,6 @@ export default function FinancialReportsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
-  )
+      )
 }
 

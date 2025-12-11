@@ -97,13 +97,13 @@ export function PaymentsList({ payments, onPaymentUpdate }: PaymentsListProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
       case 'pending':
-        return <Clock className="h-4 w-4 text-orange-600" />
+        return <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
       case 'overdue':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />
+        return <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />
+        return <Clock className="h-4 w-4 text-muted-foreground" />
     }
   }
 
@@ -123,13 +123,13 @@ export function PaymentsList({ payments, onPaymentUpdate }: PaymentsListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
       case 'pending':
-        return 'bg-orange-100 text-orange-800'
+        return 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
       case 'overdue':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground'
     }
   }
 

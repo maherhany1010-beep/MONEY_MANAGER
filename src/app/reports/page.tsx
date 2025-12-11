@@ -1,6 +1,5 @@
 'use client'
 
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,17 +64,16 @@ export default function ReportsPage() {
   ]
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir="rtl">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">التقارير التفصيلية</h1>
-            <p className="text-muted-foreground">
-              تقارير شاملة ومفصلة لجميع حساباتك المالية
-            </p>
-          </div>
-          <div className="flex gap-2">
+    <div className="space-y-4 sm:space-y-6" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">التقارير التفصيلية</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            تقارير شاملة ومفصلة لجميع حساباتك المالية
+          </p>
+        </div>
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="h-4 w-4 ml-2" />
               تصدير PDF
@@ -129,7 +127,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">إجمالي الأرصدة</CardTitle>
@@ -327,7 +325,6 @@ export default function ReportsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
-  )
+      )
 }
 

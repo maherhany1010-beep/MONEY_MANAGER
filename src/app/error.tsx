@@ -35,10 +35,10 @@ export default function Error({ error, reset }: ErrorProps) {
 
         {/* Error Content */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             حدث خطأ ما
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             عذراً، حدث خطأ غير متوقع. يرجى محاولة مرة أخرى.
           </p>
 
@@ -77,7 +77,7 @@ export default function Error({ error, reset }: ErrorProps) {
         </div>
 
         {/* Help Text */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           إذا استمرت المشكلة، يرجى التواصل مع الدعم الفني
         </p>
       </div>

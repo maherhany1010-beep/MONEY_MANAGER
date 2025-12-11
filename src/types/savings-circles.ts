@@ -98,47 +98,65 @@ export interface SavingsCircle {
   description?: string // وصف الجمعية
   type: CircleType // نوع الجمعية
   role: CircleRole // دورك في الجمعية
-  
+
   // تفاصيل الجمعية
   monthlyAmount: number // المبلغ الشهري لكل عضو
   totalMembers: number // عدد الأعضاء الكلي
   duration: number // المدة بالأشهر (= عدد الأعضاء عادةً)
   startDate: string // تاريخ البداية
   endDate: string // تاريخ النهاية المتوقعة
-  
+
   // الرسوم
   hasFees: boolean // هل توجد رسوم؟
   managementFee?: number // رسوم إدارية
   feeType?: FeeType // نوع الرسوم
   lateFee?: number // رسوم التأخير
   earlyWithdrawalFee?: number // رسوم الانسحاب المبكر
-  
+
   // الحالة
   status: CircleStatus // حالة الجمعية
   currentRound: number // الدورة الحالية (الشهر الحالي)
-  
+
   // الأعضاء (إذا كنت المدير)
   members: CircleMember[]
-  
+
   // معلومات الدفع
   paymentMethod: PaymentMethod // طريقة الدفع
   linkedAccountId?: string // الحساب المرتبط (بنك/محفظة/نقدية)
   linkedAccountType?: 'bank' | 'cash' | 'ewallet' | 'prepaid' // نوع الحساب المرتبط
-  
+
   // معلومات إضافية (إذا كنت عضو)
   myTurnNumber?: number // رقم دورك إذا كنت عضو
   myMemberId?: string // معرف عضويتك إذا كنت عضو
-  
+
   // معلومات التطبيق (إذا كانت app-based)
   appName?: string // اسم التطبيق (MoneyFellows, Gam3eety, etc.)
   appAccountId?: string // معرف الحساب في التطبيق
-  
+
   // الإحصائيات
   totalCollected: number // إجمالي المبالغ المحصلة
   totalDistributed: number // إجمالي المبالغ الموزعة
   totalFees: number // إجمالي الرسوم المحصلة
   currentBalance: number // الرصيد الحالي
-  
+
+  // Database fields (snake_case) for compatibility
+  circle_name?: string
+  monthly_payment?: number
+  total_amount?: number
+  start_date?: string
+  end_date?: string | null
+  current_round?: number
+  my_turn_number?: number
+  user_id?: string
+  created_at?: string
+  updated_at?: string
+
+  // Additional tracking fields
+  totalPaid?: number // إجمالي ما تم دفعه
+  hasWithdrawn?: boolean // هل تم السحب؟
+  withdrawnAmount?: number // المبلغ المسحوب
+  totalWithdrawn?: number // إجمالي المسحوبات
+
   // التواريخ
   createdAt: string
   updatedAt: string
@@ -158,6 +176,11 @@ export interface CircleStats {
   averageMonthlyAmount: number
   upcomingPayouts: CirclePayout[] // الاستلامات القادمة
   overduePayments: CirclePayment[] // الدفعات المتأخرة
+  totalPayments?: number // إجمالي الدفعات
+  totalWithdrawals?: number // إجمالي السحوبات
+  balance?: number // الرصيد الحالي
+  totalSavings?: number // إجمالي المدخرات
+  monthlyContribution?: number // المساهمة الشهرية
 }
 
 /**

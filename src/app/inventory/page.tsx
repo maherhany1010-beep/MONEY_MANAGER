@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +13,6 @@ import {
   Plus,
   Search,
   AlertTriangle,
-  TrendingUp,
   DollarSign,
   Archive,
   Edit,
@@ -51,24 +49,23 @@ export default function InventoryPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir="rtl">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">إدارة المخازن والمنتجات</h1>
-            <p className="text-muted-foreground">
-              إدارة شاملة للمخزون والمنتجات
-            </p>
-          </div>
-          <Button onClick={() => setShowAddDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 ml-2" />
-            إضافة منتج جديد
-          </Button>
+    <div className="space-y-4 sm:space-y-6" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">إدارة المخازن والمنتجات</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            إدارة شاملة للمخزون والمنتجات
+          </p>
         </div>
+        <Button onClick={() => setShowAddDialog(true)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+          <Plus className="h-4 w-4 ml-2" />
+          إضافة منتج جديد
+        </Button>
+      </div>
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+      {/* Statistics Cards */}
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">إجمالي المنتجات</CardTitle>
@@ -240,7 +237,6 @@ export default function InventoryPage() {
         {/* Add Product Dialog */}
         <AddProductDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
       </div>
-    </AppLayout>
-  )
+      )
 }
 

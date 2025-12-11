@@ -26,12 +26,12 @@ export function CardSettingsDialog({ open, onOpenChange, card }: CardSettingsDia
 
   // Card basic info
   const [cardInfo, setCardInfo] = useState({
-    name: card.name,
-    bankName: card.bankName,
-    creditLimit: card.creditLimit,
-    cashbackRate: card.cashbackRate,
-    dueDate: card.dueDate,
-    isActive: card.isActive,
+    name: card.card_name || card.name,
+    bankName: card.bank_name || card.bankName,
+    creditLimit: card.credit_limit || card.creditLimit,
+    cashbackRate: 0,
+    dueDate: card.due_date || card.dueDate,
+    status: card.status || 'active',
   })
 
   // Notifications settings
@@ -67,32 +67,12 @@ export function CardSettingsDialog({ open, onOpenChange, card }: CardSettingsDia
   const handleSave = async () => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      updateCard(card.id, {
-        name: cardInfo.name,
-        bankName: cardInfo.bankName,
-        creditLimit: cardInfo.creditLimit,
-        cashbackRate: cardInfo.cashbackRate,
-        dueDate: cardInfo.dueDate,
-        isActive: cardInfo.isActive,
-        // Fees & Charges
-        annualFee: feesCharges.annualFee,
-        cashWithdrawalFee: feesCharges.cashWithdrawalFee,
-        latePaymentFee: feesCharges.latePaymentFee,
-        overLimitFee: feesCharges.overLimitFee,
-        annualInterestRate: feesCharges.annualInterestRate,
-        foreignTransactionFee: feesCharges.foreignTransactionFee,
-        cardReplacementFee: feesCharges.cardReplacementFee,
-        // Card Holder Info
-        holderInfo: {
-          fullName: holderInfo.fullName,
-          phoneNumber: holderInfo.phoneNumber,
-          email: holderInfo.email,
-          nationalId: holderInfo.nationalId,
-          address: holderInfo.address,
-        },
+      await updateCard(card.id, {
+        card_name: cardInfo.name,
+        bank_name: cardInfo.bankName,
+        credit_limit: cardInfo.creditLimit,
+        due_date: cardInfo.dueDate,
+        status: cardInfo.status,
       })
 
       toast.success('تم حفظ الإعدادات بنجاح')
@@ -212,12 +192,12 @@ export function CardSettingsDialog({ open, onOpenChange, card }: CardSettingsDia
                   <div className="space-y-0.5">
                     <Label>حالة البطاقة</Label>
                     <p className="text-sm text-muted-foreground">
-                      {cardInfo.isActive ? 'البطاقة نشطة' : 'البطاقة معطلة'}
+                      {cardInfo.status === 'active' ? 'البطاقة نشطة' : 'البطاقة معطلة'}
                     </p>
                   </div>
                   <Switch
-                    checked={cardInfo.isActive}
-                    onCheckedChange={(checked) => setCardInfo({ ...cardInfo, isActive: checked })}
+                    checked={cardInfo.status === 'active'}
+                    onCheckedChange={(checked) => setCardInfo({ ...cardInfo, status: checked ? 'active' : 'blocked' })}
                   />
                 </div>
 

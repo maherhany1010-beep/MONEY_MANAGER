@@ -28,11 +28,11 @@ export function DashboardStats({ cards }: DashboardStatsProps) {
     const currentYear = now.getFullYear()
 
     return {
-      totalCreditLimit: cards.reduce((sum, card) => sum + (card.creditLimit ?? 0), 0),
-      totalCurrentBalance: cards.reduce((sum, card) => sum + (card.currentBalance ?? 0), 0),
-      totalAvailableBalance: cards.reduce((sum, card) => sum + ((card.creditLimit ?? 0) - (card.currentBalance ?? 0)), 0),
-      totalMinPayment: cards.reduce((sum, card) => sum + ((card as any).minimumPayment || 0), 0),
-      activeCards: cards.filter(card => card.isActive).length,
+      totalCreditLimit: cards.reduce((sum, card) => sum + (card.credit_limit ?? card.creditLimit ?? 0), 0),
+      totalCurrentBalance: cards.reduce((sum, card) => sum + (card.current_balance ?? card.currentBalance ?? 0), 0),
+      totalAvailableBalance: cards.reduce((sum, card) => sum + ((card.credit_limit ?? card.creditLimit ?? 0) - (card.current_balance ?? card.currentBalance ?? 0)), 0),
+      totalMinPayment: cards.reduce((sum, card) => sum + (card.minimum_payment ?? (card as any).minimumPayment ?? 0), 0),
+      activeCards: cards.filter(card => card.isActive || card.status === 'active').length,
       utilizationRate: 0,
     }
   }, [cards])

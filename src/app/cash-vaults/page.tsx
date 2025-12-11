@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { CashVaultCard } from '@/components/cash-vaults/cash-vault-card'
 import { AddCashVaultDialog } from '@/components/cash-vaults/add-cash-vault-dialog'
@@ -21,7 +20,7 @@ import { Vault, Plus, LayoutDashboard, Grid3x3, FileText } from 'lucide-react'
 
 export default function CashVaultsPage() {
   const router = useRouter()
-  const { vaults, updateVaults } = useCashVaults()
+  const { vaults, updateVaults, addVault } = useCashVaults()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isReconciliationDialogOpen, setIsReconciliationDialogOpen] = useState(false)
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false)
@@ -37,19 +36,19 @@ export default function CashVaultsPage() {
     sortBy: 'name-asc',
   })
 
-  const handleAddVault = (newVault: any) => {
-    const vault = {
-      ...newVault,
-      id: Date.now().toString(),
-      isDefault: vaults.length === 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      totalDeposits: 0,
-      totalWithdrawals: 0,
-      monthlyDeposits: 0,
-      monthlyWithdrawals: 0,
-      transactionCount: 0,
+  // معالج إضافة خزينة جديدة - يحفظ في قاعدة البيانات
+  const handleAddVault = async (newVault: any) => {
+    // تحويل أسماء الحقول من camelCase إلى snake_case للتوافق مع قاعدة البيانات
+    const vaultData = {
+      vault_name: newVault.vaultName,
+      vault_type: newVault.vaultType || 'main',
+      location: newVault.location || null,
+      balance: parseFloat(newVault.balance) || 0,
+      currency: 'EGP',
+      status: 'active',
     }
-    updateVaults([...vaults, vault])
+
+    await addVault(vaultData)
   }
 
   const handleToggleActive = (id: string) => {
@@ -147,7 +146,7 @@ export default function CashVaultsPage() {
   }, [vaults, filters])
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="الخزائن النقدية"
         description="إدارة الخزائن النقدية ومتابعة السيولة والمعاملات"
@@ -169,34 +168,35 @@ export default function CashVaultsPage() {
           }}
         />
       ) : (
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="dashboard" className="gap-2">
+            <TabsTrigger value="dashboard" className="gap-2 text-xs sm:text-sm">
               <LayoutDashboard className="h-4 w-4" />
-              لوحة المعلومات
+              <span className="hidden sm:inline">لوحة المعلومات</span>
+              <span className="sm:hidden">لوحة</span>
             </TabsTrigger>
-            <TabsTrigger value="vaults" className="gap-2">
+            <TabsTrigger value="vaults" className="gap-2 text-xs sm:text-sm">
               <Grid3x3 className="h-4 w-4" />
               الخزائن
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2">
+            <TabsTrigger value="reports" className="gap-2 text-xs sm:text-sm">
               <FileText className="h-4 w-4" />
               التقارير
             </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6 mt-0">
             <DashboardStats vaults={vaults} />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <TopTransactions vaults={vaults} />
               <BalanceForecast vaults={vaults} />
             </div>
           </TabsContent>
 
           {/* Vaults Tab */}
-          <TabsContent value="vaults" className="space-y-6">
+          <TabsContent value="vaults" className="space-y-4 sm:space-y-6 mt-0">
             <SearchFilter
               filters={filters}
               onFiltersChange={setFilters}
@@ -204,7 +204,7 @@ export default function CashVaultsPage() {
               locations={locations}
             />
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAndSortedVaults.map((vault) => (
                 <CashVaultCard
                   key={vault.id}
@@ -270,7 +270,7 @@ export default function CashVaultsPage() {
           />
         </>
       )}
-    </AppLayout>
+    </>
   )
 }
 

@@ -63,11 +63,11 @@ export function DashboardOverview({ recentActivity, cards, stats }: DashboardOve
       case 'transaction':
         return <Minus className="h-4 w-4 text-red-600" />
       case 'payment':
-        return <Plus className="h-4 w-4 text-green-600" />
+        return <Plus className="h-4 w-4 text-green-600 dark:text-green-400" />
       case 'cashback':
-        return <Gift className="h-4 w-4 text-purple-600" />
+        return <Gift className="h-4 w-4 text-purple-600 dark:text-purple-400" />
       default:
-        return <ArrowUpDown className="h-4 w-4 text-gray-600" />
+        return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
     }
   }
 

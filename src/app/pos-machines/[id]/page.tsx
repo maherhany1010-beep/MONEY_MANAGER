@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -211,11 +210,9 @@ export default function POSMachineDetailsPage() {
 
   if (!machine) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center min-h-[400px] container mx-auto p-6">
+        <p className="text-muted-foreground">جاري التحميل...</p>
+      </div>
     )
   }
 
@@ -249,8 +246,7 @@ export default function POSMachineDetailsPage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 container mx-auto p-6">
         {/* زر العودة */}
         <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 ml-2" />
@@ -596,7 +592,6 @@ export default function POSMachineDetailsPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
 
       {/* Dialogs */}
       <AddAccountDialog
@@ -641,6 +636,6 @@ export default function POSMachineDetailsPage() {
         machine={machine}
         onWithdrawal={handleWithdrawal}
       />
-    </AppLayout>
+    </div>
   )
 }

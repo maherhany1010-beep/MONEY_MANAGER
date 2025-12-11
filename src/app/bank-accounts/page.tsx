@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { BankAccountCard } from '@/components/bank-accounts/bank-account-card'
 import { AddBankAccountDialog } from '@/components/bank-accounts/add-bank-account-dialog'
@@ -19,7 +18,7 @@ import { Landmark, Plus, LayoutDashboard, Grid3x3, FileText } from 'lucide-react
 
 export default function BankAccountsPage() {
   const router = useRouter()
-  const { accounts, updateAccounts, updateAccountBalance } = useBankAccounts()
+  const { accounts, updateAccounts, updateAccountBalance, addAccount } = useBankAccounts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isReconciliationDialogOpen, setIsReconciliationDialogOpen] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null)
@@ -33,13 +32,20 @@ export default function BankAccountsPage() {
     sortBy: 'name-asc',
   })
 
-  const handleAddAccount = (newAccount: BankAccount) => {
-    const account = {
-      ...newAccount,
-      id: Date.now().toString(),
-      isDefault: accounts.length === 0,
+  // معالج إضافة حساب جديد - يحفظ في قاعدة البيانات
+  const handleAddAccount = async (newAccount: any) => {
+    // تحويل أسماء الحقول من camelCase إلى snake_case للتوافق مع قاعدة البيانات
+    const accountData = {
+      account_name: newAccount.accountName,
+      bank_name: newAccount.bankName,
+      account_number: newAccount.accountNumber,
+      account_type: newAccount.accountType || 'checking',
+      balance: parseFloat(newAccount.balance) || 0,
+      currency: 'EGP',
+      status: 'active',
     }
-    updateAccounts([...accounts, account])
+
+    await addAccount(accountData)
   }
 
   const handleToggleActive = (id: string) => {
@@ -129,7 +135,7 @@ export default function BankAccountsPage() {
   }, [accounts, filters])
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="الحسابات البنكية"
         description="إدارة حساباتك البنكية ومتابعة الأرصدة والمعاملات"
@@ -151,34 +157,35 @@ export default function BankAccountsPage() {
           }}
         />
       ) : (
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="dashboard" className="gap-2">
+            <TabsTrigger value="dashboard" className="gap-2 text-xs sm:text-sm">
               <LayoutDashboard className="h-4 w-4" />
-              لوحة المعلومات
+              <span className="hidden sm:inline">لوحة المعلومات</span>
+              <span className="sm:hidden">لوحة</span>
             </TabsTrigger>
-            <TabsTrigger value="accounts" className="gap-2">
+            <TabsTrigger value="accounts" className="gap-2 text-xs sm:text-sm">
               <Grid3x3 className="h-4 w-4" />
               الحسابات
             </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2">
+            <TabsTrigger value="reports" className="gap-2 text-xs sm:text-sm">
               <FileText className="h-4 w-4" />
               التقارير
             </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6 mt-0">
             <DashboardStats accounts={accounts} />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <TopTransactions accounts={accounts} />
               <BalanceForecast accounts={accounts} />
             </div>
           </TabsContent>
 
           {/* Accounts Tab */}
-          <TabsContent value="accounts" className="space-y-6">
+          <TabsContent value="accounts" className="space-y-4 sm:space-y-6 mt-0">
             <SearchFilter
               filters={filters}
               onFiltersChange={setFilters}
@@ -186,7 +193,7 @@ export default function BankAccountsPage() {
               accountTypes={accountTypes}
             />
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAndSortedAccounts.map((account) => (
                 <BankAccountCard
                   key={account.id}
@@ -199,15 +206,15 @@ export default function BankAccountsPage() {
             </div>
 
             {filteredAndSortedAccounts.length === 0 && (
-              <div className="text-center py-12">
-                <Landmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">لا توجد حسابات تطابق معايير البحث</p>
+              <div className="text-center py-8 sm:py-12">
+                <Landmark className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground opacity-50" />
+                <p className="text-sm sm:text-base text-muted-foreground">لا توجد حسابات تطابق معايير البحث</p>
               </div>
             )}
           </TabsContent>
 
           {/* Reports Tab */}
-          <TabsContent value="reports">
+          <TabsContent value="reports" className="mt-0">
             <ReportsTab accounts={accounts} />
           </TabsContent>
         </Tabs>
@@ -230,7 +237,7 @@ export default function BankAccountsPage() {
           onReconcile={handleReconcileConfirm}
         />
       )}
-    </AppLayout>
+    </>
   )
 }
 

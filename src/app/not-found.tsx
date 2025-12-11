@@ -23,20 +23,20 @@ export default function NotFound() {
 
         {/* 404 Content */}
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-6xl font-bold text-foreground mb-2">
             404
           </h1>
-          <p className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <p className="text-2xl font-semibold text-foreground/80 mb-2">
             الصفحة غير موجودة
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground">
             عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
           </p>
         </div>
 
         {/* Suggestions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-8 border border-blue-200 dark:border-blue-800">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             الصفحات الشهيرة:
           </p>
           <ul className="space-y-2 text-sm">
@@ -73,7 +73,7 @@ export default function NotFound() {
         </Link>
 
         {/* Help Text */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           هل تحتاج إلى مساعدة؟{' '}
           <a href="mailto:support@example.com" className="text-blue-600 dark:text-blue-400 hover:underline">
             تواصل معنا

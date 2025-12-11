@@ -41,6 +41,16 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
     notes: '',
   })
 
+  // بيانات الفاتورة المحسّنة
+  const [invoiceData, setInvoiceData] = useState({
+    sourceAccountType: 'bank' as 'bank' | 'e-wallet' | 'pos' | 'cash-vault' | 'prepaid-card',
+    sourceAccountId: '',
+    actualPaidAmount: '', // المبلغ المدفوع فعلياً من الحساب المصدر
+    chargedAmount: '', // المبلغ المسجل على العميل
+    feesType: 'fixed' as 'fixed' | 'percentage',
+    feesValue: '',
+  })
+
   // بيانات التحويل
   const [transferData, setTransferData] = useState({
     debitAccountType: 'customer' as 'bank' | 'e-wallet' | 'pos' | 'cash-vault' | 'prepaid-card' | 'customer',
@@ -81,7 +91,19 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
   const debitAccounts = useMemo(() => getAccountsByType(transferData.debitAccountType), [transferData.debitAccountType, bankAccounts, eWallets, posMachines, cashVaults, prepaidCards])
   const creditAccounts = useMemo(() => getAccountsByType(transferData.creditAccountType), [transferData.creditAccountType, bankAccounts, eWallets, posMachines, cashVaults, prepaidCards])
 
-  // حساب المبالغ
+  // حساب المبالغ للفاتورة العادية
+  const actualPaid = parseFloat(invoiceData.actualPaidAmount) || 0
+  const chargedAmount = parseFloat(invoiceData.chargedAmount) || 0
+  const feesValue = parseFloat(invoiceData.feesValue) || 0
+
+  // حساب الرسوم/الأرباح تلقائياً
+  const calculatedFees = invoiceData.feesType === 'percentage'
+    ? (actualPaid * feesValue) / 100
+    : feesValue
+
+  const profit = chargedAmount - actualPaid
+
+  // حساب المبالغ للتحويل
   const amount = parseFloat(formData.amount) || 0
   const fees = parseFloat(transferData.fees) || 0
   const debitAmount = transferData.feesBearer === 'sender' ? amount + fees : amount
@@ -93,13 +115,23 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
     setLoading(true)
 
     try {
-      // التحقق من البيانات
+      // التحقق من البيانات الأساسية
       if (!formData.invoiceNumber || !formData.invoiceDate || !formData.amount) {
         throw new Error('يرجى ملء جميع الحقول المطلوبة')
       }
 
       if (amount <= 0) {
         throw new Error('المبلغ يجب أن يكون أكبر من صفر')
+      }
+
+      // التحقق من بيانات الفاتورة العادية
+      if (invoiceType === 'sale') {
+        if (!invoiceData.sourceAccountId || !invoiceData.actualPaidAmount || !invoiceData.chargedAmount) {
+          throw new Error('يرجى ملء جميع حقول الحساب والمبالغ')
+        }
+        if (actualPaid <= 0 || chargedAmount <= 0) {
+          throw new Error('المبالغ يجب أن تكون أكبر من صفر')
+        }
       }
 
       // التحقق من بيانات التحويل إذا كان النوع تحويل
@@ -113,7 +145,7 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
       }
 
       // إنشاء الفاتورة
-      const invoiceData: any = {
+      const invoicePayload: any = {
         customerId,
         invoiceNumber: formData.invoiceNumber,
         invoiceDate: formData.invoiceDate,
@@ -124,9 +156,23 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
         invoiceType,
       }
 
+      // إضافة بيانات الفاتورة العادية
+      if (invoiceType === 'sale') {
+        invoicePayload.saleDetails = {
+          sourceAccountType: invoiceData.sourceAccountType,
+          sourceAccountId: invoiceData.sourceAccountId,
+          actualPaidAmount: actualPaid,
+          chargedAmount: chargedAmount,
+          feesType: invoiceData.feesType,
+          feesValue: feesValue,
+          calculatedFees: calculatedFees,
+          profit: profit,
+        }
+      }
+
       // إضافة بيانات التحويل إذا كان النوع تحويل
       if (invoiceType === 'transfer') {
-        invoiceData.transferDetails = {
+        invoicePayload.transferDetails = {
           debitAccountType: transferData.debitAccountType,
           debitAccountId: transferData.debitAccountId,
           debitAmount,
@@ -139,7 +185,7 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
         }
       }
 
-      addInvoice(customerId, invoiceData)
+      addInvoice(customerId, invoicePayload)
 
       setSuccess(true)
       setTimeout(() => {
@@ -161,6 +207,14 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
       amount: '',
       description: '',
       notes: '',
+    })
+    setInvoiceData({
+      sourceAccountType: 'bank',
+      sourceAccountId: '',
+      actualPaidAmount: '',
+      chargedAmount: '',
+      feesType: 'fixed',
+      feesValue: '',
     })
     setTransferData({
       debitAccountType: 'customer',
@@ -198,15 +252,15 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
             </div>
             فاتورة جديدة - {customer.fullName}
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             إنشاء فاتورة جديدة للعميل
           </DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
-            <CheckCircle className="h-16 w-16 dark:text-green-400" style={{ color: '#16a34a' }} />
-            <p className="text-lg font-semibold dark:text-green-400" style={{ color: '#15803d' }}>تم إنشاء الفاتورة بنجاح!</p>
+            <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+            <p className="text-lg font-semibold text-green-700 dark:text-green-400">تم إنشاء الفاتورة بنجاح!</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -293,6 +347,143 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
                 />
               </div>
             </div>
+
+            {/* حقول الفاتورة المحسّنة (للفواتير العادية فقط) */}
+            {invoiceType === 'sale' && (
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                <h3 className="text-sm font-bold dark:text-indigo-100 mb-3" style={{ color: '#4f46e5' }}>
+                  تفاصيل الحساب والأرباح
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="sourceAccountType" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      نوع الحساب المصدر *
+                    </Label>
+                    <Select
+                      value={invoiceData.sourceAccountType}
+                      onValueChange={(value: any) => setInvoiceData({ ...invoiceData, sourceAccountType: value, sourceAccountId: '' })}
+                    >
+                      <SelectTrigger id="sourceAccountType">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bank">حساب بنكي</SelectItem>
+                        <SelectItem value="e-wallet">محفظة إلكترونية</SelectItem>
+                        <SelectItem value="pos">ماكينة POS</SelectItem>
+                        <SelectItem value="cash-vault">خزينة نقدية</SelectItem>
+                        <SelectItem value="prepaid-card">بطاقة مدفوعة مسبقاً</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="sourceAccountId" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      الحساب المصدر *
+                    </Label>
+                    <Select
+                      value={invoiceData.sourceAccountId}
+                      onValueChange={(value) => setInvoiceData({ ...invoiceData, sourceAccountId: value })}
+                    >
+                      <SelectTrigger id="sourceAccountId">
+                        <SelectValue placeholder="اختر الحساب" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAccountsByType(invoiceData.sourceAccountType).map(acc => (
+                          <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="actualPaidAmount" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      المبلغ المدفوع فعلياً (جنيه) *
+                    </Label>
+                    <Input
+                      id="actualPaidAmount"
+                      type="number"
+                      step="0.01"
+                      value={invoiceData.actualPaidAmount}
+                      onChange={(e) => setInvoiceData({ ...invoiceData, actualPaidAmount: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="chargedAmount" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      المبلغ المسجل على العميل (جنيه) *
+                    </Label>
+                    <Input
+                      id="chargedAmount"
+                      type="number"
+                      step="0.01"
+                      value={invoiceData.chargedAmount}
+                      onChange={(e) => setInvoiceData({ ...invoiceData, chargedAmount: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="feesType" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      نوع الرسوم/الأرباح
+                    </Label>
+                    <Select
+                      value={invoiceData.feesType}
+                      onValueChange={(value: any) => setInvoiceData({ ...invoiceData, feesType: value })}
+                    >
+                      <SelectTrigger id="feesType">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">رقم ثابت</SelectItem>
+                        <SelectItem value="percentage">نسبة مئوية</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="feesValue" className="dark:text-indigo-100 font-medium" style={{ color: '#4f46e5' }}>
+                      قيمة الرسوم/الأرباح {invoiceData.feesType === 'percentage' ? '(%)' : '(جنيه)'}
+                    </Label>
+                    <Input
+                      id="feesValue"
+                      type="number"
+                      step={invoiceData.feesType === 'percentage' ? '0.01' : '0.01'}
+                      value={invoiceData.feesValue}
+                      onChange={(e) => setInvoiceData({ ...invoiceData, feesValue: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* ملخص الحسابات */}
+                {(actualPaid > 0 || chargedAmount > 0) && (
+                  <div className="mt-4 p-3 bg-card rounded border">
+                    <div className="grid grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground mb-1">المدفوع فعلياً</p>
+                        <p className="font-bold text-indigo-600 dark:text-indigo-400">
+                          {formatCurrency(actualPaid)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">المسجل على العميل</p>
+                        <p className="font-bold text-blue-700 dark:text-blue-400">
+                          {formatCurrency(chargedAmount)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">الرسوم/الأرباح</p>
+                        <p className="font-bold text-green-600 dark:text-green-400">
+                          {formatCurrency(calculatedFees)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">الربح الفعلي</p>
+                        <p className={`font-bold ${profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {formatCurrency(profit)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* تفاصيل التحويل (إذا كان النوع تحويل) */}
             {invoiceType === 'transfer' && (
@@ -465,7 +656,7 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
                           />
                         </div>
                         <div className="col-span-2">
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">اختيارات سريعة:</p>
+                          <p className="text-xs text-muted-foreground mb-2">اختيارات سريعة:</p>
                           <div className="grid grid-cols-3 gap-2">
                             <Button
                               type="button"
@@ -553,23 +744,23 @@ export function InvoiceDialog({ open, onOpenChange, customerId }: InvoiceDialogP
 
                   {/* ملخص المبالغ */}
                   {amount > 0 && (
-                    <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded border">
+                    <div className="mt-4 p-3 bg-card rounded border">
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400 mb-1">المبلغ المخصوم</p>
-                          <p className="font-bold dark:text-rose-400" style={{ color: '#be123c' }}>
+                          <p className="text-muted-foreground mb-1">المبلغ المخصوم</p>
+                          <p className="font-bold text-rose-600 dark:text-rose-400">
                             {formatCurrency(debitAmount)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400 mb-1">الرسوم</p>
-                          <p className="font-bold dark:text-amber-400" style={{ color: '#d97706' }}>
+                          <p className="text-muted-foreground mb-1">الرسوم</p>
+                          <p className="font-bold text-amber-600 dark:text-amber-400">
                             {formatCurrency(fees)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-600 dark:text-gray-400 mb-1">المبلغ المحصل</p>
-                          <p className="font-bold dark:text-emerald-400" style={{ color: '#047857' }}>
+                          <p className="text-muted-foreground mb-1">المبلغ المحصل</p>
+                          <p className="font-bold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(collectionAmount)}
                           </p>
                         </div>

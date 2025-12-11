@@ -2,29 +2,18 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { AccountTypeCard } from '@/components/accounts-center/account-type-card'
-import { SummaryStats } from '@/components/accounts-center/summary-stats'
 import { ViewToggle } from '@/components/accounts-center/view-toggle'
 import { AdvancedFilter, FilterState } from '@/components/accounts-center/advanced-filter'
 import { ExportButton } from '@/components/accounts-center/export-button'
-import { QuickActions } from '@/components/accounts-center/quick-actions'
-import { ChartsDashboard } from '@/components/accounts-center/charts-dashboard'
-import { SmartAlerts } from '@/components/accounts-center/smart-alerts'
-import { CashFlowTab } from '@/components/accounts-center/cash-flow-tab'
-import { ReportsTab } from '@/components/accounts-center/reports-tab'
-import { ComparisonTool } from '@/components/accounts-center/comparison-tool'
-import { InsightsPanel } from '@/components/accounts-center/insights-panel'
-import { LiveNotifications } from '@/components/accounts-center/live-notifications'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useCards } from '@/contexts/cards-context'
 import { usePrepaidCards } from '@/contexts/prepaid-cards-context'
 import { useBankAccounts } from '@/contexts/bank-accounts-context'
 import { useCashVaults } from '@/contexts/cash-vaults-context'
 import { useEWallets } from '@/contexts/e-wallets-context'
 import { usePOSMachines } from '@/contexts/pos-machines-context'
-import { useSumByField } from '@/hooks/use-memoized-data'
 import {
   LayoutGrid,
   CreditCard,
@@ -33,59 +22,14 @@ import {
   Vault,
   Wallet,
   Smartphone,
-  BarChart3,
-  Activity,
-  FileText,
-  TrendingUp,
-  Lightbulb,
   ArrowRight,
 } from 'lucide-react'
-
-// Mock data للبطاقات الائتمانية - سيتم استبدالها بـ Context لاحقاً
-const mockCreditCards = [
-  {
-    id: '1',
-    name: 'بطاقة البنك الأهلي المصري الذهبية',
-    bankName: 'البنك الأهلي المصري',
-    cardNumberLastFour: '1234',
-    cardType: 'visa' as const,
-    creditLimit: 80000,
-    currentBalance: 18500,
-    cashbackRate: 2.5,
-    dueDate: 15,
-    isActive: true,
-  },
-  {
-    id: '2',
-    name: 'بطاقة بنك مصر البلاتينية',
-    bankName: 'بنك مصر',
-    cardNumberLastFour: '5678',
-    cardType: 'mastercard' as const,
-    creditLimit: 100000,
-    currentBalance: 15750,
-    cashbackRate: 3.0,
-    dueDate: 25,
-    isActive: true,
-  },
-  {
-    id: '3',
-    name: 'بطاقة البنك التجاري الدولي الكلاسيكية',
-    bankName: 'البنك التجاري الدولي',
-    cardNumberLastFour: '9012',
-    cardType: 'visa' as const,
-    creditLimit: 50000,
-    currentBalance: 12300,
-    cashbackRate: 1.5,
-    dueDate: 10,
-    isActive: true,
-  },
-]
 
 export default function AccountsCenterPage() {
   const router = useRouter()
 
   // جلب البيانات من الـ Contexts
-  const creditCards = mockCreditCards
+  const { cards: creditCards } = useCards()
   const { cards: prepaidCards } = usePrepaidCards()
   const { accounts: bankAccounts } = useBankAccounts()
   const { vaults: cashVaults } = useCashVaults()
@@ -124,17 +68,30 @@ export default function AccountsCenterPage() {
   }, [])
 
   // حساب الأرصدة الإجمالية لكل نوع مع Memoization
+  // البطاقات الائتمانية: نعرض إجمالي المديونية (current_balance)
   const creditCardsTotalBalance = useMemo(() => {
     return creditCards.reduce((sum, card) => {
-      const availableBalance = card.creditLimit - card.currentBalance
-      return sum + availableBalance
+      // current_balance = المديونية الحالية (المبلغ المستخدم من البطاقة)
+      const debt = card.current_balance || card.currentBalance || 0
+      return sum + debt
     }, 0)
   }, [creditCards])
 
-  const prepaidCardsTotalBalance = useSumByField(prepaidCards, card => card.balance)
-  const bankAccountsTotalBalance = useSumByField(bankAccounts, account => account.balance)
-  const cashVaultsTotalBalance = useSumByField(cashVaults, vault => vault.balance)
-  const eWalletsTotalBalance = useSumByField(eWallets, wallet => wallet.balance)
+  const prepaidCardsTotalBalance = useMemo(() => {
+    return prepaidCards.reduce((sum, card) => sum + (card.balance || 0), 0)
+  }, [prepaidCards])
+
+  const bankAccountsTotalBalance = useMemo(() => {
+    return bankAccounts.reduce((sum, account) => sum + (account.balance || 0), 0)
+  }, [bankAccounts])
+
+  const cashVaultsTotalBalance = useMemo(() => {
+    return cashVaults.reduce((sum, vault) => sum + (vault.balance || 0), 0)
+  }, [cashVaults])
+
+  const eWalletsTotalBalance = useMemo(() => {
+    return eWallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0)
+  }, [eWallets])
 
   // حساب الرصيد الإجمالي لماكينات الدفع مع Memoization
   const posMachinesTotalBalance = useMemo(() => {
@@ -342,7 +299,7 @@ export default function AccountsCenterPage() {
   }), [totalBalance, totalAccounts, accountTypes])
 
   return (
-    <AppLayout>
+    <div className="space-y-6 container mx-auto p-6">
       {/* زر العودة */}
       <div className="mb-4">
         <Button
@@ -362,65 +319,12 @@ export default function AccountsCenterPage() {
           description="عرض وإدارة جميع حساباتك المالية في مكان واحد"
         />
         <div className="flex gap-2">
-          <LiveNotifications />
           <ExportButton data={exportData} />
         </div>
       </div>
 
-      {/* نظام التبويبات */}
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="dashboard">
-            <BarChart3 className="h-4 w-4 ml-2" />
-            لوحة المعلومات
-          </TabsTrigger>
-          <TabsTrigger value="balances">
-            <Wallet className="h-4 w-4 ml-2" />
-            الأرصدة
-          </TabsTrigger>
-          <TabsTrigger value="cash-flow">
-            <Activity className="h-4 w-4 ml-2" />
-            التدفقات النقدية
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <TrendingUp className="h-4 w-4 ml-2" />
-            التحليلات
-          </TabsTrigger>
-          <TabsTrigger value="reports">
-            <FileText className="h-4 w-4 ml-2" />
-            التقارير
-          </TabsTrigger>
-        </TabsList>
-
-        {/* تبويب لوحة المعلومات */}
-        <TabsContent value="dashboard" className="space-y-6">
-          {/* الإجراءات السريعة */}
-          <QuickActions />
-
-          {/* الإحصائيات الإجمالية */}
-          <SummaryStats
-            totalBalance={totalBalance}
-            totalAccounts={totalAccounts}
-            highestBalance={highestBalance}
-            lowestBalance={lowestBalance}
-          />
-
-          {/* التنبيهات الذكية */}
-          <SmartAlerts
-            accountTypes={accountTypes}
-            totalBalance={totalBalance}
-            totalAccounts={totalAccounts}
-          />
-
-          {/* الرسوم البيانية */}
-          <ChartsDashboard
-            accountTypes={accountTypes}
-            totalBalance={totalBalance}
-          />
-        </TabsContent>
-
-        {/* تبويب الأرصدة */}
-        <TabsContent value="balances" className="space-y-6">
+      {/* قسم الأرصدة */}
+      <div className="space-y-6">
           <div className="flex justify-end">
             <ViewToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
           </div>
@@ -474,35 +378,8 @@ export default function AccountsCenterPage() {
               </p>
             </div>
           )}
-        </TabsContent>
-
-        {/* تبويب التدفقات النقدية */}
-        <TabsContent value="cash-flow">
-          <CashFlowTab totalBalance={totalBalance} />
-        </TabsContent>
-
-        {/* تبويب التحليلات المتقدمة */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <ComparisonTool />
-            </div>
-            <div>
-              <InsightsPanel />
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* تبويب التقارير */}
-        <TabsContent value="reports">
-          <ReportsTab
-            accountTypes={accountTypes}
-            totalBalance={totalBalance}
-            totalAccounts={totalAccounts}
-          />
-        </TabsContent>
-      </Tabs>
-    </AppLayout>
+      </div>
+    </div>
   )
 }
 

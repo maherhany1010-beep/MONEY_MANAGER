@@ -190,15 +190,15 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 dark:text-gray-100">
-                <Gift className="h-5 w-5" style={{ color: '#9333ea' }} />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Gift className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 نظام الكاش باك الشامل
               </CardTitle>
-              <CardDescription className="dark:text-gray-400">
+              <CardDescription className="text-muted-foreground">
                 متابعة وإدارة نقاط الكاش باك من جميع البطاقات
               </CardDescription>
             </div>
-            <Button className="gap-2" style={{ backgroundColor: '#9333ea', color: 'white' }}>
+            <Button className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
               <Sparkles className="h-4 w-4" />
               استرداد الكاش باك
             </Button>
@@ -210,61 +210,61 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">إجمالي المكتسب</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">إجمالي المكتسب</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {formatCurrency(totalEarned)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">منذ البداية</p>
+            <p className="text-xs text-muted-foreground">منذ البداية</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">الرصيد المتاح</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">الرصيد المتاح</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(totalAvailable)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">جاهز للاسترداد</p>
+            <p className="text-xs text-muted-foreground">جاهز للاسترداد</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">المسترد</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">المسترد</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {formatCurrency(totalRedeemed)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">تم استرداده</p>
+            <p className="text-xs text-muted-foreground">تم استرداده</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">قيد الانتظار</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">قيد الانتظار</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {formatCurrency(totalPending)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">سيضاف قريباً</p>
+            <p className="text-xs text-muted-foreground">سيضاف قريباً</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">هذا الشهر</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">هذا الشهر</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {formatCurrency(thisMonthTotal)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">يناير 2024</p>
+            <p className="text-xs text-muted-foreground">يناير 2024</p>
           </CardContent>
         </Card>
       </div>
@@ -272,8 +272,8 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
       {/* Cards Cashback Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100">ملخص الكاش باك لكل بطاقة</CardTitle>
-          <CardDescription className="dark:text-gray-400">
+          <CardTitle className="text-foreground">ملخص الكاش باك لكل بطاقة</CardTitle>
+          <CardDescription className="text-muted-foreground">
             نظرة عامة على الكاش باك من جميع البطاقات
           </CardDescription>
         </CardHeader>
@@ -282,16 +282,16 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
             {cashbackData.map((item) => (
               <div
                 key={item.id}
-                className="p-4 border rounded-lg dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
+                className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-950/30">
-                      <CreditCard className="h-5 w-5" style={{ color: '#9333ea' }} />
+                      <CreditCard className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <h4 className="font-medium dark:text-gray-100">{item.cardName}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <h4 className="font-medium text-foreground">{item.cardName}</h4>
+                      <p className="text-sm text-muted-foreground">
                         معدل الكاش باك: {item.cashbackRate}%
                       </p>
                     </div>
@@ -300,45 +300,45 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
                     <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       {formatCurrency(item.availableBalance)}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">متاح للاسترداد</p>
+                    <p className="text-sm text-muted-foreground">متاح للاسترداد</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 mb-3">
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">إجمالي المكتسب</p>
-                    <p className="font-medium dark:text-gray-200">{formatCurrency(item.totalEarned)}</p>
+                    <p className="text-xs text-muted-foreground">إجمالي المكتسب</p>
+                    <p className="font-medium text-foreground">{formatCurrency(item.totalEarned)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">المسترد</p>
-                    <p className="font-medium dark:text-gray-200">{formatCurrency(item.redeemedAmount)}</p>
+                    <p className="text-xs text-muted-foreground">المسترد</p>
+                    <p className="font-medium text-foreground">{formatCurrency(item.redeemedAmount)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">قيد الانتظار</p>
-                    <p className="font-medium dark:text-gray-200">{formatCurrency(item.pendingAmount)}</p>
+                    <p className="text-xs text-muted-foreground">قيد الانتظار</p>
+                    <p className="font-medium text-foreground">{formatCurrency(item.pendingAmount)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">هذا الشهر</p>
-                    <p className="font-medium dark:text-gray-200">{formatCurrency(item.thisMonthEarned)}</p>
+                    <p className="text-xs text-muted-foreground">هذا الشهر</p>
+                    <p className="font-medium text-foreground">{formatCurrency(item.thisMonthEarned)}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">نسبة الاسترداد</span>
-                    <span className="font-medium dark:text-gray-200">
+                    <span className="text-muted-foreground">نسبة الاسترداد</span>
+                    <span className="font-medium text-foreground">
                       {((item.redeemedAmount / item.totalEarned) * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <Progress 
-                    value={(item.redeemedAmount / item.totalEarned) * 100} 
+                  <Progress
+                    value={(item.redeemedAmount / item.totalEarned) * 100}
                     className="h-2"
                     indicatorClassName="bg-purple-600"
                   />
                 </div>
 
                 {item.lastRedemption && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
+                  <p className="text-xs text-muted-foreground mt-3">
                     آخر استرداد: {formatDate(item.lastRedemption)}
                   </p>
                 )}
@@ -351,15 +351,15 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100">سجل الكاش باك</CardTitle>
-          <CardDescription className="dark:text-gray-400">
+          <CardTitle className="text-foreground">سجل الكاش باك</CardTitle>
+          <CardDescription className="text-muted-foreground">
             جميع عمليات الكاش باك المكتسبة والمستردة
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 mb-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">البطاقة</label>
+              <label className="text-sm font-medium text-foreground">البطاقة</label>
               <Select value={selectedCard} onValueChange={setSelectedCard}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر البطاقة" />
@@ -376,7 +376,7 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">النوع</label>
+              <label className="text-sm font-medium text-foreground">النوع</label>
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر النوع" />
@@ -393,46 +393,41 @@ export function AllCashbackTab({ cards }: AllCashbackTabProps) {
           <div className="space-y-3">
             {filteredHistory.length === 0 ? (
               <div className="py-12 text-center">
-                <Gift className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                <h3 className="text-xl font-semibold mb-2 dark:text-gray-100">لا توجد سجلات</h3>
-                <p className="text-gray-600 dark:text-gray-400">لم يتم العثور على سجلات كاش باك بالمعايير المحددة</p>
+                <Gift className="h-16 w-16 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2 text-foreground">لا توجد سجلات</h3>
+                <p className="text-muted-foreground">لم يتم العثور على سجلات كاش باك بالمعايير المحددة</p>
               </div>
             ) : (
               filteredHistory.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 border rounded-lg dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
+                  className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {item.type === 'earned' ? (
-                          <TrendingUp className="h-4 w-4" style={{ color: '#9333ea' }} />
+                          <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         ) : (
-                          <Wallet className="h-4 w-4" style={{ color: '#16a34a' }} />
+                          <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
                         )}
-                        <span className="font-medium dark:text-gray-100">{item.cardName}</span>
-                        <Badge className={getTypeColor(item.type)} style={{
-                          color: item.type === 'earned' ? '#9333ea' : '#16a34a'
-                        }}>
+                        <span className="font-medium text-foreground">{item.cardName}</span>
+                        <Badge className={getTypeColor(item.type)}>
                           {getTypeLabel(item.type)}
                         </Badge>
-                        <Badge className={getStatusColor(item.status)} style={{
-                          color: item.status === 'available' ? '#16a34a' :
-                                 item.status === 'pending' ? '#d97706' : '#2563eb'
-                        }}>
+                        <Badge className={getStatusColor(item.status)}>
                           {getStatusLabel(item.status)}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.source}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                      <p className="text-sm text-muted-foreground mb-1">{item.source}</p>
+                      <p className="text-xs text-muted-foreground">
                         {formatDate(item.date)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className={`text-xl font-bold ${
-                        item.type === 'earned' 
-                          ? 'text-purple-600 dark:text-purple-400' 
+                        item.type === 'earned'
+                          ? 'text-purple-600 dark:text-purple-400'
                           : 'text-green-600 dark:text-green-400'
                       }`}>
                         {item.type === 'earned' ? '+' : '-'}

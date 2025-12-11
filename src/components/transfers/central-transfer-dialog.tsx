@@ -444,7 +444,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
             </div>
             تحويل مركزي
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             تحويل الأموال بين جميع أنواع الحسابات
           </DialogDescription>
         </DialogHeader>
@@ -566,7 +566,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                     required
                     aria-required="true"
                     aria-label="المبلغ الأساسي للتحويل بالجنيه المصري"
-                    className="pl-16 pr-4 h-12 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-input text-gray-900 dark:text-gray-100 text-right text-base font-semibold"
+                    className="pl-16 pr-4 h-12 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-input text-foreground text-right text-base font-semibold"
                   />
                   <span
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-blue-700 dark:text-blue-300 pointer-events-none"
@@ -591,7 +591,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                     onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                     placeholder="0.00"
                     aria-label="رسوم التحويل بالجنيه المصري"
-                    className="pl-16 pr-4 h-12 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-input text-gray-900 dark:text-gray-100 text-right text-base font-semibold"
+                    className="pl-16 pr-4 h-12 border-blue-300 dark:border-blue-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-input text-foreground text-right text-base font-semibold"
                   />
                   <span
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-blue-700 dark:text-blue-300 pointer-events-none"
@@ -689,7 +689,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
 
           {/* الملاحظات */}
           <div className="space-y-3 p-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 border-2 border-gray-300 dark:border-gray-700 rounded-xl shadow-sm">
-            <Label htmlFor="notes" className="text-gray-900 dark:text-gray-100 font-semibold text-base">ملاحظات (اختياري)</Label>
+            <Label htmlFor="notes" className="text-foreground font-semibold text-base">ملاحظات (اختياري)</Label>
             <Textarea
               id="notes"
               value={formData.notes}
@@ -697,7 +697,7 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
               placeholder="أدخل ملاحظات إضافية عن التحويل..."
               rows={3}
               aria-label="ملاحظات إضافية عن التحويل"
-              className="resize-none bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 min-h-[80px] text-base"
+              className="resize-none bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-600 text-foreground min-h-[80px] text-base"
               dir="rtl"
             />
           </div>
@@ -743,9 +743,9 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                       {getAccountTypeIcon(fromAccount.type)}
                       <p className="text-xs font-bold text-rose-900 dark:text-rose-100">المرسل</p>
                     </div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{fromAccount.name}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">({getTypeLabel(fromAccount.type)})</p>
-                    <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 mt-3">
+                    <p className="text-sm font-bold text-foreground">{fromAccount.name}</p>
+                    <p className="text-xs text-muted-foreground">({getTypeLabel(fromAccount.type)})</p>
+                    <div className="text-xs text-foreground space-y-1.5 mt-3">
                       <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(fromAccount.balance ?? 0)}</span></p>
                       <p>المبلغ المحول: <span className="font-semibold text-rose-600 dark:text-rose-400">-{formatCurrency(amount)}</span></p>
                       {fee > 0 && formData.feeBearer === 'sender' && (
@@ -768,9 +768,9 @@ export function CentralTransferDialog({ open, onOpenChange, onTransfer }: Centra
                       {getAccountTypeIcon(toAccount.type)}
                       <p className="text-xs font-bold text-emerald-900 dark:text-emerald-100">المستقبل</p>
                     </div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{toAccount.name}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">({getTypeLabel(toAccount.type)})</p>
-                    <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 mt-3">
+                    <p className="text-sm font-bold text-foreground">{toAccount.name}</p>
+                    <p className="text-xs text-muted-foreground">({getTypeLabel(toAccount.type)})</p>
+                    <div className="text-xs text-foreground space-y-1.5 mt-3">
                       <p>الرصيد الحالي: <span className="font-semibold">{formatCurrency(toAccount.balance ?? 0)}</span></p>
                       <p>المبلغ المستلم: <span className="font-semibold text-emerald-600 dark:text-emerald-400">+{formatCurrency(amount)}</span></p>
                       {fee > 0 && formData.feeBearer === 'receiver' && (

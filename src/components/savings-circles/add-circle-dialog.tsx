@@ -49,7 +49,9 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
     members: [],
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -88,10 +90,28 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
       return
     }
 
+    setIsSubmitting(true)
+
     try {
-      addCircle({
+      // حساب إجمالي الرسوم
+      const managementFee = parseFloat(formData.managementFee || '0')
+      const totalMembers = parseInt(formData.totalMembers)
+      const duration = parseInt(formData.duration)
+      let totalFees = 0
+
+      if (formData.hasFees && managementFee > 0) {
+        if (formData.feeType === 'monthly') {
+          // رسوم شهرية × عدد الأعضاء × عدد الأشهر
+          totalFees = managementFee * totalMembers * duration
+        } else {
+          // رسوم لمرة واحدة فقط
+          totalFees = managementFee
+        }
+      }
+
+      const result = await addCircle({
         circle_name: formData.name,
-        total_amount: parseFloat(formData.monthlyAmount) * parseFloat(formData.totalMembers),
+        total_amount: parseFloat(formData.monthlyAmount) * totalMembers,
         monthly_payment: parseFloat(formData.monthlyAmount),
         start_date: formData.startDate,
         end_date: null,
@@ -102,42 +122,61 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
         type: formData.type,
         role: formData.role,
         monthlyAmount: parseFloat(formData.monthlyAmount),
-        totalMembers: parseFloat(formData.totalMembers),
-        duration: parseFloat(formData.duration),
+        totalMembers: totalMembers,
+        duration: duration,
         startDate: formData.startDate,
         hasFees: formData.hasFees,
+        managementFee: managementFee,
+        feeType: formData.feeType,
         paymentMethod: formData.paymentMethod,
-        totalFees: 0,
+        myTurnNumber: formData.myTurnNumber ? parseInt(formData.myTurnNumber) : undefined,
+        appName: formData.appName,
+        appAccountId: formData.appAccountId,
+        totalFees: totalFees,
         currentBalance: 0,
+        currentRound: 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
-      onOpenChange(false)
-      // إعادة تعيين النموذج
-      setFormData({
-        name: '',
-        description: '',
-        type: 'personal',
-        role: 'member',
-        monthlyAmount: '',
-        totalMembers: '',
-        duration: '',
-        startDate: new Date().toISOString().split('T')[0],
-        hasFees: false,
-        managementFee: '',
-        feeType: 'monthly',
-        lateFee: '',
-        earlyWithdrawalFee: '',
-        paymentMethod: 'cash',
-        linkedAccountId: '',
-        myTurnNumber: '',
-        appName: '',
-        appAccountId: '',
-        members: [],
-      })
+
+      if (result) {
+        onOpenChange(false)
+        // إعادة تعيين النموذج
+        setFormData({
+          name: '',
+          description: '',
+          type: 'personal',
+          role: 'member',
+          monthlyAmount: '',
+          totalMembers: '',
+          duration: '',
+          startDate: new Date().toISOString().split('T')[0],
+          hasFees: false,
+          managementFee: '',
+          feeType: 'monthly',
+          lateFee: '',
+          earlyWithdrawalFee: '',
+          paymentMethod: 'cash',
+          linkedAccountId: '',
+          myTurnNumber: '',
+          appName: '',
+          appAccountId: '',
+          members: [],
+        })
+      } else {
+        setError('حدث خطأ أثناء إضافة الجمعية. تحقق من الـ Console للتفاصيل.')
+      }
     } catch (err) {
-      setError('حدث خطأ أثناء إضافة الجمعية')
+      console.error('Error in handleSubmit:', err)
+      setError('حدث خطأ غير متوقع أثناء إضافة الجمعية')
+    } finally {
+      setIsSubmitting(false)
     }
+  }
+
+  // دالة تنسيق العملة بالأرقام اللاتينية
+  const formatCurrency = (amount: number) => {
+    return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`
   }
 
   // حساب المبلغ الكلي
@@ -147,8 +186,8 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
 
   // حساب المبلغ الصافي للعضو بعد الرسوم
   const netAmountForMember = formData.role === 'member' && formData.hasFees && formData.managementFee
-    ? totalAmount - (formData.feeType === 'one-time' 
-        ? parseFloat(formData.managementFee) 
+    ? totalAmount - (formData.feeType === 'one-time'
+        ? parseFloat(formData.managementFee)
         : parseFloat(formData.managementFee) * parseInt(formData.totalMembers || '0'))
     : totalAmount
 
@@ -209,7 +248,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="مثال: جمعية الأصدقاء 2025"
                   required
-                  className="h-12 bg-white dark:bg-gray-950 border-blue-300 dark:border-blue-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                  className="h-12 bg-white dark:bg-gray-950 border-blue-300 dark:border-blue-700 text-foreground text-base font-semibold"
                   dir="rtl"
                 />
               </div>
@@ -243,7 +282,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="أضف وصفاً للجمعية..."
                 rows={2}
-                className="resize-none bg-white dark:bg-gray-950 border-blue-300 dark:border-blue-700 text-gray-900 dark:text-gray-100 text-base"
+                className="resize-none bg-white dark:bg-gray-950 border-blue-300 dark:border-blue-700 text-foreground text-base"
                 dir="rtl"
               />
             </div>
@@ -291,7 +330,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                     value={formData.appName}
                     onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
                     placeholder="مثال: MoneyFellows"
-                    className="h-12 bg-white dark:bg-gray-950 border-purple-300 dark:border-purple-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                    className="h-12 bg-white dark:bg-gray-950 border-purple-300 dark:border-purple-700 text-foreground text-base font-semibold"
                     dir="rtl"
                   />
                 </div>
@@ -323,7 +362,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                     onChange={(e) => setFormData({ ...formData, monthlyAmount: e.target.value })}
                     placeholder="0.00"
                     required
-                    className="pl-16 pr-4 h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-gray-900 dark:text-gray-100 text-right text-base font-semibold"
+                    className="pl-16 pr-4 h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-foreground text-right text-base font-semibold"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-green-700 dark:text-green-300 pointer-events-none">
                     EGP
@@ -345,7 +384,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                   }}
                   placeholder="مثال: 10"
                   required
-                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-foreground text-base font-semibold"
                 />
               </div>
 
@@ -361,7 +400,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                   placeholder="مثال: 10"
                   required
-                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-foreground text-base font-semibold"
                 />
               </div>
             </div>
@@ -371,7 +410,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-green-900 dark:text-green-200 font-semibold text-base">المبلغ الكلي (شهرياً):</span>
                   <span className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(totalAmount)}
+                    {formatCurrency(totalAmount)}
                   </span>
                 </div>
               </div>
@@ -388,7 +427,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   required
-                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                  className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-foreground text-base font-semibold"
                 />
               </div>
 
@@ -405,7 +444,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                     value={formData.myTurnNumber}
                     onChange={(e) => setFormData({ ...formData, myTurnNumber: e.target.value })}
                     placeholder={`من 1 إلى ${formData.totalMembers || '...'}`}
-                    className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-gray-900 dark:text-gray-100 text-base font-semibold"
+                    className="h-12 bg-white dark:bg-gray-950 border-green-300 dark:border-green-700 text-foreground text-base font-semibold"
                   />
                 </div>
               )}
@@ -447,7 +486,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                           <p className="text-sm font-bold text-green-700 dark:text-green-300">
                             ✅ العمولة = دخل إضافي لك
                           </p>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                          <p className="text-sm text-muted-foreground">
                             ستحصل على عمولة من كل عضو كدخل إضافي مقابل إدارة الجمعية
                           </p>
                         </>
@@ -456,7 +495,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                           <p className="text-sm font-bold text-red-700 dark:text-red-300">
                             ❌ الرسوم = خصم من المبلغ المستلم
                           </p>
-                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                          <p className="text-sm text-muted-foreground">
                             ستدفع رسوم إضافية للمدير أو التطبيق، وسيتم خصمها من المبلغ الذي تستلمه
                           </p>
                         </>
@@ -501,6 +540,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                       <SelectContent>
                         <SelectItem value="monthly">شهرية (لكل عضو كل شهر)</SelectItem>
                         <SelectItem value="one-time">لمرة واحدة (عند الاستلام)</SelectItem>
+                        <SelectItem value="percentage">نسبة مئوية</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -515,7 +555,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                           💰 دخلك الشهري من العمولات:
                         </span>
                         <span className="text-xl font-bold text-green-700 dark:text-green-300">
-                          {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(monthlyCommission)}
+                          {formatCurrency(monthlyCommission)}
                         </span>
                       </div>
                     )}
@@ -525,7 +565,7 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
                           💵 المبلغ الصافي الذي ستستلمه:
                         </span>
                         <span className="text-xl font-bold text-orange-700 dark:text-orange-300">
-                          {new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(netAmountForMember)}
+                          {formatCurrency(netAmountForMember)}
                         </span>
                       </div>
                     )}
@@ -539,15 +579,26 @@ export function AddCircleDialog({ open, onOpenChange }: AddCircleDialogProps) {
           <div className="flex gap-3 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
             <Button
               type="submit"
-              className="flex-1 h-12 text-base font-bold bg-gradient-to-l from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
+              disabled={isSubmitting}
+              className="flex-1 h-12 text-base font-bold bg-gradient-to-l from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg disabled:opacity-50"
             >
-              <Plus className="h-5 w-5 ml-2" />
-              إضافة الجمعية
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin ml-2">⏳</span>
+                  جاري الإضافة...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-5 w-5 ml-2" />
+                  إضافة الجمعية
+                </>
+              )}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
               className="h-12 px-8 text-base font-semibold border-2"
             >
               إلغاء

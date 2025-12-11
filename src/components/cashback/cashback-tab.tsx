@@ -44,15 +44,15 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">معلق</Badge>
+        return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">معلق</Badge>
       case 'approved':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">معتمد</Badge>
+        return <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">معتمد</Badge>
       case 'redeemed':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">مسترد</Badge>
+        return <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">مسترد</Badge>
       case 'expired':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800">منتهي</Badge>
+        return <Badge variant="secondary" className="bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">منتهي</Badge>
       case 'cancelled':
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">ملغي</Badge>
+        return <Badge variant="secondary" className="bg-muted text-muted-foreground">ملغي</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
@@ -65,13 +65,13 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي الكاش باك</CardTitle>
-            <TrendingUp className="h-4 w-4 dark:text-purple-400" style={{ color: '#9333ea' }} />
+            <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-purple-400" style={{ color: '#9333ea' }}>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {formatCurrency(stats.totalEarned)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               {stats.totalRecords} سجل
             </p>
           </CardContent>
@@ -80,13 +80,13 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">الرصيد المتاح</CardTitle>
-            <Gift className="h-4 w-4 dark:text-green-400" style={{ color: '#16a34a' }} />
+            <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-green-400" style={{ color: '#16a34a' }}>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(stats.availableBalance)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               متاح للاسترداد
             </p>
           </CardContent>
@@ -95,13 +95,13 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">المسترد</CardTitle>
-            <DollarSign className="h-4 w-4 dark:text-blue-400" style={{ color: '#2563eb' }} />
+            <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-blue-400" style={{ color: '#2563eb' }}>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {formatCurrency(stats.totalRedeemed)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               {stats.totalRedemptions} عملية
             </p>
           </CardContent>
@@ -110,13 +110,13 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">المعلق</CardTitle>
-            <Clock className="h-4 w-4 dark:text-amber-400" style={{ color: '#d97706' }} />
+            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-amber-400" style={{ color: '#d97706' }}>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {formatCurrency(stats.totalPending)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               في الانتظار
             </p>
           </CardContent>
@@ -161,9 +161,9 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <CardContent>
           {cashbackRecords.length === 0 ? (
             <div className="text-center py-12">
-              <Gift className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">لا توجد سجلات كاش باك</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
+              <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-2">لا توجد سجلات كاش باك</p>
+              <p className="text-sm text-muted-foreground">
                 ابدأ بإضافة سجل كاش باك جديد
               </p>
             </div>
@@ -172,7 +172,7 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
               {cashbackRecords.map((record: any) => (
                 <div
                   key={record.id}
-                  className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="p-4 border rounded-lg hover:bg-muted transition-colors"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -181,17 +181,17 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
                         {getStatusBadge(record.status)}
                       </div>
                       {record.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <p className="text-sm text-muted-foreground mb-2">
                           {record.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {record.earnedDate}
                         </span>
                         {record.autoRedeemEnabled && record.autoRedeemDate && (
-                          <span className="flex items-center gap-1 dark:text-blue-400" style={{ color: '#2563eb' }}>
+                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
                             <Clock className="h-3 w-3" />
                             استرداد تلقائي: {record.autoRedeemDate}
                           </span>
@@ -199,16 +199,16 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
                       </div>
                     </div>
                     <div className="text-left">
-                      <p className="text-2xl font-bold dark:text-purple-400 mb-1" style={{ color: '#9333ea' }}>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                         {formatCurrency(record.amount)}
                       </p>
                       {record.redeemedAmount > 0 && (
-                        <p className="text-sm dark:text-green-400" style={{ color: '#16a34a' }}>
+                        <p className="text-sm text-green-600 dark:text-green-400">
                           مسترد: {formatCurrency(record.redeemedAmount)}
                         </p>
                       )}
                       {record.remainingAmount > 0 && (
-                        <p className="text-sm dark:text-amber-400" style={{ color: '#d97706' }}>
+                        <p className="text-sm text-amber-600 dark:text-amber-400">
                           متبقي: {formatCurrency(record.remainingAmount)}
                         </p>
                       )}
@@ -243,28 +243,28 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
         <CardContent>
           {redemptions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">لا توجد عمليات استرداد</p>
+              <p className="text-muted-foreground">لا توجد عمليات استرداد</p>
             </div>
           ) : (
             <div className="space-y-3">
               {redemptions.map((redemption: any) => (
                 <div
                   key={redemption.id}
-                  className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="p-4 border rounded-lg hover:bg-muted transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {redemption.redemptionType === 'balance' ? (
-                          <DollarSign className="h-4 w-4 dark:text-blue-400" style={{ color: '#2563eb' }} />
+                          <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         ) : (
-                          <Ticket className="h-4 w-4 dark:text-orange-400" style={{ color: '#c2410c' }} />
+                          <Ticket className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                         )}
                         <span className="font-medium">
                           {redemption.redemptionType === 'balance' ? 'رصيد البطاقة' : 'قسيمة مشتريات'}
                         </span>
                         {redemption.isAutomatic && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                          <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs">
                             تلقائي
                           </Badge>
                         )}
@@ -273,21 +273,21 @@ export function CashbackTab({ cardId }: CashbackTabProps) {
                         </Badge>
                       </div>
                       {redemption.voucherDetails && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        <p className="text-sm text-muted-foreground mb-1">
                           📍 {redemption.voucherDetails.storeName}
                         </p>
                       )}
                       {redemption.voucherDetails?.voucherCode && (
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                        <p className="text-xs text-muted-foreground mb-1">
                           كود: {redemption.voucherDetails.voucherCode}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {redemption.redemptionDate}
                       </p>
                     </div>
                     <div className="text-left">
-                      <p className="text-xl font-bold dark:text-green-400" style={{ color: '#16a34a' }}>
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(redemption.amount)}
                       </p>
                     </div>

@@ -11,7 +11,7 @@ interface AccountTypeCardProps {
   title: string
   icon: LucideIcon
   color: string
-  gradient: string
+  gradient?: string // kept for backward compatibility but not used
   count: number
   totalBalance: number
   route: string
@@ -22,7 +22,6 @@ export function AccountTypeCard({
   title,
   icon: Icon,
   color,
-  gradient,
   count,
   totalBalance,
   route,
@@ -31,40 +30,46 @@ export function AccountTypeCard({
   // تحديد ألوان الأيقونة والخلفية حسب النوع
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-100 dark:bg-blue-900/30',
-      text: 'text-blue-600 dark:text-blue-400',
-      border: 'border-blue-200 dark:border-blue-800',
-      gradient: 'from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30'
+      iconBg: 'bg-blue-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-blue-600 dark:text-blue-400',
+      button: 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
     },
     purple: {
-      bg: 'bg-purple-100 dark:bg-purple-900/30',
-      text: 'text-purple-600 dark:text-purple-400',
-      border: 'border-purple-200 dark:border-purple-800',
-      gradient: 'from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/30'
+      iconBg: 'bg-purple-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-purple-600 dark:text-purple-400',
+      button: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600'
     },
     green: {
-      bg: 'bg-green-100 dark:bg-green-900/30',
-      text: 'text-green-600 dark:text-green-400',
-      border: 'border-green-200 dark:border-green-800',
-      gradient: 'from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30'
+      iconBg: 'bg-green-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-green-600 dark:text-green-400',
+      button: 'bg-green-600 hover:bg-green-700 text-white border-green-600'
     },
     orange: {
-      bg: 'bg-orange-100 dark:bg-orange-900/30',
-      text: 'text-orange-600 dark:text-orange-400',
-      border: 'border-orange-200 dark:border-orange-800',
-      gradient: 'from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30'
+      iconBg: 'bg-orange-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-orange-600 dark:text-orange-400',
+      button: 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600'
     },
     indigo: {
-      bg: 'bg-indigo-100 dark:bg-indigo-900/30',
-      text: 'text-indigo-600 dark:text-indigo-400',
-      border: 'border-indigo-200 dark:border-indigo-800',
-      gradient: 'from-indigo-50 to-indigo-100 dark:from-indigo-950/30 dark:to-indigo-900/30'
+      iconBg: 'bg-indigo-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-indigo-600 dark:text-indigo-400',
+      button: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600'
     },
     cyan: {
-      bg: 'bg-cyan-100 dark:bg-cyan-900/30',
-      text: 'text-cyan-600 dark:text-cyan-400',
-      border: 'border-cyan-200 dark:border-cyan-800',
-      gradient: 'from-cyan-50 to-cyan-100 dark:from-cyan-950/30 dark:to-cyan-900/30'
+      iconBg: 'bg-cyan-500',
+      iconText: 'text-white',
+      border: 'border-gray-200 dark:border-gray-700',
+      balanceText: 'text-cyan-600 dark:text-cyan-400',
+      button: 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600'
     }
   }
 
@@ -72,13 +77,13 @@ export function AccountTypeCard({
 
   if (viewMode === 'list') {
     return (
-      <Card className={`border-2 ${colors.border} bg-gradient-to-r ${colors.gradient} hover:shadow-lg transition-all duration-300`}>
-        <CardContent className="p-6">
+      <Card className="hover:shadow-md transition-all duration-300">
+        <div className="p-6">
           <div className="flex items-center justify-between gap-4">
             {/* الأيقونة والعنوان */}
             <div className="flex items-center gap-4">
-              <div className={`p-4 ${colors.bg} rounded-xl`}>
-                <Icon className={`h-8 w-8 ${colors.text}`} />
+              <div className={`p-4 ${colors.iconBg} rounded-xl shadow-sm`}>
+                <Icon className={`h-8 w-8 ${colors.iconText}`} />
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-1">{title}</h3>
@@ -86,7 +91,7 @@ export function AccountTypeCard({
                   <Badge variant="secondary" className="text-sm">
                     {count} {count === 1 ? 'حساب' : 'حسابات'}
                   </Badge>
-                  <span className={`text-2xl font-bold ${colors.text}`}>
+                  <span className={`text-2xl font-bold ${colors.balanceText}`}>
                     {formatCurrency(totalBalance)}
                   </span>
                 </div>
@@ -95,44 +100,44 @@ export function AccountTypeCard({
 
             {/* زر عرض الكل */}
             <Link href={route}>
-              <Button variant="outline" className="gap-2">
+              <Button className={`gap-2 ${colors.button}`}>
                 عرض الكل
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
-        </CardContent>
+        </div>
       </Card>
     )
   }
 
   // Grid View (الافتراضي)
   return (
-    <Card className={`border-2 ${colors.border} bg-gradient-to-br ${colors.gradient} hover:shadow-lg transition-all duration-300`}>
-      <CardHeader>
+    <Card className="hover:shadow-md transition-all duration-300">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className={`p-3 ${colors.bg} rounded-lg`}>
-            <Icon className={`h-6 w-6 ${colors.text}`} />
+          <div className={`p-3 ${colors.iconBg} rounded-xl shadow-sm`}>
+            <Icon className={`h-6 w-6 ${colors.iconText}`} />
           </div>
           <Badge variant="secondary">
             {count} {count === 1 ? 'حساب' : 'حسابات'}
           </Badge>
         </div>
-        <CardTitle className="mt-4">{title}</CardTitle>
+        <CardTitle className="mt-4 text-2xl">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {/* الرصيد الإجمالي */}
           <div>
             <p className="text-sm text-muted-foreground mb-1">الرصيد الإجمالي</p>
-            <p className={`text-2xl font-bold ${colors.text}`}>
+            <p className={`text-2xl font-bold ${colors.balanceText}`}>
               {formatCurrency(totalBalance)}
             </p>
           </div>
 
           {/* زر عرض الكل */}
           <Link href={route} className="block">
-            <Button variant="outline" className="w-full gap-2">
+            <Button className={`w-full gap-2 ${colors.button}`}>
               عرض الكل
               <ArrowRight className="h-4 w-4" />
             </Button>

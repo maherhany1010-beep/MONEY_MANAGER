@@ -98,26 +98,26 @@ export function CashVaultStats({ vault }: CashVaultStatsProps) {
                 <div className="text-left">
                   <p className="font-bold">{formatCurrency(vault.maxCapacity)}</p>
                   <p className={`text-sm ${
-                    capacityPercentage > 90 ? 'text-red-600' : 
-                    capacityPercentage > 70 ? 'text-yellow-600' : 
-                    'text-green-600'
+                    capacityPercentage > 90 ? 'text-red-600 dark:text-red-400' :
+                    capacityPercentage > 70 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-green-600 dark:text-green-400'
                   }`}>
                     {formatPercentage(capacityPercentage / 100)} ممتلئة
                   </p>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
+              <div className="w-full bg-muted rounded-full h-3">
+                <div
                   className={`h-3 rounded-full transition-all ${
-                    capacityPercentage > 90 ? 'bg-red-500' : 
-                    capacityPercentage > 70 ? 'bg-yellow-500' : 
+                    capacityPercentage > 90 ? 'bg-red-500' :
+                    capacityPercentage > 70 ? 'bg-yellow-500' :
                     'bg-green-500'
                   }`}
                   style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
                 />
               </div>
               {isNearMaxCapacity && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                   <AlertCircle className="h-4 w-4" />
                   <span>تحذير: الخزينة قريبة من السعة القصوى</span>
                 </div>

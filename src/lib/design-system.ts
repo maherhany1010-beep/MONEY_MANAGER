@@ -48,65 +48,65 @@ export const typography = {
 // ========================================
 
 export const colors = {
-  // الألوان الأساسية
+  // الألوان الأساسية - مع دعم الوضع الداكن
   primary: {
-    50: 'bg-blue-50',
-    100: 'bg-blue-100',
-    500: 'bg-blue-500',
-    600: 'bg-blue-600',
-    700: 'bg-blue-700',
-    text: 'text-blue-600',
-    textDark: 'text-blue-700',
+    50: 'bg-blue-50 dark:bg-blue-950',
+    100: 'bg-blue-100 dark:bg-blue-900',
+    500: 'bg-blue-500 dark:bg-blue-600',
+    600: 'bg-blue-600 dark:bg-blue-500',
+    700: 'bg-blue-700 dark:bg-blue-400',
+    text: 'text-blue-600 dark:text-blue-400',
+    textDark: 'text-blue-700 dark:text-blue-300',
   },
-  
-  // ألوان الحالات
+
+  // ألوان الحالات - مع دعم الوضع الداكن
   success: {
-    bg: 'bg-green-50',
-    bgSolid: 'bg-green-500',
-    text: 'text-green-600',
-    textDark: 'text-green-700',
-    border: 'border-green-200',
+    bg: 'bg-green-50 dark:bg-green-950/30',
+    bgSolid: 'bg-green-500 dark:bg-green-600',
+    text: 'text-green-600 dark:text-green-400',
+    textDark: 'text-green-700 dark:text-green-300',
+    border: 'border-green-200 dark:border-green-800',
   },
-  
+
   warning: {
-    bg: 'bg-yellow-50',
-    bgSolid: 'bg-yellow-500',
-    text: 'text-yellow-600',
-    textDark: 'text-yellow-700',
-    border: 'border-yellow-200',
+    bg: 'bg-yellow-50 dark:bg-yellow-950/30',
+    bgSolid: 'bg-yellow-500 dark:bg-yellow-600',
+    text: 'text-yellow-600 dark:text-yellow-400',
+    textDark: 'text-yellow-700 dark:text-yellow-300',
+    border: 'border-yellow-200 dark:border-yellow-800',
   },
-  
+
   error: {
-    bg: 'bg-red-50',
-    bgSolid: 'bg-red-500',
-    text: 'text-red-600',
-    textDark: 'text-red-700',
-    border: 'border-red-200',
+    bg: 'bg-red-50 dark:bg-red-950/30',
+    bgSolid: 'bg-red-500 dark:bg-red-600',
+    text: 'text-red-600 dark:text-red-400',
+    textDark: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
   },
-  
+
   info: {
-    bg: 'bg-blue-50',
-    bgSolid: 'bg-blue-500',
-    text: 'text-blue-600',
-    textDark: 'text-blue-700',
-    border: 'border-blue-200',
+    bg: 'bg-blue-50 dark:bg-blue-950/30',
+    bgSolid: 'bg-blue-500 dark:bg-blue-600',
+    text: 'text-blue-600 dark:text-blue-400',
+    textDark: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
   },
-  
-  // ألوان محايدة
+
+  // ألوان محايدة - مع دعم الوضع الداكن
   neutral: {
-    50: 'bg-gray-50',
-    100: 'bg-gray-100',
-    200: 'bg-gray-200',
-    300: 'bg-gray-300',
-    400: 'bg-gray-400',
-    500: 'bg-gray-500',
-    600: 'bg-gray-600',
-    700: 'bg-gray-700',
-    800: 'bg-gray-800',
-    900: 'bg-gray-900',
+    50: 'bg-gray-50 dark:bg-gray-900',
+    100: 'bg-gray-100 dark:bg-gray-800',
+    200: 'bg-gray-200 dark:bg-gray-700',
+    300: 'bg-gray-300 dark:bg-gray-600',
+    400: 'bg-gray-400 dark:bg-gray-500',
+    500: 'bg-gray-500 dark:bg-gray-400',
+    600: 'bg-gray-600 dark:bg-gray-300',
+    700: 'bg-gray-700 dark:bg-gray-200',
+    800: 'bg-gray-800 dark:bg-gray-100',
+    900: 'bg-gray-900 dark:bg-gray-50',
   },
-  
-  // تدرجات للبطاقات
+
+  // تدرجات للبطاقات - تبقى كما هي لأنها تعمل في كلا الوضعين
   gradients: {
     blue: 'bg-gradient-to-br from-blue-500 to-blue-700',
     green: 'bg-gradient-to-br from-green-500 to-green-700',
@@ -194,20 +194,20 @@ export const shadows = {
 // ========================================
 
 export const components = {
-  // البطاقات
+  // البطاقات - مع دعم الوضع الداكن
   card: {
-    base: 'bg-white rounded-lg border border-gray-200 overflow-hidden',
-    hover: 'hover:shadow-lg transition-shadow duration-300',
+    base: 'bg-card text-card-foreground rounded-lg border border-border overflow-hidden',
+    hover: 'hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20 transition-shadow duration-300',
     padding: 'p-6',
   },
-  
+
   // بطاقات الإحصائيات
   statCard: {
     base: 'p-4 rounded-lg text-white',
     title: 'text-sm opacity-90 mb-1 font-medium',
     value: 'text-2xl font-bold',
   },
-  
+
   // الأزرار
   button: {
     base: 'inline-flex items-center justify-center rounded-md font-medium transition-colors duration-200',
@@ -217,19 +217,19 @@ export const components = {
       lg: 'h-11 px-6 text-lg',
     },
   },
-  
-  // الشارات
+
+  // الشارات - مع دعم الوضع الداكن
   badge: {
     base: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
     variants: {
-      success: 'bg-green-100 text-green-700',
-      warning: 'bg-yellow-100 text-yellow-700',
-      error: 'bg-red-100 text-red-700',
-      info: 'bg-blue-100 text-blue-700',
-      neutral: 'bg-gray-100 text-gray-700',
+      success: 'bg-badge-success-bg text-badge-success-text',
+      warning: 'bg-badge-warning-bg text-badge-warning-text',
+      error: 'bg-badge-error-bg text-badge-error-text',
+      info: 'bg-badge-info-bg text-badge-info-text',
+      neutral: 'bg-badge-neutral-bg text-badge-neutral-text',
     },
   },
-  
+
   // الأيقونات
   icon: {
     sizes: {
@@ -240,6 +240,15 @@ export const components = {
       xl: 'h-8 w-8',
       '2xl': 'h-10 w-10',
     },
+  },
+
+  // الجداول - جديد
+  table: {
+    wrapper: 'bg-card rounded-lg border border-border overflow-hidden',
+    header: 'bg-table-header-bg border-b border-table-border',
+    headerCell: 'px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide',
+    row: 'border-b border-border hover:bg-table-row-hover transition-colors',
+    cell: 'px-6 py-4 text-sm text-foreground',
   },
 }
 
@@ -297,3 +306,15 @@ export const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('en-EG').format(num)
 }
 
+export const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  } catch {
+    return dateString
+  }
+}

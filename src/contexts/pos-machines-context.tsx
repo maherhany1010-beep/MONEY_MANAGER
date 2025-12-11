@@ -341,18 +341,51 @@ export function POSMachinesProvider({ children }: { children: ReactNode }) {
   // ===================================
   // 💰 Update account balance
   // ===================================
-  const updateAccountBalance = (machineId: string, accountId: string, newBalance: number): void => {
-    setMachines(prev => prev.map(m => {
-      if (m.id === machineId && m.accounts) {
-        return {
-          ...m,
-          accounts: m.accounts.map(acc =>
-            acc.id === accountId ? { ...acc, balance: newBalance } : acc
-          )
-        }
+  const updateAccountBalance = async (machineId: string, accountId: string, newBalance: number): Promise<void> => {
+    if (!user) {
+      setError('يجب تسجيل الدخول أولاً')
+      return
+    }
+
+    try {
+      // الحصول على الحسابات الحالية للماكينة
+      const machine = machines.find(m => m.id === machineId)
+      if (!machine || !machine.accounts) return
+
+      // تحديث الحساب المحدد
+      const updatedAccounts = machine.accounts.map(acc =>
+        acc.id === accountId ? { ...acc, balance: newBalance } : acc
+      )
+
+      // تحديث قاعدة البيانات
+      const { error: updateError } = await supabase
+        .from('pos_machines')
+        .update({ accounts: updatedAccounts })
+        .eq('id', machineId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating POS account balance:', updateError)
+        setError(updateError.message)
+        return
       }
-      return m
-    }))
+
+      // تحديث الـ state المحلي فوراً
+      setMachines(prev => prev.map(m => {
+        if (m.id === machineId && m.accounts) {
+          return {
+            ...m,
+            accounts: m.accounts.map(acc =>
+              acc.id === accountId ? { ...acc, balance: newBalance } : acc
+            )
+          }
+        }
+        return m
+      }))
+    } catch (err) {
+      console.error('Unexpected error updating POS account balance:', err)
+      setError('حدث خطأ غير متوقع')
+    }
   }
 
   // ===================================

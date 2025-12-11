@@ -123,26 +123,26 @@ export function EWalletStats({ wallet }: EWalletStatsProps) {
                 <div className="text-left">
                   <p className="font-bold">{formatCurrency(wallet.dailyLimit)}</p>
                   <p className={`text-sm ${
-                    dailyUsagePercentage > 80 ? 'text-red-600' : 
-                    dailyUsagePercentage > 50 ? 'text-yellow-600' : 
-                    'text-green-600'
+                    dailyUsagePercentage > 80 ? 'text-red-600 dark:text-red-400' :
+                    dailyUsagePercentage > 50 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-green-600 dark:text-green-400'
                   }`}>
                     {formatPercentage(dailyUsagePercentage / 100)} مستخدم
                   </p>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
+              <div className="w-full bg-muted rounded-full h-3">
+                <div
                   className={`h-3 rounded-full transition-all ${
-                    dailyUsagePercentage > 80 ? 'bg-red-500' : 
-                    dailyUsagePercentage > 50 ? 'bg-yellow-500' : 
+                    dailyUsagePercentage > 80 ? 'bg-red-500' :
+                    dailyUsagePercentage > 50 ? 'bg-yellow-500' :
                     'bg-green-500'
                   }`}
                   style={{ width: `${Math.min(dailyUsagePercentage, 100)}%` }}
                 />
               </div>
               {isNearDailyLimit && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                   <AlertCircle className="h-4 w-4" />
                   <span>تحذير: اقتربت من تجاوز الحد اليومي</span>
                 </div>
@@ -163,26 +163,26 @@ export function EWalletStats({ wallet }: EWalletStatsProps) {
                 <div className="text-left">
                   <p className="font-bold">{formatCurrency(wallet.monthlyLimit)}</p>
                   <p className={`text-sm ${
-                    monthlyUsagePercentage > 80 ? 'text-red-600' : 
-                    monthlyUsagePercentage > 50 ? 'text-yellow-600' : 
-                    'text-green-600'
+                    monthlyUsagePercentage > 80 ? 'text-red-600 dark:text-red-400' :
+                    monthlyUsagePercentage > 50 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-green-600 dark:text-green-400'
                   }`}>
                     {formatPercentage(monthlyUsagePercentage / 100)} مستخدم
                   </p>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
+              <div className="w-full bg-muted rounded-full h-3">
+                <div
                   className={`h-3 rounded-full transition-all ${
-                    monthlyUsagePercentage > 80 ? 'bg-red-500' : 
-                    monthlyUsagePercentage > 50 ? 'bg-yellow-500' : 
+                    monthlyUsagePercentage > 80 ? 'bg-red-500' :
+                    monthlyUsagePercentage > 50 ? 'bg-yellow-500' :
                     'bg-green-500'
                   }`}
                   style={{ width: `${Math.min(monthlyUsagePercentage, 100)}%` }}
                 />
               </div>
               {isNearMonthlyLimit && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                   <AlertCircle className="h-4 w-4" />
                   <span>تحذير: اقتربت من تجاوز الحد الشهري</span>
                 </div>

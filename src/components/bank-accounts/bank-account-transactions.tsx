@@ -92,11 +92,11 @@ export function BankAccountTransactions({ account }: BankAccountTransactionsProp
   const getTransactionColor = (type: string) => {
     switch (type) {
       case 'deposit':
-        return 'text-green-600'
+        return 'text-green-600 dark:text-green-400'
       case 'withdrawal':
-        return 'text-red-600'
+        return 'text-red-600 dark:text-red-400'
       default:
-        return 'text-gray-600'
+        return 'text-muted-foreground'
     }
   }
 

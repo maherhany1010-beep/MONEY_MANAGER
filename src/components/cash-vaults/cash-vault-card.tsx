@@ -35,15 +35,15 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
   const getVaultTypeColor = (type: string) => {
     switch (type) {
       case 'main':
-        return 'from-blue-500 to-blue-700'
+        return 'from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-900 text-blue-900 dark:text-white'
       case 'branch':
-        return 'from-green-500 to-green-700'
+        return 'from-green-100 to-green-200 dark:from-green-800 dark:to-green-900 text-green-900 dark:text-white'
       case 'personal':
-        return 'from-purple-500 to-purple-700'
+        return 'from-purple-100 to-purple-200 dark:from-purple-800 dark:to-purple-900 text-purple-900 dark:text-white'
       case 'emergency':
-        return 'from-red-500 to-red-700'
+        return 'from-red-100 to-red-200 dark:from-red-800 dark:to-red-900 text-red-900 dark:text-white'
       default:
-        return 'from-gray-500 to-gray-700'
+        return 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-900 dark:text-white'
     }
   }
 
@@ -86,7 +86,7 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
       onClick={onClick}
     >
       {/* رأس البطاقة بتدرج لوني */}
-      <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-6 text-white relative`}>
+      <div className={`bg-gradient-to-br ${getVaultTypeColor(vault.vaultType ?? 'main')} p-6 relative`}>
         {/* حالة الخزينة */}
         {!vault.isActive && (
           <div className="absolute top-2 left-2">
@@ -108,7 +108,7 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
             </div>
           </div>
           {vault.isDefault && (
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            <Badge variant="secondary" className="bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/30">
               افتراضية
             </Badge>
           )}
@@ -122,17 +122,17 @@ export function CashVaultCard({ vault, onClick, onToggleActive, onReconcile, onD
         </div>
 
         {vault.maxCapacity && (
-          <div className="mt-4 pt-4 border-t border-white/20">
+          <div className="mt-4 pt-4 border-t border-black/10 dark:border-white/20">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="opacity-75">السعة</span>
               <span>{formatPercentage(capacityPercentage / 100)}</span>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-2">
-              <div 
+            <div className="w-full bg-black/10 dark:bg-white/20 rounded-full h-2">
+              <div
                 className={`h-2 rounded-full transition-all ${
-                  capacityPercentage > 90 ? 'bg-red-300' : 
-                  capacityPercentage > 70 ? 'bg-yellow-300' : 
-                  'bg-green-300'
+                  capacityPercentage > 90 ? 'bg-red-500 dark:bg-red-300' :
+                  capacityPercentage > 70 ? 'bg-yellow-500 dark:bg-yellow-300' :
+                  'bg-green-500 dark:bg-green-300'
                 }`}
                 style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
               />

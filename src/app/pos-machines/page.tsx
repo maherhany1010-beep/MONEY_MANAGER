@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
 import { POSMachineCard } from '@/components/pos-machines/pos-machine-card'
 import { AddPOSMachineDialog } from '@/components/pos-machines/add-pos-machine-dialog'
@@ -103,7 +102,7 @@ export default function POSMachinesPage() {
   }, [machines, filters])
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="ماكينات الدفع الإلكتروني"
         description="إدارة ماكينات الدفع الإلكتروني ومتابعة الحسابات والمعاملات"
@@ -142,17 +141,17 @@ export default function POSMachinesPage() {
           </TabsList>
 
           {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6 mt-0">
             <DashboardStats machines={machines} />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <TopTransactions machines={machines} />
               <BalanceForecast machines={machines} />
             </div>
           </TabsContent>
 
           {/* Machines Tab */}
-          <TabsContent value="machines" className="space-y-6">
+          <TabsContent value="machines" className="space-y-4 sm:space-y-6 mt-0">
             <SearchFilter
               filters={filters}
               onFiltersChange={setFilters}
@@ -160,7 +159,7 @@ export default function POSMachinesPage() {
               locations={locations}
             />
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAndSortedMachines.map((machine) => (
                 <POSMachineCard
                   key={machine.id}
@@ -172,9 +171,9 @@ export default function POSMachinesPage() {
             </div>
 
             {filteredAndSortedMachines.length === 0 && (
-              <div className="text-center py-12">
-                <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">لا توجد ماكينات تطابق معايير البحث</p>
+              <div className="text-center py-8 sm:py-12">
+                <CreditCard className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground opacity-50" />
+                <p className="text-sm sm:text-base text-muted-foreground">لا توجد ماكينات تطابق معايير البحث</p>
               </div>
             )}
           </TabsContent>
@@ -191,7 +190,7 @@ export default function POSMachinesPage() {
         onOpenChange={setIsAddDialogOpen}
         onAdd={addMachine}
       />
-    </AppLayout>
+    </>
   )
 }
 

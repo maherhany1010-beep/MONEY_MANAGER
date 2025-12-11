@@ -86,13 +86,13 @@ export function TransactionsTab({ transactions, cardName }: TransactionsTabProps
       case 'withdrawal':
         return <TrendingDown className="h-4 w-4 text-red-600" />
       case 'purchase':
-        return <ShoppingCart className="h-4 w-4 text-blue-600" />
+        return <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
       case 'transfer_in':
-        return <ArrowRightLeft className="h-4 w-4 text-purple-600" />
+        return <ArrowRightLeft className="h-4 w-4 text-purple-600 dark:text-purple-400" />
       case 'transfer_out':
-        return <ArrowRightLeft className="h-4 w-4 text-orange-600" />
+        return <ArrowRightLeft className="h-4 w-4 text-orange-600 dark:text-orange-400" />
       case 'fee':
-        return <DollarSign className="h-4 w-4 text-gray-600" />
+        return <DollarSign className="h-4 w-4 text-muted-foreground" />
     }
   }
 

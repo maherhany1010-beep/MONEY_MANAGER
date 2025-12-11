@@ -8,25 +8,41 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  // Skip Supabase session refresh in development to avoid fetch errors
+  // Session will be handled by the client-side auth provider
+  if (process.env.NODE_ENV === 'development') {
+    return response
+  }
 
-  // Refresh session if needed
-  await supabase.auth.getSession()
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+
+    // Refresh session if needed - with error handling
+    try {
+      await supabase.auth.getSession()
+    } catch (sessionError) {
+      // Log but don't block the request
+      console.warn('Session refresh warning (non-critical):', sessionError)
+    }
+  } catch (error) {
+    // Log but don't block the request
+    console.warn('Middleware warning (non-critical):', error)
+  }
 
   return response
 }

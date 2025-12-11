@@ -227,12 +227,12 @@ export function TransferDialog({ open, onOpenChange, wallet }: TransferDialogPro
                   />
                   <div className="flex-1">
                     <p className="font-medium text-sm">المحفظة (خصم إضافي)</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       خصم: {formatCurrency(sourceDeduction)} (المبلغ + الرسوم)
                     </p>
                   </div>
                 </label>
-                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900">
+                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-muted">
                   <input
                     type="radio"
                     name="feeBearerType"
@@ -242,7 +242,7 @@ export function TransferDialog({ open, onOpenChange, wallet }: TransferDialogPro
                   />
                   <div className="flex-1">
                     <p className="font-medium text-sm">حساب الاستقبال (خصم من المبلغ)</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       يستقبل: {formatCurrency(destinationAddition - commission)} (المبلغ - الرسوم)
                     </p>
                   </div>
@@ -263,7 +263,7 @@ export function TransferDialog({ open, onOpenChange, wallet }: TransferDialogPro
               value={formData.commission}
               onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
             />
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               العمولة هي مبلغ إضافي يُضاف إلى حساب الاستقبال كربح (لا تُخصم من المصدر)
             </p>
           </div>

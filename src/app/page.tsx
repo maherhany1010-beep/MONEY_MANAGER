@@ -1,6 +1,5 @@
 'use client'
 
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
@@ -9,31 +8,41 @@ import { useCashVaults } from '@/contexts/cash-vaults-context'
 import { useEWallets } from '@/contexts/e-wallets-context'
 import { usePrepaidCards } from '@/contexts/prepaid-cards-context'
 import { useCards } from '@/contexts/cards-context'
+import { useBalanceVisibility } from '@/contexts/balance-visibility-context'
+import { useCentralTransfers } from '@/contexts/central-transfers-context'
+import { useSales } from '@/contexts/sales-context'
+import { useInvestments } from '@/contexts/investments-context'
+import { useCustomers } from '@/contexts/customers-context'
 import {
   CreditCard,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
-  Calendar,
   ArrowUpDown,
-  BarChart3,
   Landmark,
   Vault,
   Wallet,
-  Users,
   CircleDollarSign,
   Eye,
-  EyeOff
+  EyeOff,
+  PieChart,
+  BarChart3,
+  Users,
+  Zap,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon
 } from 'lucide-react'
-import { useState } from 'react'
+import { MetricCard } from '@/components/dashboard/metric-card'
 
 export default function DashboardPage() {
-  const [showBalances, setShowBalances] = useState(true)
+  const { isBalanceVisible, toggleBalanceVisibility } = useBalanceVisibility()
   const { accounts: bankAccounts } = useBankAccounts()
   const { vaults: cashVaults } = useCashVaults()
   const { wallets: eWallets } = useEWallets()
   const { cards: prepaidCards } = usePrepaidCards()
   const { cards: creditCards } = useCards()
+  const { transfers } = useCentralTransfers()
+  const { sales } = useSales()
+  const { investments, getTotalProfitLoss } = useInvestments()
+  const { customers } = useCustomers()
 
   // حساب الإحصائيات من البيانات الفعلية
   const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0)
@@ -43,28 +52,40 @@ export default function DashboardPage() {
   const totalCreditBalance = creditCards.reduce((sum, card) => sum + ((card.creditLimit ?? card.credit_limit ?? 0) - (card.currentBalance ?? card.current_balance ?? 0)), 0)
   const totalAvailableBalance = totalBankBalance + totalVaultBalance + totalWalletBalance + totalPrepaidBalance + totalCreditBalance
 
-  // إحصائيات شاملة من جميع الأنظمة الفرعية
-  const stats = {
-    totalBalance: totalAvailableBalance,
-    bankAccounts: totalBankBalance,
-    cashVaults: totalVaultBalance,
-    eWallets: totalWalletBalance,
-    prepaidCards: totalPrepaidBalance,
-    creditCards: totalCreditBalance,
-    totalAccounts: bankAccounts.length + cashVaults.length + eWallets.length + prepaidCards.length + creditCards.length,
-    totalCards: creditCards.length + prepaidCards.length,
-  }
+  // حساب المديونية (الديون من البطاقات الائتمانية)
+  const totalDebt = creditCards.reduce((sum, card) => sum + (card.currentBalance ?? card.current_balance ?? 0), 0)
+
+  // حساب صافي الموازنة العامة (الأرصدة المتاحة - المديونية)
+  const netBalance = totalAvailableBalance - totalDebt
+
+  // حساب إجمالي التحويلات
+  const totalTransfers = transfers.reduce((sum, t) => sum + (t.amount ?? 0), 0)
+
+  // حساب إجمالي المبيعات
+  const totalSalesAmount = sales.reduce((sum, s) => sum + (s.total_amount ?? 0), 0)
+
+  // حساب الأرباح والمصروفات (بيانات وهمية للآن - يمكن تحديثها لاحقاً)
+  const totalProfit = getTotalProfitLoss()
+  const totalExpenses = 0 // سيتم تحديثه عند إضافة نظام المصروفات
+
+  // حساب إجمالي الاستثمارات
+  const totalInvestments = investments.reduce((sum, inv) => sum + (inv.current_value ?? inv.currentValue ?? 0), 0)
+
+  // حساب إجمالي مديونيات العملاء
+  const totalCustomerDebts = customers.reduce((sum, c) => sum + (c.currentDebt ?? 0), 0)
+
+  // بيانات الرسم البياني (فارغة - سيتم ملؤها من البيانات الفعلية)
+  const chartData: Array<{ name: string; value: number }> = []
 
 
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+          <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">لوحة التحكم</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">لوحة التحكم</h1>
+            <p className="mt-1 text-muted-foreground">
               نظرة عامة شاملة على نظامك المالي
             </p>
           </div>
@@ -72,10 +93,10 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowBalances(!showBalances)}
+              onClick={toggleBalanceVisibility}
               className="gap-2"
             >
-              {showBalances ? (
+              {isBalanceVisible ? (
                 <>
                   <Eye className="h-4 w-4" />
                   إخفاء
@@ -87,117 +108,129 @@ export default function DashboardPage() {
                 </>
               )}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.location.href = '/reports'}>
-              <BarChart3 className="h-4 w-4 ml-2" />
-              التقارير
-            </Button>
           </div>
         </div>
 
-        {/* الملخص الشامل - إجمالي الأرصدة */}
-        <Card className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 border-slate-700 text-white">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الأرصدة المتاحة</CardTitle>
-            <DollarSign className="h-5 w-5 opacity-70" />
+        {/* الملخص الشامل - صافي الموازنة العامة */}
+        <Card className="bg-primary dark:bg-primary border-2 border-primary/50 shadow-xl rounded-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-5 px-5 sm:pt-6 sm:px-6">
+            <CardTitle className="text-sm sm:text-base font-semibold text-primary-foreground">صافي الموازنة العامة</CardTitle>
+            <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground/70" />
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              {showBalances ? formatCurrency(stats.totalBalance) : '••••••'}
+          <CardContent className="px-5 pb-5 sm:px-6 sm:pb-6">
+            <div className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 text-primary-foreground">
+              {isBalanceVisible ? formatCurrency(netBalance) : '••••••'}
             </div>
-            <p className="text-xs opacity-70 mt-2">
-              من {stats.totalAccounts} حساب و {stats.totalCards} بطاقة
+            <p className="text-xs sm:text-sm text-primary-foreground/70">
+              الفرق بين الأرصدة المتاحة والمديونية
             </p>
           </CardContent>
         </Card>
 
-        {/* توزيع الأرصدة حسب النوع */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          {/* الحسابات البنكية */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الحسابات البنكية</CardTitle>
-              <Landmark className="h-5 w-5 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {showBalances ? formatCurrency(stats.bankAccounts) : '••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {bankAccounts.length} حساب
-              </p>
-            </CardContent>
-          </Card>
+        {/* المؤشرات المالية الرئيسية - 8 مؤشرات */}
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* 1. إجمالي المديونية */}
+          <MetricCard
+            title="إجمالي المديونية"
+            value={totalDebt}
+            icon={TrendingDownIcon}
+            color="text-red-500"
+            trend={-2.5}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
 
-          {/* الخزائن النقدية */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">الخزائن النقدية</CardTitle>
-              <Vault className="h-5 w-5 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {showBalances ? formatCurrency(stats.cashVaults) : '••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {cashVaults.length} خزينة
-              </p>
-            </CardContent>
-          </Card>
+          {/* 2. إجمالي الأرصدة المتاحة */}
+          <MetricCard
+            title="الأرصدة المتاحة"
+            value={totalAvailableBalance}
+            icon={DollarSign}
+            color="text-blue-500"
+            trend={3.2}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
 
-          {/* المحافظ الإلكترونية */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">المحافظ الإلكترونية</CardTitle>
-              <Wallet className="h-5 w-5 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {showBalances ? formatCurrency(stats.eWallets) : '••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {eWallets.length} محفظة
-              </p>
-            </CardContent>
-          </Card>
+          {/* 3. التحويلات */}
+          <MetricCard
+            title="إجمالي التحويلات"
+            value={totalTransfers}
+            icon={ArrowUpDown}
+            color="text-purple-500"
+            trend={1.8}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
 
-          {/* البطاقات المدفوعة مسبقاً */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">بطاقات مسبقة</CardTitle>
-              <CircleDollarSign className="h-5 w-5 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {showBalances ? formatCurrency(stats.prepaidCards) : '••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {prepaidCards.length} بطاقة
-              </p>
-            </CardContent>
-          </Card>
+          {/* 4. المبيعات */}
+          <MetricCard
+            title="إجمالي المبيعات"
+            value={totalSalesAmount}
+            icon={BarChart3}
+            color="text-green-500"
+            trend={5.4}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
 
-          {/* البطاقات الائتمانية */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">بطاقات ائتمانية</CardTitle>
-              <CreditCard className="h-5 w-5 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {showBalances ? formatCurrency(stats.creditCards) : '••••'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {creditCards.length} بطاقة
-              </p>
-            </CardContent>
-          </Card>
+          {/* 5. الأرباح */}
+          <MetricCard
+            title="صافي الأرباح"
+            value={totalProfit}
+            icon={TrendingUpIcon}
+            color="text-emerald-500"
+            trend={4.1}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
+
+          {/* 6. المصروفات */}
+          <MetricCard
+            title="إجمالي المصروفات"
+            value={totalExpenses}
+            icon={Zap}
+            color="text-orange-500"
+            trend={-1.2}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
+
+          {/* 7. الاستثمارات */}
+          <MetricCard
+            title="إجمالي الاستثمارات"
+            value={totalInvestments}
+            icon={PieChart}
+            color="text-cyan-500"
+            trend={2.7}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
+
+          {/* 8. مديونيات العملاء */}
+          <MetricCard
+            title="مديونيات العملاء"
+            value={totalCustomerDebts}
+            icon={Users}
+            color="text-pink-500"
+            trend={-0.5}
+            chartData={chartData}
+            isVisible={isBalanceVisible}
+            format={formatCurrency}
+          />
         </div>
 
         {/* إجراءات سريعة */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">الوصول السريع</CardTitle>
-            <CardDescription>انتقل مباشرة إلى الأقسام الرئيسية</CardDescription>
+            <CardTitle className="text-lg font-bold text-foreground">الوصول السريع</CardTitle>
+            <CardDescription className="text-muted-foreground">انتقل مباشرة إلى الأقسام الرئيسية</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -251,18 +284,10 @@ export default function DashboardPage() {
               </Button>
               <Button
                 variant="outline"
-                className="h-20 flex-col gap-2 hover:bg-cyan-50 dark:hover:bg-cyan-950"
-                onClick={() => window.location.href = '/reports'}
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span className="text-xs">التقارير</span>
-              </Button>
-              <Button
-                variant="outline"
                 className="h-20 flex-col gap-2 hover:bg-teal-50 dark:hover:bg-teal-950"
                 onClick={() => window.location.href = '/customers'}
               >
-                <Users className="h-5 w-5" />
+                <CircleDollarSign className="h-5 w-5" />
                 <span className="text-xs">العملاء</span>
               </Button>
             </div>
@@ -270,6 +295,5 @@ export default function DashboardPage() {
         </Card>
 
       </div>
-    </AppLayout>
-  )
+      )
 }

@@ -139,7 +139,7 @@ export function InstallmentDetailsDialog({ open, onOpenChange, installment }: In
             </div>
             تفاصيل التقسيط - {installment.merchantName}
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             جميع المعلومات والأقساط الشهرية للتقسيط
           </DialogDescription>
         </DialogHeader>
@@ -151,10 +151,10 @@ export function InstallmentDetailsDialog({ open, onOpenChange, installment }: In
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 mt-0.5" style={{ color: '#2563eb' }} />
                 <div className="flex-1">
-                  <h4 className="font-semibold mb-2" style={{ color: '#2563eb' }}>
+                  <h4 className="font-semibold mb-2 text-blue-700 dark:text-blue-400">
                     نوع التقسيط: {getInstallmentType()}
                   </h4>
-                  <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="space-y-1 text-sm text-foreground">
                     {adminFees > 0 && (
                       <p>• المصاريف الإدارية ({formatCurrency(adminFees)}) تُخصم في القسط الأول فقط</p>
                     )}

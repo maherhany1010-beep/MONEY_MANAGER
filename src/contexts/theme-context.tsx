@@ -1,51 +1,95 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
-type Theme = 'light' | 'dark'
+// نوع الثيم المحفوظ (يشمل system)
+type ThemePreference = 'light' | 'dark' | 'system'
+// نوع الثيم الفعلي المطبق
+type ResolvedTheme = 'light' | 'dark'
 
 interface ThemeContextType {
-  theme: Theme
+  theme: ThemePreference
+  resolvedTheme: ResolvedTheme
   toggleTheme: () => void
-  setTheme: (theme: Theme) => void
+  setTheme: (theme: ThemePreference) => void
+  mounted: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
+// دالة لحساب الثيم الفعلي بناءً على تفضيل النظام
+const getSystemTheme = (): ResolvedTheme => {
+  if (typeof window === 'undefined') return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+// دالة لتطبيق الثيم على DOM - تعمل فوراً
+const applyThemeToDOM = (resolvedTheme: ResolvedTheme) => {
+  const root = document.documentElement
+
+  // إزالة كلا الكلاسين أولاً
+  root.classList.remove('light', 'dark')
+
+  // تطبيق الثيم الجديد
+  root.classList.add(resolvedTheme)
+  root.setAttribute('data-theme', resolvedTheme)
+
+  // تحديث لون الخلفية فوراً لمنع الوميض
+  if (resolvedTheme === 'dark') {
+    root.style.colorScheme = 'dark'
+    root.style.backgroundColor = '#0f172a'
+  } else {
+    root.style.colorScheme = 'light'
+    root.style.backgroundColor = '#f8fafc'
+  }
+}
+
+// دالة للحصول على الثيم المحفوظ
+const getSavedTheme = (): ThemePreference => {
+  if (typeof window === 'undefined') return 'system'
+
+  const savedTheme = localStorage.getItem('theme') as ThemePreference | null
+  if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+    return savedTheme
+  }
+
+  return 'system'
+}
+
+// دالة لحساب الثيم الفعلي
+const resolveTheme = (preference: ThemePreference): ResolvedTheme => {
+  if (preference === 'system') {
+    return getSystemTheme()
+  }
+  return preference
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light')
+  const [theme, setThemeState] = useState<ThemePreference>('system')
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light')
   const [mounted, setMounted] = useState(false)
 
-  // تحميل الثيم من localStorage أو اكتشاف تفضيل النظام
+  // تحميل الثيم عند بدء التشغيل
   useEffect(() => {
+    const savedTheme = getSavedTheme()
+    const resolved = resolveTheme(savedTheme)
+    setThemeState(savedTheme)
+    setResolvedTheme(resolved)
+    applyThemeToDOM(resolved)
     setMounted(true)
-    
-    // محاولة الحصول على الثيم المحفوظ
-    const savedTheme = localStorage.getItem('theme') as Theme | null
-    
-    if (savedTheme) {
-      setThemeState(savedTheme)
-      applyTheme(savedTheme)
-    } else {
-      // اكتشاف تفضيل النظام
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const systemTheme: Theme = prefersDark ? 'dark' : 'light'
-      setThemeState(systemTheme)
-      applyTheme(systemTheme)
-    }
   }, [])
 
-  // الاستماع لتغييرات تفضيل النظام
+  // الاستماع لتغييرات تفضيل النظام (مهم عندما يكون الثيم 'system')
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      // فقط إذا لم يكن هناك تفضيل محفوظ
-      const savedTheme = localStorage.getItem('theme')
-      if (!savedTheme) {
-        const newTheme: Theme = e.matches ? 'dark' : 'light'
-        setThemeState(newTheme)
-        applyTheme(newTheme)
+
+    const handleChange = () => {
+      // فقط نحدث إذا كان الثيم المحفوظ هو 'system'
+      const savedTheme = localStorage.getItem('theme') as ThemePreference | null
+      if (!savedTheme || savedTheme === 'system') {
+        const newResolved = getSystemTheme()
+        setResolvedTheme(newResolved)
+        applyThemeToDOM(newResolved)
       }
     }
 
@@ -53,36 +97,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement
-    
-    if (newTheme === 'dark') {
-      root.setAttribute('data-theme', 'dark')
-      root.classList.add('dark')
-    } else {
-      root.setAttribute('data-theme', 'light')
-      root.classList.remove('dark')
-    }
-  }
-
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: ThemePreference) => {
     setThemeState(newTheme)
     localStorage.setItem('theme', newTheme)
-    applyTheme(newTheme)
-  }
+    const resolved = resolveTheme(newTheme)
+    setResolvedTheme(resolved)
+    applyThemeToDOM(resolved)
+  }, [])
 
-  const toggleTheme = () => {
-    const newTheme: Theme = theme === 'light' ? 'dark' : 'light'
+  const toggleTheme = useCallback(() => {
+    // عند التبديل، نتبدل بين light و dark (نخرج من وضع system)
+    const newTheme: ThemePreference = resolvedTheme === 'light' ? 'dark' : 'light'
     setTheme(newTheme)
-  }
+  }, [resolvedTheme, setTheme])
 
-  // منع flash of unstyled content
-  if (!mounted) {
-    return null
-  }
-
+  // عرض المحتوى مباشرة بدون div إضافي
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, toggleTheme, setTheme, mounted }}>
       {children}
     </ThemeContext.Provider>
   )

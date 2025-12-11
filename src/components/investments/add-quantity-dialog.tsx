@@ -31,7 +31,7 @@ export function AddQuantityDialog({ open, onOpenChange, investment }: AddQuantit
     investment.type === 'cryptocurrency' ? 'عملة' :
     'سهم'
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
@@ -46,16 +46,21 @@ export function AddQuantityDialog({ open, onOpenChange, investment }: AddQuantit
       return
     }
 
-    addQuantity(investment.id, parseFloat(quantity), parseFloat(purchasePrice), 0)
-    setSuccess(true)
-    
-    setTimeout(() => {
-      onOpenChange(false)
-      setSuccess(false)
-      setError('')
-      setQuantity('')
-      setPurchasePrice('')
-    }, 1500)
+    try {
+      await addQuantity(investment.id, parseFloat(quantity), parseFloat(purchasePrice), 0)
+      setSuccess(true)
+
+      setTimeout(() => {
+        onOpenChange(false)
+        setSuccess(false)
+        setError('')
+        setQuantity('')
+        setPurchasePrice('')
+      }, 1500)
+    } catch (err) {
+      console.error('Error adding quantity:', err)
+      setError('فشل في إضافة الكمية')
+    }
   }
 
   // Calculate new average price

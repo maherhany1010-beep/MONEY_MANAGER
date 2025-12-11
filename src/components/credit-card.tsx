@@ -9,7 +9,7 @@ import {
   formatPercentage,
   getCardTypeIcon
 } from '@/lib/utils'
-import { ShoppingCart, Wallet, Settings, Power } from 'lucide-react'
+import { ShoppingCart, Wallet, Power } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type CardTier = 'classic' | 'gold' | 'platinum' | 'titanium' | 'black'
@@ -146,14 +146,18 @@ export function CreditCardComponent(props: CreditCardProps) {
         {/* Card Details */}
         <div className="p-4 space-y-3">
           {/* Credit Limit & Balance */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">الحد الائتماني</p>
-              <p className="font-semibold">{formatCurrency(displayCreditLimit)}</p>
+              <p className="font-semibold text-sm">{formatCurrency(displayCreditLimit)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">الرصيد الحالي</p>
-              <p className="font-semibold text-red-600">{formatCurrency(displayCurrentBalance)}</p>
+              <p className="text-xs text-muted-foreground mb-1">المديونية</p>
+              <p className="font-semibold text-sm text-red-600">{formatCurrency(displayCurrentBalance)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">المتبقي</p>
+              <p className="font-semibold text-sm text-green-600">{formatCurrency(displayCreditLimit - displayCurrentBalance)}</p>
             </div>
           </div>
 
@@ -163,7 +167,7 @@ export function CreditCardComponent(props: CreditCardProps) {
               <p className="text-xs text-muted-foreground">نسبة الاستخدام</p>
               <p className="text-xs font-medium">{formatPercentage(utilizationPercentage)}</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
                   utilizationPercentage > 80
@@ -190,7 +194,7 @@ export function CreditCardComponent(props: CreditCardProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-4 gap-2 pt-3 border-t">
+          <div className="grid grid-cols-3 gap-2 pt-3 border-t">
             <Button
               variant="outline"
               size="sm"
@@ -217,20 +221,6 @@ export function CreditCardComponent(props: CreditCardProps) {
             >
               <Wallet className="h-4 w-4" />
               <span className="text-xs">سداد</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-1"
-              onClick={(e) => {
-                e.stopPropagation()
-                onSettings?.()
-              }}
-              disabled={!onSettings || !isActive}
-            >
-              <Settings className="h-4 w-4" />
-              <span className="text-xs">إعدادات</span>
             </Button>
 
             <Button

@@ -78,7 +78,9 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
     }
   }, [open])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -109,10 +111,12 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
       }
     }
 
+    setIsSubmitting(true)
+
     try {
       if (customer) {
         // تحديث عميل موجود
-        updateCustomer(customer.id, {
+        await updateCustomer(customer.id, {
           fullName: formData.fullName.trim(),
           phone: formData.phone.trim(),
           email: formData.email.trim() || undefined,
@@ -125,10 +129,14 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
           notes: formData.notes.trim() || undefined,
           debtAlertThreshold: formData.debtAlertThreshold ? parseFloat(formData.debtAlertThreshold) : undefined,
         })
+        setSuccess(true)
+        setTimeout(() => {
+          onOpenChange(false)
+        }, 1500)
       } else {
         // إضافة عميل جديد
-        const initialDebt = formData.initialDebt ? parseFloat(formData.initialDebt) : 0
-        addCustomer({
+        const initialDebtValue = formData.initialDebt ? parseFloat(formData.initialDebt) : 0
+        const result = await addCustomer({
           name: formData.fullName.trim(),
           phone: formData.phone.trim() || null,
           email: formData.email.trim() || null,
@@ -136,16 +144,25 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
           notes: formData.notes.trim() || null,
           fullName: formData.fullName.trim(),
           company: formData.company.trim() || undefined,
+          openingBalance: initialDebtValue,
+          currentDebt: initialDebtValue,
         })
-      }
 
-      setSuccess(true)
-      setTimeout(() => {
-        onOpenChange(false)
-      }, 1500)
+        // التحقق من نجاح الإضافة قبل عرض رسالة النجاح
+        if (result) {
+          setSuccess(true)
+          setTimeout(() => {
+            onOpenChange(false)
+          }, 1500)
+        } else {
+          setError('فشل في إضافة العميل. يرجى المحاولة مرة أخرى.')
+        }
+      }
     } catch (err) {
       setError('حدث خطأ أثناء حفظ البيانات')
       console.error('Customer save error:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -172,26 +189,26 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 border-sky-100 dark:border-sky-900/30"
+        className="max-w-5xl max-h-[90vh] overflow-y-auto bg-card border-2 border-border"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="border-b pb-4 border-sky-100 dark:border-sky-900/30">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-            <div className="p-2 bg-sky-100 dark:bg-sky-900/30 rounded-lg">
-              <User className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+        <DialogHeader className="border-b pb-4 border-border">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-foreground">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <User className="h-6 w-6 text-primary" />
             </div>
             {customer ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             {customer ? 'تحديث معلومات العميل' : 'إضافة عميل جديد إلى النظام'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* المعلومات الشخصية */}
-          <div className="space-y-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
-            <h3 className="text-sm font-bold text-blue-900 flex items-center gap-2">
+          <div className="space-y-4 p-5 bg-muted/50 border-2 border-border rounded-xl">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <User className="h-4 w-4" />
               المعلومات الشخصية
             </h3>
@@ -211,7 +228,7 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
               <div className="space-y-2">
                 <Label htmlFor="phone">رقم الهاتف *</Label>
                 <div className="relative">
-                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -226,7 +243,7 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
               <div className="space-y-2">
                 <Label htmlFor="email">البريد الإلكتروني</Label>
                 <div className="relative">
-                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -241,7 +258,7 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
               <div className="space-y-2">
                 <Label htmlFor="address">العنوان</Label>
                 <div className="relative">
-                  <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="address"
                     value={formData.address}
@@ -255,8 +272,8 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
           </div>
 
           {/* معلومات العمل */}
-          <div className="space-y-4 p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
-            <h3 className="text-sm font-bold text-green-900 flex items-center gap-2">
+          <div className="space-y-4 p-5 bg-muted/50 border-2 border-border rounded-xl">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Building className="h-4 w-4" />
               معلومات العمل
             </h3>
@@ -295,8 +312,8 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
           </div>
 
           {/* الإعدادات */}
-          <div className="space-y-4 p-5 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl">
-            <h3 className="text-sm font-bold text-purple-900">الإعدادات</h3>
+          <div className="space-y-4 p-5 bg-muted/50 border-2 border-border rounded-xl">
+            <h3 className="text-sm font-bold text-foreground">الإعدادات</h3>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -350,7 +367,7 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
                     onChange={(e) => setFormData({ ...formData, initialDebt: e.target.value })}
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-gray-500">إذا كان العميل لديه مديونية سابقة</p>
+                  <p className="text-xs text-muted-foreground">إذا كان العميل لديه مديونية سابقة</p>
                 </div>
               )}
             </div>
@@ -379,11 +396,15 @@ export function CustomerDialog({ open, onOpenChange, customer }: CustomerDialogP
 
           {/* الأزرار */}
           <div className="flex gap-3 justify-end pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               إلغاء
             </Button>
-            <Button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-              {customer ? 'تحديث البيانات' : 'إضافة العميل'}
+            <Button
+              type="submit"
+              className="bg-primary hover:bg-primary/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'جاري الحفظ...' : (customer ? 'تحديث البيانات' : 'إضافة العميل')}
             </Button>
           </div>
         </form>

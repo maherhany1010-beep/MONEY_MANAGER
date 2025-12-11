@@ -115,7 +115,7 @@ export function AddTransactionDialog({ open, onOpenChange, onSuccess }: AddTrans
             </div>
             إضافة معاملة جديدة
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             أدخل تفاصيل المعاملة المالية الجديدة
           </DialogDescription>
         </DialogHeader>

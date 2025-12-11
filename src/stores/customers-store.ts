@@ -26,7 +26,7 @@ interface CustomersState {
   error: string | null
   initialized: boolean
   channel: RealtimeChannel | null
-  
+
   initialize: (userId: string) => Promise<void>
   cleanup: () => void
   addCustomer: (customer: Omit<Customer, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Customer | null>
@@ -34,6 +34,16 @@ interface CustomersState {
   deleteCustomer: (id: string) => Promise<void>
   getCustomerById: (id: string) => Customer | undefined
   searchCustomers: (query: string) => Customer[]
+
+  // Notification methods
+  checkDebtThreshold: (customerId: string, currentDebt: number, threshold: number) => boolean
+  checkOverdueInvoices: (customerId: string) => boolean
+
+  // Invoice and Payment methods
+  updateCustomerDebt: (customerId: string, amount: number, operation: 'increase' | 'decrease') => Promise<void>
+  addInvoiceToStore: (customerId: string, invoice: any) => void
+  addPaymentToStore: (customerId: string, payment: any) => void
+  updateAccountBalance: (accountType: string, accountId: string, amount: number) => Promise<void>
 }
 
 export const useCustomersStore = create<CustomersState>((set, get) => ({
@@ -216,6 +226,114 @@ export const useCustomersStore = create<CustomersState>((set, get) => ({
         c.phone?.toLowerCase().includes(lowerQuery) ||
         c.email?.toLowerCase().includes(lowerQuery)
     )
+  },
+
+  // Check if customer debt exceeds threshold
+  checkDebtThreshold: (customerId: string, currentDebt: number, threshold: number) => {
+    return currentDebt > threshold
+  },
+
+  // Check if customer has overdue invoices
+  checkOverdueInvoices: (customerId: string) => {
+    // This will be implemented in the context layer
+    // where we have access to invoices data
+    return false
+  },
+
+  // Update customer debt
+  updateCustomerDebt: async (customerId: string, amount: number, operation: 'increase' | 'decrease') => {
+    try {
+      const supabase = createClientComponentClient()
+      const customer = get().getCustomerById(customerId)
+
+      if (!customer) {
+        throw new Error('العميل غير موجود')
+      }
+
+      const currentDebt = (customer as any).currentDebt || 0
+      const newDebt = operation === 'increase'
+        ? currentDebt + amount
+        : Math.max(0, currentDebt - amount)
+
+      const { error } = await supabase
+        .from('customers')
+        .update({ current_debt: newDebt })
+        .eq('id', customerId)
+
+      if (error) throw error
+
+      // Update local state
+      set(state => ({
+        customers: state.customers.map(c =>
+          c.id === customerId
+            ? { ...c, currentDebt: newDebt }
+            : c
+        ),
+      }))
+    } catch (err) {
+      console.error('خطأ في تحديث المديونية:', err)
+      throw err
+    }
+  },
+
+  // Add invoice to local store
+  addInvoiceToStore: (customerId: string, invoice: any) => {
+    // This is handled by the context layer
+    // The store just maintains customer data
+    console.log('Invoice added for customer:', customerId, invoice)
+  },
+
+  // Add payment to local store
+  addPaymentToStore: (customerId: string, payment: any) => {
+    // This is handled by the context layer
+    // The store just maintains customer data
+    console.log('Payment added for customer:', customerId, payment)
+  },
+
+  // Update account balance (generic method for all account types)
+  updateAccountBalance: async (accountType: string, accountId: string, amount: number) => {
+    try {
+      const supabase = createClientComponentClient()
+
+      // Map account type to table name
+      const tableMap: { [key: string]: string } = {
+        'bank': 'bank_accounts',
+        'e-wallet': 'e_wallets',
+        'pos': 'pos_machines',
+        'cash-vault': 'cash_vaults',
+        'prepaid-card': 'prepaid_cards',
+      }
+
+      const tableName = tableMap[accountType]
+      if (!tableName) {
+        throw new Error(`نوع حساب غير معروف: ${accountType}`)
+      }
+
+      // Get current balance
+      const { data: account, error: fetchError } = await supabase
+        .from(tableName)
+        .select('balance')
+        .eq('id', accountId)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const currentBalance = account?.balance || 0
+      const newBalance = currentBalance + amount
+
+      // Update balance
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({ balance: newBalance })
+        .eq('id', accountId)
+
+      if (updateError) throw updateError
+
+      console.log(`تم تحديث رصيد ${accountType} بمبلغ ${amount}`)
+    } catch (err) {
+      console.error('خطأ في تحديث رصيد الحساب:', err)
+      throw err
+    }
   },
 }))
 

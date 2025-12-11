@@ -13,69 +13,8 @@ interface AllStatementsTabProps {
   cards: any[]
 }
 
-// بيانات وهمية لكشوف الحساب
-const mockStatements = [
-  {
-    id: '1',
-    cardId: '1',
-    cardName: 'بطاقة البنك الأهلي المصري الذهبية',
-    month: 1,
-    year: 2024,
-    statementDate: '2024-01-31',
-    dueDate: '2024-02-15',
-    statementAmount: 12500.00,
-    paidAmount: 500.00,
-    minimumPayment: 625.00,
-    totalSpent: 4250.00,
-    cashbackEarned: 85.50,
-    status: 'current' as const,
-  },
-  {
-    id: '2',
-    cardId: '2',
-    cardName: 'بطاقة بنك مصر البلاتينية',
-    month: 1,
-    year: 2024,
-    statementDate: '2024-01-25',
-    dueDate: '2024-02-25',
-    statementAmount: 8750.00,
-    paidAmount: 8750.00,
-    minimumPayment: 437.50,
-    totalSpent: 2750.00,
-    cashbackEarned: 82.50,
-    status: 'paid' as const,
-  },
-  {
-    id: '3',
-    cardId: '3',
-    cardName: 'بطاقة البنك التجاري الدولي الكلاسيكية',
-    month: 1,
-    year: 2024,
-    statementDate: '2024-01-10',
-    dueDate: '2024-02-10',
-    statementAmount: 5200.00,
-    paidAmount: 1000.00,
-    minimumPayment: 260.00,
-    totalSpent: 2500.00,
-    cashbackEarned: 45.00,
-    status: 'partial' as const,
-  },
-  {
-    id: '4',
-    cardId: '1',
-    cardName: 'بطاقة البنك الأهلي المصري الذهبية',
-    month: 12,
-    year: 2023,
-    statementDate: '2023-12-31',
-    dueDate: '2024-01-15',
-    statementAmount: 8750.00,
-    paidAmount: 8750.00,
-    minimumPayment: 437.50,
-    totalSpent: 3850.00,
-    cashbackEarned: 77.00,
-    status: 'paid' as const,
-  },
-]
+// بيانات وهمية لكشوف الحساب (فارغة - سيتم ملؤها من البيانات الفعلية)
+const mockStatements: any[] = []
 
 export function AllStatementsTab({ cards }: AllStatementsTabProps) {
   const [statements] = useState(mockStatements)
@@ -144,8 +83,8 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="dark:text-gray-100">كشوفات الحساب الشهرية</CardTitle>
-              <CardDescription className="dark:text-gray-400">
+              <CardTitle className="text-foreground">كشوفات الحساب الشهرية</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 عرض وإدارة كشوفات حساب جميع البطاقات
               </CardDescription>
             </div>
@@ -158,7 +97,7 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">البطاقة</label>
+              <label className="text-sm font-medium text-foreground">البطاقة</label>
               <Select value={selectedCard} onValueChange={setSelectedCard}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر البطاقة" />
@@ -175,7 +114,7 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">السنة</label>
+              <label className="text-sm font-medium text-foreground">السنة</label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر السنة" />
@@ -189,7 +128,7 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium dark:text-gray-200">الحالة</label>
+              <label className="text-sm font-medium text-foreground">الحالة</label>
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الحالة" />
@@ -211,47 +150,47 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">إجمالي الكشوف</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">إجمالي الكشوف</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold dark:text-gray-100">{totalStatements}</div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">كشف حساب</p>
+            <div className="text-2xl font-bold text-foreground">{totalStatements}</div>
+            <p className="text-xs text-muted-foreground">كشف حساب</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">إجمالي المبالغ</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">إجمالي المبالغ</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(totalAmount)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">مجموع الكشوف</p>
+            <p className="text-xs text-muted-foreground">مجموع الكشوف</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">المدفوع</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">المدفوع</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(totalPaid)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">تم السداد</p>
+            <p className="text-xs text-muted-foreground">تم السداد</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium dark:text-gray-200">المتبقي</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">المتبقي</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {formatCurrency(totalRemaining)}
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">متبقي للسداد</p>
+            <p className="text-xs text-muted-foreground">متبقي للسداد</p>
           </CardContent>
         </Card>
       </div>
@@ -261,9 +200,9 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
         {filteredStatements.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <FileText className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-              <h3 className="text-xl font-semibold mb-2 dark:text-gray-100">لا توجد كشوف حساب</h3>
-              <p className="text-gray-600 dark:text-gray-400">لم يتم العثور على كشوف حساب بالمعايير المحددة</p>
+              <FileText className="h-16 w-16 mx-auto mb-4 opacity-50 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2 text-foreground">لا توجد كشوف حساب</h3>
+              <p className="text-muted-foreground">لم يتم العثور على كشوف حساب بالمعايير المحددة</p>
             </CardContent>
           </Card>
         ) : (
@@ -273,18 +212,14 @@ export function AllStatementsTab({ cards }: AllStatementsTabProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <CardTitle className="text-lg dark:text-gray-100">
+                      <CardTitle className="text-lg text-foreground">
                         {statement.cardName}
                       </CardTitle>
-                      <Badge className={getStatusColor(statement.status)} style={{
-                        color: statement.status === 'current' ? '#2563eb' :
-                               statement.status === 'paid' ? '#16a34a' :
-                               (statement as any).status === 'overdue' ? '#dc2626' : '#d97706'
-                      }}>
+                      <Badge className={getStatusColor(statement.status)}>
                         {getStatusLabel(statement.status)}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span>كشف {statement.month}/{statement.year}</span>
                       <span>•</span>

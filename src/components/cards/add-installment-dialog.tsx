@@ -154,7 +154,7 @@ export function AddInstallmentDialog({ open, onOpenChange, cardId, onAdd }: AddI
             </div>
             إضافة تقسيط جديد
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             أضف تقسيط جديد على البطاقة الائتمانية
           </DialogDescription>
         </DialogHeader>

@@ -120,7 +120,7 @@ export function EditInstallmentDialog({ open, onOpenChange, installment, onSave 
             </div>
             تعديل التقسيط - {installment.merchantName}
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 dark:text-gray-400 mt-2">
+          <DialogDescription className="text-base text-muted-foreground mt-2">
             تعديل تفاصيل التقسيط وإعادة حساب الأقساط
           </DialogDescription>
         </DialogHeader>
@@ -302,17 +302,17 @@ export function EditInstallmentDialog({ open, onOpenChange, installment, onSave 
 
               {(interestRate > 0 || adminFees > 0) && (
                 <div className="flex items-start gap-2 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-600 rounded text-xs mt-2">
-                  <AlertCircle className="h-4 w-4 mt-0.5" style={{ color: '#d97706' }} />
+                  <AlertCircle className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400" />
                   <div className="space-y-1">
-                    <p className="font-semibold dark:text-amber-200" style={{ color: '#d97706' }}>
+                    <p className="font-semibold text-amber-700 dark:text-amber-200">
                       ملاحظة هامة:
                     </p>
                     {adminFees > 0 && (
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p className="text-foreground">
                         • المصاريف الإدارية ({formatCurrency(adminFees)}) تُخصم في القسط الأول فقط
                       </p>
                     )}
-                    <p className="text-gray-700 dark:text-gray-300">
+                    <p className="text-foreground">
                       • سيتم إعادة حساب جميع الأقساط بناءً على البيانات الجديدة
                     </p>
                   </div>

@@ -63,37 +63,47 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
     commission: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setIsSubmitting(true)
 
     // Common validation
     if (!formData.name.trim()) {
       setError('الرجاء إدخال اسم الاستثمار')
+      setIsSubmitting(false)
       return
     }
 
     try {
+      let result = null
+
       switch (investmentType) {
         case 'precious_metals':
           if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
             setError('الرجاء إدخال كمية صحيحة')
+            setIsSubmitting(false)
+            setIsSubmitting(false)
             return
           }
           if (!formData.purchasePrice || parseFloat(formData.purchasePrice) <= 0) {
             setError('الرجاء إدخال سعر شراء صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.currentPrice || parseFloat(formData.currentPrice) <= 0) {
             setError('الرجاء إدخال السعر الحالي')
+            setIsSubmitting(false)
             return
           }
-          
+
           // Get exchange rate from localStorage
           const savedExchangeRate = localStorage.getItem('currentExchangeRate')
           const exchangeRate = savedExchangeRate ? parseFloat(savedExchangeRate) : undefined
 
-          addInvestment({
+          result = await addInvestment({
             type: 'precious_metals',
             name: formData.name.trim(),
             metalType: formData.metalType as any,
@@ -114,18 +124,22 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
         case 'cryptocurrency':
           if (!formData.cryptoSymbol.trim()) {
             setError('الرجاء إدخال رمز العملة')
+            setIsSubmitting(false)
             return
           }
           if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
             setError('الرجاء إدخال كمية صحيحة')
+            setIsSubmitting(false)
             return
           }
           if (!formData.purchasePrice || parseFloat(formData.purchasePrice) <= 0) {
             setError('الرجاء إدخال سعر شراء صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.currentPrice || parseFloat(formData.currentPrice) <= 0) {
             setError('الرجاء إدخال السعر الحالي')
+            setIsSubmitting(false)
             return
           }
           
@@ -133,7 +147,7 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
           const cryptoExchangeRate = localStorage.getItem('currentExchangeRate')
           const cryptoRate = cryptoExchangeRate ? parseFloat(cryptoExchangeRate) : undefined
 
-          addInvestment({
+          result = await addInvestment({
             type: 'cryptocurrency',
             name: formData.name.trim(),
             cryptoName: formData.cryptoName.trim() || formData.name.trim(),
@@ -154,22 +168,26 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
         case 'certificate':
           if (!formData.bank.trim()) {
             setError('الرجاء إدخال اسم البنك')
+            setIsSubmitting(false)
             return
           }
           if (!formData.amount || parseFloat(formData.amount) <= 0) {
             setError('الرجاء إدخال مبلغ صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.interestRate || parseFloat(formData.interestRate) <= 0) {
             setError('الرجاء إدخال معدل فائدة صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.maturityDate) {
             setError('الرجاء إدخال تاريخ الاستحقاق')
+            setIsSubmitting(false)
             return
           }
           
-          addInvestment({
+          result = await addInvestment({
             type: 'certificate',
             name: formData.name.trim(),
             certificateType: formData.certificateType as any,
@@ -189,22 +207,27 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
         case 'stock':
           if (!formData.tickerSymbol.trim()) {
             setError('الرجاء إدخال رمز السهم')
+            setIsSubmitting(false)
             return
           }
           if (!formData.market.trim()) {
             setError('الرجاء إدخال اسم السوق/البورصة')
+            setIsSubmitting(false)
             return
           }
           if (!formData.shares || parseFloat(formData.shares) <= 0) {
             setError('الرجاء إدخال عدد أسهم صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.purchasePrice || parseFloat(formData.purchasePrice) <= 0) {
             setError('الرجاء إدخال سعر شراء صحيح')
+            setIsSubmitting(false)
             return
           }
           if (!formData.currentPrice || parseFloat(formData.currentPrice) <= 0) {
             setError('الرجاء إدخال السعر الحالي')
+            setIsSubmitting(false)
             return
           }
           
@@ -212,7 +235,7 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
           const stockExchangeRate = localStorage.getItem('currentExchangeRate')
           const stockRate = stockExchangeRate ? parseFloat(stockExchangeRate) : undefined
 
-          addInvestment({
+          result = await addInvestment({
             type: 'stock',
             name: formData.name.trim(),
             companyName: formData.companyName.trim() || formData.name.trim(),
@@ -229,6 +252,13 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
             currentExchangeRate: stockRate,
           } as any)
           break
+      }
+
+      // التحقق من نجاح الإضافة
+      if (!result) {
+        setError('فشل في إضافة الاستثمار. تحقق من الاتصال بقاعدة البيانات.')
+        setIsSubmitting(false)
+        return
       }
 
       // Reset form
@@ -264,9 +294,12 @@ export function AddInvestmentDialog({ open, onOpenChange }: AddInvestmentDialogP
         shares: '',
         commission: '',
       })
+      setIsSubmitting(false)
       onOpenChange(false)
     } catch (err) {
+      console.error('Error in handleSubmit:', err)
       setError('حدث خطأ أثناء إضافة الاستثمار')
+      setIsSubmitting(false)
     }
   }
 

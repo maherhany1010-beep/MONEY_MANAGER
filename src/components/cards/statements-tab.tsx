@@ -85,7 +85,7 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
       case 'partial':
         return 'bg-amber-100 dark:bg-amber-950/30 border-amber-200 dark:border-amber-700 dark:text-amber-300'
       default:
-        return 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:text-gray-300'
+        return 'bg-muted border-border text-foreground'
     }
   }
 
@@ -119,8 +119,8 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold dark:text-gray-100">كشوفات الحساب الشهرية</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <h3 className="text-lg font-semibold text-foreground">كشوفات الحساب الشهرية</h3>
+          <p className="text-sm text-muted-foreground">
             عرض وإدارة كشوفات حساب البطاقة
           </p>
         </div>
@@ -145,8 +145,8 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="dark:text-gray-100">قائمة الكشوف</CardTitle>
-              <CardDescription className="dark:text-gray-400">
+              <CardTitle className="text-foreground">قائمة الكشوف</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 {statements.length} كشف حساب
               </CardDescription>
             </CardHeader>
@@ -155,32 +155,28 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
                 {statements.map((statement) => (
                   <div
                     key={statement.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-accent/50 dark:hover:bg-accent/20 ${
-                      selectedStatement.id === statement.id 
-                        ? 'bg-accent border-primary dark:bg-accent/30' 
-                        : 'dark:border-gray-700'
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-accent/50 ${
+                      selectedStatement.id === statement.id
+                        ? 'bg-accent border-primary'
+                        : 'border-border'
                     }`}
                     onClick={() => setSelectedStatement(statement)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        <span className="font-medium dark:text-gray-100">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-foreground">
                           {statement.month}/{statement.year}
                         </span>
                       </div>
-                      <Badge className={getStatusColor((statement as any).status)} style={{
-                        color: (statement as any).status === 'current' ? '#2563eb' :
-                               (statement as any).status === 'paid' ? '#16a34a' :
-                               (statement as any).status === 'overdue' ? '#dc2626' : '#d97706'
-                      }}>
+                      <Badge className={getStatusColor((statement as any).status)}>
                         {getStatusLabel(statement.status)}
                       </Badge>
                     </div>
-                    <p className="text-sm font-medium dark:text-gray-200">
+                    <p className="text-sm font-medium text-foreground">
                       الرصيد: {formatCurrency(statement.currentBalance)}
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       الاستحقاق: {formatDate(statement.dueDate)}
                     </p>
                   </div>
@@ -197,10 +193,10 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="dark:text-gray-100">
+                  <CardTitle className="text-foreground">
                     كشف حساب {selectedStatement.month}/{selectedStatement.year}
                   </CardTitle>
-                  <CardDescription className="dark:text-gray-400">
+                  <CardDescription className="text-muted-foreground">
                     تاريخ الإصدار: {formatDate(selectedStatement.statementDate)}
                   </CardDescription>
                 </div>
@@ -218,26 +214,26 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="p-4 border rounded-lg dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">الرصيد السابق</p>
-                  <p className="text-2xl font-bold dark:text-gray-100">
+                <div className="p-4 border border-border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">الرصيد السابق</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {formatCurrency(selectedStatement.previousBalance)}
                   </p>
                 </div>
-                <div className="p-4 border rounded-lg dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">الرصيد الحالي</p>
+                <div className="p-4 border border-border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">الرصيد الحالي</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(selectedStatement.currentBalance)}
                   </p>
                 </div>
-                <div className="p-4 border rounded-lg dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">الحد الأدنى للسداد</p>
+                <div className="p-4 border border-border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">الحد الأدنى للسداد</p>
                   <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {formatCurrency(selectedStatement.minimumPayment)}
                   </p>
                 </div>
-                <div className="p-4 border rounded-lg dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">الكاش باك المكتسب</p>
+                <div className="p-4 border border-border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">الكاش باك المكتسب</p>
                   <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {formatCurrency(selectedStatement.cashbackEarned)}
                   </p>
@@ -249,8 +245,8 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
           {/* Activity Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="dark:text-gray-100">نشاط الحساب</CardTitle>
-              <CardDescription className="dark:text-gray-400">
+              <CardTitle className="text-foreground">نشاط الحساب</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 ملخص المعاملات لهذا الشهر
               </CardDescription>
             </CardHeader>
@@ -258,7 +254,7 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-red-500" />
-                  <span className="text-sm font-medium dark:text-gray-200">إجمالي المصروفات</span>
+                  <span className="text-sm font-medium text-foreground">إجمالي المصروفات</span>
                 </div>
                 <span className="font-bold text-red-600 dark:text-red-400">
                   {formatCurrency(selectedStatement.totalSpent)}
@@ -268,7 +264,7 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingDown className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium dark:text-gray-200">إجمالي المدفوعات</span>
+                  <span className="text-sm font-medium text-foreground">إجمالي المدفوعات</span>
                 </div>
                 <span className="font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(selectedStatement.totalPayments)}
@@ -279,7 +275,7 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm font-medium dark:text-gray-200">رسوم الفوائد</span>
+                    <span className="text-sm font-medium text-foreground">رسوم الفوائد</span>
                   </div>
                   <span className="font-bold text-orange-600 dark:text-orange-400">
                     {formatCurrency(selectedStatement.interestCharges)}
@@ -290,10 +286,10 @@ export function StatementsTab({ cardId }: StatementsTabProps) {
               {selectedStatement.fees > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium dark:text-gray-200">رسوم أخرى</span>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">رسوم أخرى</span>
                   </div>
-                  <span className="font-bold text-gray-600 dark:text-gray-400">
+                  <span className="font-bold text-muted-foreground">
                     {formatCurrency(selectedStatement.fees)}
                   </span>
                 </div>

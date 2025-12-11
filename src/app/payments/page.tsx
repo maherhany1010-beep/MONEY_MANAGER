@@ -1,20 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/app-layout'
 import { PageHeader } from '@/components/layout/page-header'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PaymentsList } from '@/components/payments/payments-list'
 import { AddPaymentDialog } from '@/components/payments/add-payment-dialog'
 import { PaymentReminders } from '@/components/payments/payment-reminders'
 import { PaymentCalendar } from '@/components/payments/payment-calendar'
-import { 
-  formatCurrency, 
-  formatDate,
-} from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { Plus, Calendar, Bell, CreditCard, AlertTriangle } from 'lucide-react'
 
 // Mock data - will be replaced with real data from Supabase
@@ -93,7 +88,7 @@ export default function PaymentsPage() {
   }
 
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="إدارة السداد"
         description="تتبع وإدارة مدفوعات البطاقات الائتمانية"
@@ -105,7 +100,7 @@ export default function PaymentsPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-4 sm:mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">المدفوعات المعلقة</CardTitle>
@@ -236,6 +231,6 @@ export default function PaymentsPage() {
           setIsAddDialogOpen(false)
         }}
       />
-    </AppLayout>
+    </>
   )
 }
