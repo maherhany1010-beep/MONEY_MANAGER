@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Arabic } from "next/font/google";
-import { AuthProvider } from "@/components/auth/auth-provider";
-import { ThemeProvider } from "@/contexts/theme-context";
-import { SettingsProvider } from "@/contexts/settings-context";
-import { NotificationsProvider } from "@/contexts/notifications-context";
-import { BankAccountsProvider } from "@/contexts/bank-accounts-context";
-import { EWalletsProvider } from "@/contexts/e-wallets-context";
-import { CashVaultsProvider } from "@/contexts/cash-vaults-context";
-import { CardsProvider } from "@/contexts/cards-context";
-import { CustomersProvider } from "@/contexts/customers-context";
-import { ProductsProvider } from "@/contexts/products-context";
-import { SalesProvider } from "@/contexts/sales-context";
-import { PrepaidCardsProvider } from "@/contexts/prepaid-cards-context";
-import { POSMachinesProvider } from "@/contexts/pos-machines-context";
-import { SavingsCirclesProvider } from "@/contexts/savings-circles-context";
-import { InvestmentsProvider } from "@/contexts/investments-context";
-import { MerchantsProvider } from "@/contexts/merchants-context";
+// Provider Groups - reduces nesting from 17 to 6 levels
+import {
+  CoreProvider,
+  FinancialAccountsProvider,
+  CardsAndCashbackProvider,
+  BusinessProvider,
+  InvestmentsAndSavingsProvider,
+} from "@/providers";
 import { CentralTransfersProvider } from "@/contexts/central-transfers-context";
-import { CashbackProvider } from "@/contexts/cashback-context";
 import { ReconciliationProvider } from "@/contexts/reconciliation-context";
-import { BalanceVisibilityProvider } from "@/contexts/balance-visibility-context";
 import { LayoutProvider } from "@/components/layout/layout-provider";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
@@ -83,50 +73,31 @@ export default function RootLayout({
       <body
         className={`${notoSansArabic.variable} antialiased bg-background text-foreground`}
       >
-        <SettingsProvider>
-          <ThemeProvider>
-            <NotificationsProvider>
-              <AuthProvider>
-                <BalanceVisibilityProvider>
-                  <MerchantsProvider>
-                  <CardsProvider>
-                    <BankAccountsProvider>
-                      <CashVaultsProvider>
-                        <EWalletsProvider>
-                          <PrepaidCardsProvider>
-                            <POSMachinesProvider>
-                              <CustomersProvider>
-                                <ProductsProvider>
-                                  <SalesProvider>
-                                    <SavingsCirclesProvider>
-                                      <InvestmentsProvider>
-                                        <CentralTransfersProvider>
-                                          <CashbackProvider>
-                                            <ReconciliationProvider>
-                                              <LayoutProvider>
-                                                {children}
-                                              </LayoutProvider>
-                                              <Toaster />
-                                            </ReconciliationProvider>
-                                          </CashbackProvider>
-                                        </CentralTransfersProvider>
-                                      </InvestmentsProvider>
-                                    </SavingsCirclesProvider>
-                                  </SalesProvider>
-                                </ProductsProvider>
-                              </CustomersProvider>
-                            </POSMachinesProvider>
-                          </PrepaidCardsProvider>
-                        </EWalletsProvider>
-                      </CashVaultsProvider>
-                    </BankAccountsProvider>
-                  </CardsProvider>
-                </MerchantsProvider>
-                </BalanceVisibilityProvider>
-              </AuthProvider>
-            </NotificationsProvider>
-          </ThemeProvider>
-        </SettingsProvider>
+        {/*
+          Provider Groups - Reduced from 17 nested providers to 6 logical groups
+          This improves:
+          - Code readability
+          - Maintainability
+          - Performance (slightly)
+        */}
+        <CoreProvider>
+          <CardsAndCashbackProvider>
+            <FinancialAccountsProvider>
+              <BusinessProvider>
+                <InvestmentsAndSavingsProvider>
+                  <CentralTransfersProvider>
+                    <ReconciliationProvider>
+                      <LayoutProvider>
+                        {children}
+                      </LayoutProvider>
+                      <Toaster />
+                    </ReconciliationProvider>
+                  </CentralTransfersProvider>
+                </InvestmentsAndSavingsProvider>
+              </BusinessProvider>
+            </FinancialAccountsProvider>
+          </CardsAndCashbackProvider>
+        </CoreProvider>
       </body>
     </html>
   );

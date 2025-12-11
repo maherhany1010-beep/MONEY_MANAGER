@@ -21,8 +21,24 @@ import { useReconciliationsStore } from '@/stores/reconciliation-store'
 /**
  * StoreInitializer Component
  *
- * يقوم بتهيئة جميع الـ Zustand stores عند تسجيل الدخول
- * وتنظيفها عند تسجيل الخروج
+ * يقوم بتهيئة جميع الـ Zustand stores عند تسجيل الدخول وتنظيفها عند تسجيل الخروج.
+ *
+ * ⚠️ ملاحظة مهمة للمطورين:
+ * ---------------------------
+ * المشروع يستخدم نظامين للـ State Management:
+ *
+ * 1. **React Contexts** (src/contexts/) - الأساسي للـ UI components
+ *    - يُستخدم في معظم الصفحات والمكونات
+ *    - متكامل مع الـ Provider hierarchy
+ *
+ * 2. **Zustand Stores** (src/stores/) - للتخزين المركزي و real-time updates
+ *    - يُستخدم في صفحة التحويلات (transfers) و StoreInitializer
+ *    - يدعم real-time subscriptions مع Supabase
+ *
+ * 📋 خطة التوحيد المستقبلية:
+ * - الاحتفاظ بـ Zustand للكيانات التي تحتاج real-time (central-transfers)
+ * - استخدام Contexts للباقي (bank-accounts, cards, etc.)
+ * - حذف الـ stores المكررة تدريجياً
  */
 export function StoreInitializer() {
   const { user } = useAuth()
